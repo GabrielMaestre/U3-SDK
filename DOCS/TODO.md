@@ -9,7 +9,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 ## P0 — Baseline e segurança
 
 - [ ] Fixar máquinas, SO, resolução, presets, mapas, rotas e número de bots/jogadores para benchmarks.
-- [ ] Medir boot frio/quente, menu, loading de mapa, entrada em servidor e primeiro frame controlável.
+- [x] Medir boot frio/quente até menu no Unity Editor: `76,96 s` frio contra `11,88–12,15 s` quente.
+- [ ] Medir loading de mapa, entrada em servidor e primeiro frame controlável.
 - [ ] Criar cenas/cenários de benchmark: cidade densa, floresta, combate, horda, veículos e servidor cheio.
 - [ ] Registrar CPU/GPU frame time p50/p95/p99, GC, RAM, VRAM, I/O, rede e tick do servidor.
 - [ ] Separar métricas de Editor, Development Build, Release e servidor dedicado.
@@ -19,15 +20,21 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Definir limites de regressão e ruído aceitável por métrica.
 - [ ] Manter resultados de benchmark fora do repositório quando forem binários ou grandes; versionar só resumo textual.
 
-## P1 — Boot e loading — 1/X
+## P1 — Boot e loading — 5/X
 
 - [x] Carregar master bundles direto do disco com `LoadFromFileAsync`, sem copiar arquivo inteiro para memória; manter SHA-1 de integridade.
+- [x] Suspender leitores de assets ociosos com `SemaphoreSlim.WaitAsync`, eliminando busy-spin durante varredura de diretórios.
+- [x] Calcular hash de recursos por stream sequencial, sem duplicar arquivos em `MemoryStream`.
+- [x] Enumerar DLLs de módulos sob demanda e remover log duplicado durante descoberta.
+- [x] Adiar geração `Auto_Skybox` de 27 recursos até primeiro uso no loading do mapa.
+- [ ] Repetir cold start após reiniciar Unity e comparar contra baseline de `76,96 s`.
 - [ ] Traçar ordem e duração de inicializadores, cenas, subsistemas, bundles, Workshop e conexão Steam.
 - [ ] Remover inicialização duplicada, bloqueante ou não usada antes do menu.
 - [ ] Adiar sistemas até primeiro uso quando não afetarem correção.
+- [ ] Avaliar lazy-load dos 67 pontos eager em 25 tipos de asset, um tipo por vez, com teste de regressão.
 - [ ] Paralelizar somente I/O e trabalho independente comprovadamente seguro.
 - [ ] Evitar varreduras repetidas de diretórios, mods, assets e configurações.
-- [ ] Cachear metadados de assets/mods com chave por versão, tamanho e data; invalidar corretamente.
+- [ ] Cachear metadados de assets/mods somente após definir invalidação segura para core, Workshop, mapas, Sandbox e reload.
 - [ ] Agrupar leituras pequenas e reduzir seeks durante boot e loading.
 - [ ] Mover descompressão e parsing pesado para etapas assíncronas sem tocar Unity API fora da main thread.
 - [ ] Pré-aquecer apenas shaders, pools e assets que causarem hitch medido.

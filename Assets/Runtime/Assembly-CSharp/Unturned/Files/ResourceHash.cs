@@ -54,7 +54,7 @@ namespace SDG.Unturned
 			return paths;
 		}
 
-		private static async void ThreadInitialize(object voidState)
+		private static void ThreadInitialize(object voidState)
 		{
 			ResourceHashThreadState state = (ResourceHashThreadState) voidState;
 
@@ -74,12 +74,10 @@ namespace SDG.Unturned
 					List<byte[]> hashes = new List<byte[]>();
 					foreach (string path in filePaths)
 					{
-						using (FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-						using (SHA1Stream hashStream = new SHA1Stream(fileStream))
-						using (MemoryStream memoryStream = new MemoryStream())
+						using (FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.SequentialScan))
+						using (System.Security.Cryptography.SHA1 algorithm = System.Security.Cryptography.SHA1.Create())
 						{
-							await hashStream.CopyToAsync(memoryStream);
-							byte[] hash = hashStream.Hash;
+							byte[] hash = algorithm.ComputeHash(fileStream);
 							hashes.Add(hash);
 
 							if (state.shouldLogVerbose)

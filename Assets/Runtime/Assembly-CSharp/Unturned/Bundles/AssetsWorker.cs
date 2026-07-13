@@ -85,6 +85,7 @@ namespace SDG.Unturned
 			UnityEngine.Debug.Assert(!string.IsNullOrEmpty(language));
 
 			shouldWorkerThreadsContinue = 1;
+			shutdownCancellationSource = new CancellationTokenSource();
 
 			resultItems = new ConcurrentQueue<ResultItem>();
 		}
@@ -92,6 +93,7 @@ namespace SDG.Unturned
 		public void Shutdown()
 		{
 			Interlocked.Exchange(ref shouldWorkerThreadsContinue, 0);
+			shutdownCancellationSource.Cancel();
 		}
 
 		public void RequestSearch(string path, AssetOrigin origin)
@@ -104,6 +106,7 @@ namespace SDG.Unturned
 				rootPath = path,
 				searchPaths = new Queue<string>(),
 				readerWorkItems = new ConcurrentQueue<WorkerThreadState.ReaderWorkItem>(),
+				readerWorkAvailable = new SemaphoreSlim(0),
 				datParser = new DatParser(),
 				origin = origin,
 			};
@@ -157,7 +160,7 @@ namespace SDG.Unturned
 					if (File.Exists(mbConfigPath))
 					{
 						Interlocked.Increment(ref totalMasterBundlesFound);
-						state.readerWorkItems.Enqueue(new WorkerThreadState.ReaderWorkItem()
+						state.EnqueueReaderWorkItem(new WorkerThreadState.ReaderWorkItem()
 						{
 							filePath = mbConfigPath,
 							itemType = WorkerThreadState.ReaderWorkItem.EItemType.MasterBundle,
@@ -190,15 +193,25 @@ namespace SDG.Unturned
 			}
 
 			Interlocked.Exchange(ref state.isFinishedSearching, 1);
+			state.readerWorkAvailable.Release();
 			Interlocked.Increment(ref totalSearchLocationsFinishedSearching);
 		}
 
-		private void ReaderThreadMain(object untypedState)
+		private async void ReaderThreadMain(object untypedState)
 		{
 			WorkerThreadState state = (WorkerThreadState) untypedState;
 
 			while (shouldWorkerThreadsContinue > 0)
 			{
+				try
+				{
+					await state.readerWorkAvailable.WaitAsync(shutdownCancellationSource.Token);
+				}
+				catch (System.OperationCanceledException)
+				{
+					break;
+				}
+
 				// Hack? We check this before checking for a new work item to prevent a race condition if a work item
 				// is added after dequeuing work item but before checking if finished.
 				bool finishedSearching = state.isFinishedSearching > 0;
@@ -253,7 +266,8 @@ namespace SDG.Unturned
 					break;
 				}
 
-				// We don't sleep while we have work to do otherwise this thread becomes the bottleneck.
+				UnityEngine.Debug.Assert(false, "Asset reader woke without queued work or completed search");
+
 			}
 
 			Interlocked.Increment(ref totalSearchLocationsFinishedReading);
@@ -278,12 +292,19 @@ namespace SDG.Unturned
 			public string rootPath;
 			public Queue<string> searchPaths;
 			public ConcurrentQueue<ReaderWorkItem> readerWorkItems;
+			public SemaphoreSlim readerWorkAvailable;
 			public int isFinishedSearching;
 
 			/// <summary>
 			/// Warning: on worker thread this only acts as handle. Do not access.
 			/// </summary>
 			public AssetOrigin origin;
+
+			public void EnqueueReaderWorkItem(ReaderWorkItem workItem)
+			{
+				readerWorkItems.Enqueue(workItem);
+				readerWorkAvailable.Release();
+			}
 
 			public IDatDictionary ReadFileWithoutHash(string path)
 			{
@@ -304,7 +325,7 @@ namespace SDG.Unturned
 					if (File.Exists(testPath))
 					{
 						Interlocked.Increment(ref owner.totalAssetDefinitionsFound);
-						readerWorkItems.Enqueue(new ReaderWorkItem()
+						EnqueueReaderWorkItem(new ReaderWorkItem()
 						{
 							filePath = testPath,
 							itemType = ReaderWorkItem.EItemType.Asset,
@@ -324,7 +345,7 @@ namespace SDG.Unturned
 					if (File.Exists(testPath))
 					{
 						Interlocked.Increment(ref owner.totalAssetDefinitionsFound);
-						readerWorkItems.Enqueue(new ReaderWorkItem()
+						EnqueueReaderWorkItem(new ReaderWorkItem()
 						{
 							filePath = testPath,
 							itemType = ReaderWorkItem.EItemType.Asset,
@@ -344,7 +365,7 @@ namespace SDG.Unturned
 					if (File.Exists(testPath))
 					{
 						Interlocked.Increment(ref owner.totalAssetDefinitionsFound);
-						readerWorkItems.Enqueue(new ReaderWorkItem()
+						EnqueueReaderWorkItem(new ReaderWorkItem()
 						{
 							filePath = testPath,
 							itemType = ReaderWorkItem.EItemType.Asset,
@@ -363,7 +384,7 @@ namespace SDG.Unturned
 					foreach (string filePath in Directory.EnumerateFiles(dirPath, "*.asset"))
 					{
 						Interlocked.Increment(ref owner.totalAssetDefinitionsFound);
-						readerWorkItems.Enqueue(new ReaderWorkItem()
+						EnqueueReaderWorkItem(new ReaderWorkItem()
 						{
 							filePath = filePath,
 							itemType = ReaderWorkItem.EItemType.Asset,
@@ -439,6 +460,7 @@ namespace SDG.Unturned
 		}
 
 		private int shouldWorkerThreadsContinue;
+		private CancellationTokenSource shutdownCancellationSource;
 
 		private ConcurrentQueue<ResultItem> resultItems;
 		internal int totalMasterBundlesFound;

@@ -52,16 +52,29 @@ namespace SDG.Unturned
 		public GameObject stumpGameObject => _stumpGameObject;
 
 		protected GameObject _skyboxGameObject;
-		public GameObject skyboxGameObject => _skyboxGameObject;
+		public GameObject skyboxGameObject
+		{
+			get
+			{
+				GenerateAutoSkyboxIfNeeded();
+				return _skyboxGameObject;
+			}
+		}
 
 		protected GameObject _debrisGameObject;
 		public GameObject debrisGameObject => _debrisGameObject;
 
 		public Material skyboxMaterial
 		{
-			get;
-			private set;
+			get
+			{
+				GenerateAutoSkyboxIfNeeded();
+				return _skyboxMaterial;
+			}
 		}
+		private Material _skyboxMaterial;
+		private bool shouldAutoGenerateSkybox;
+		private bool hasGeneratedAutoSkybox;
 
 
 		public ushort health;
@@ -341,67 +354,7 @@ namespace SDG.Unturned
 					_debrisGameObject = p.bundle.load<GameObject>("Debris");
 				}
 
-				if (p.data.ContainsKey("Auto_Skybox") && skyboxGameObject)
-				{
-					Transform model_0 = modelGameObject.transform.Find("Model_0");
-
-					if (model_0)
-					{
-						meshes.Clear();
-						model_0.GetComponentsInChildren(true, meshes);
-
-						if (meshes.Count > 0)
-						{
-							Bounds bound = new Bounds();
-							for (int index = 0; index < meshes.Count; index++)
-							{
-								Mesh mesh = meshes[index].sharedMesh;
-
-								if (mesh == null)
-								{
-									continue;
-								}
-
-								Bounds other = mesh.bounds;
-								bound.Encapsulate(other.min);
-								bound.Encapsulate(other.max);
-							}
-
-							if (bound.min.y < 0)
-							{
-								float min = Mathf.Abs(bound.min.z);
-								bound.center += new Vector3(0.0f, 0.0f, min / 2);
-								bound.size -= new Vector3(0.0f, 0.0f, min);
-							}
-
-							float range = Mathf.Max(bound.size.x, bound.size.y);
-							float height = bound.size.z;
-
-							skyboxGameObject.transform.localScale = new Vector3(height, height, height);
-
-							Transform icon = GameObject.Instantiate(modelGameObject).transform;
-
-							Transform hook_0 = new GameObject().transform;
-							hook_0.parent = icon;
-							hook_0.localPosition = new Vector3(0.0f, height / 2, -range / 2);
-							hook_0.localRotation = Quaternion.identity;
-
-							Transform hook_1 = new GameObject().transform;
-							hook_1.parent = icon;
-							hook_1.localPosition = new Vector3(-range / 2, height / 2, 0);
-							hook_1.localRotation = Quaternion.Euler(0, 90.0f, 0.0f);
-
-							if (!shader)
-							{
-								shader = Shader.Find("Custom/Card");
-							}
-
-							Texture2D texture = ItemTool.getCard(icon, hook_0, hook_1, 64, 64, height / 2, range);
-							skyboxMaterial = new Material(shader);
-							skyboxMaterial.mainTexture = texture;
-						}
-					}
-				}
+				shouldAutoGenerateSkybox = p.data.ContainsKey("Auto_Skybox") && _skyboxGameObject != null;
 			}
 
 			// Required for hit detection which uses CompareTag.
@@ -526,6 +479,68 @@ namespace SDG.Unturned
 			shouldExcludeFromLevelBatching = p.data.ParseBool("Exclude_From_Level_Batching");
 
 			this.PopulateArmorFalloff(in p); // this. is necessary, at least in current C# version.
+		}
+
+		private void GenerateAutoSkyboxIfNeeded()
+		{
+			if (!shouldAutoGenerateSkybox || hasGeneratedAutoSkybox)
+				return;
+
+			// ponytail: generate once on first map use; prewarm if level-load hitch becomes measurable.
+			hasGeneratedAutoSkybox = true;
+
+			Transform model_0 = _modelGameObject.transform.Find("Model_0");
+			if (!model_0)
+				return;
+
+			meshes.Clear();
+			model_0.GetComponentsInChildren(true, meshes);
+			if (meshes.Count < 1)
+				return;
+
+			Bounds bound = new Bounds();
+			for (int index = 0; index < meshes.Count; index++)
+			{
+				Mesh mesh = meshes[index].sharedMesh;
+				if (mesh == null)
+					continue;
+
+				Bounds other = mesh.bounds;
+				bound.Encapsulate(other.min);
+				bound.Encapsulate(other.max);
+			}
+
+			if (bound.min.y < 0)
+			{
+				float min = Mathf.Abs(bound.min.z);
+				bound.center += new Vector3(0.0f, 0.0f, min / 2);
+				bound.size -= new Vector3(0.0f, 0.0f, min);
+			}
+
+			float range = Mathf.Max(bound.size.x, bound.size.y);
+			float height = bound.size.z;
+			_skyboxGameObject.transform.localScale = new Vector3(height, height, height);
+
+			Transform icon = GameObject.Instantiate(_modelGameObject).transform;
+
+			Transform hook_0 = new GameObject().transform;
+			hook_0.parent = icon;
+			hook_0.localPosition = new Vector3(0.0f, height / 2, -range / 2);
+			hook_0.localRotation = Quaternion.identity;
+
+			Transform hook_1 = new GameObject().transform;
+			hook_1.parent = icon;
+			hook_1.localPosition = new Vector3(-range / 2, height / 2, 0);
+			hook_1.localRotation = Quaternion.Euler(0, 90.0f, 0.0f);
+
+			if (!shader)
+			{
+				shader = Shader.Find("Custom/Card");
+			}
+
+			Texture2D texture = ItemTool.getCard(icon, hook_0, hook_1, 64, 64, height / 2, range);
+			_skyboxMaterial = new Material(shader);
+			_skyboxMaterial.mainTexture = texture;
 		}
 
 		internal string OnGetRewardSpawnTableErrorContext()

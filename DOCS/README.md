@@ -35,6 +35,49 @@ Metas principais:
 - Resultado esperado: menor pico de RAM, menos cópias e menor custo de abertura dos bundles.
 - Validação: `Assembly-CSharp.csproj` compila com 0 erros; benchmark dentro do jogo ainda necessário.
 
+### 2026-07-13 — Worker de assets, recursos e módulos
+
+- Substituída espera ativa do leitor de assets por `SemaphoreSlim.WaitAsync`.
+- Leitores ociosos deixam de consumir CPU e threads são liberadas enquanto busca de diretórios continua.
+- Hash de recursos usa leitura sequencial direta, sem `MemoryStream` nem cópia integral temporária.
+- Descoberta de módulos enumera DLLs sob demanda e remove log duplicado por assembly.
+- Mantidos conteúdo carregado, SHA-1, ordem funcional e suporte a cancelamento no shutdown.
+- Validação: invariant check no worker e `Assembly-CSharp.csproj` compilando com 0 erros; benchmark dentro do jogo ainda necessário.
+
+### 2026-07-13 — Auto skybox sob demanda
+
+- Localizados 27 `ResourceAsset` com `Auto_Skybox` executando instanciação, análise de meshes e renderização de ícone antes do menu.
+- Geração movida para primeiro acesso durante loading do mapa.
+- Resultado esperado: menos CPU, objetos temporários e trabalho gráfico no cold start.
+- Compatibilidade preservada: primeiro getter gera escala e material antes de instanciar skybox.
+- Validação: callers revisados e `Assembly-CSharp.csproj` compilando com 0 erros; novo cold start ainda precisa ser medido após reiniciar Unity.
+
+## Investigação de cold start
+
+Medição em Unity Editor `2022.3.62f3`, mesma sessão e mesmo mapa de startup:
+
+- primeiro load: `76,96 s`;
+- loads seguintes: `11,88 s` e `12,15 s`;
+- primeiro load foi aproximadamente `6,4x` mais lento;
+- `core.masterbundle` permaneceu entre `5,95 s` e `6,13 s` em todas execuções.
+
+Conclusão: diferença não está na abertura do `core.masterbundle`. Cache quente vem principalmente do processo Unity, JIT e cache de filesystem. Não existe cache persistente de definições de assets no runtime atual.
+
+Cache persistente não foi adicionado porque invalidação incorreta quebraria mods, Workshop e reload de assets; cache de SHA-1 também reduziria garantia de integridade. Próxima opção segura: converter loads eager para lazy-load por tipo, com benchmark e regressão individual. Foram localizados 67 pontos de load eager em 25 tipos de asset.
+
+## Profiling recomendado
+
+Ordem de uso:
+
+1. Unity Profiler em Development Build standalone: CPU Timeline, GPU Usage, Rendering, Memory e File Access.
+2. Memory Profiler `1.1.11`, já instalado: snapshots antes/depois de mapa e comparação de objetos retidos.
+3. Profile Analyzer `1.2.2`, ainda não instalado: comparação de múltiplos frames e capturas antes/depois.
+4. JetBrains dotTrace Timeline: complementar para managed CPU, threads, GC e file I/O.
+
+New Relic não é prioridade para cliente Unity: serve melhor para telemetria/APM de serviços e servidores. GPU, draw calls, objetos Unity e boot local exigem profiler nativo da Unity.
+
+Sem captura standalone, ranking exato de CPU/GPU durante gameplay permanece desconhecido. Hipóteses de código não devem ser tratadas como gargalos confirmados.
+
 ## Princípios
 
 1. Medir antes de otimizar. Capturar baseline repetível antes de cada mudança.

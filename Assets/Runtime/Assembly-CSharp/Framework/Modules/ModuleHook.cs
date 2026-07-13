@@ -508,12 +508,11 @@ namespace SDG.Framework.Modules
 			try
 			{
 				string rootPath = getModulesRootPath();
-				foreach (string dllPath in Directory.GetFiles(rootPath, "*.dll", SearchOption.AllDirectories))
+				foreach (string dllPath in Directory.EnumerateFiles(rootPath, "*.dll", SearchOption.AllDirectories))
 				{
 					try
 					{
 						AssemblyName assemblyName = AssemblyName.GetAssemblyName(dllPath);
-						UnturnedLog.info($"Discovered assembly \"{assemblyName}\" at \"{dllPath}\"");
 						string duplicatePath;
 						if (!discoveredNameToPath.TryGetValue(assemblyName, out duplicatePath))
 						{
