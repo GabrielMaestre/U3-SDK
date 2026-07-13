@@ -78,6 +78,44 @@ Metas principais:
 - Esta é primeira fatia segura das duas iniciativas. Catálogo totalmente persistente e unload de objetos físicos por chunk continuam abertos porque exigem invalidação, restauração de estado e prova com Memory Profiler.
 - Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes. Cold boot, loading do mesmo mapa e primeiro acesso precisam ser medidos.
 
+### 2026-07-13 — Top 5: segunda rodada segura
+
+- Assets: três texturas base de skin de `VehicleAsset` usam o mesmo carregamento sob demanda dos itens; catálogo deixa de abrir payloads de veículos sem skin em uso.
+- Streaming: saída de região em objetos, itens, recursos, barricadas e estruturas examina somente anel anteriormente carregado. Antes, cada manager percorria todas as `4.096` regiões por jogador; agora custo normal acompanha raio do sistema.
+- Visibilidade/LOD: luzes já fora de alcance consultam distância uma vez a cada oito frames, distribuídas por instância; luzes próximas e transição continuam atualizadas todo frame.
+- Simulação/IA: cada `Zombie.tick` lê `Time.time` uma vez e reutiliza valor em timers de alvo, ataque, stuck e habilidades.
+- Rede: replicação de jogadores calcula permissão global de visibilidade uma vez por destinatário, não uma vez por par de jogadores.
+- Compatibilidade: nenhuma distância, frequência de rede, regra de IA, física, save ou protocolo foi alterado.
+- Validação: `Assembly-CSharp.csproj` e `Assembly-CSharp-Editor.csproj` compilam com 0 erros; dois testes cobrem bounds regionais normais e centro inválido. Unity Profiler ainda precisa medir ganho em transições, cidade iluminada, horda e servidor cheio.
+
+### 2026-07-13 — Foliage e próxima fatia de loading
+
+- Clutter, como grama e pedras decorativas marcadas com `Is_Clutter`, recebe distância própria: `1/2/3/4` tiles nos presets Low/Medium/High/Ultra. Cada tile mede 32 metros.
+- Distância geral de foliage permanece `2/3/4/5` tiles. Árvores, marcos e assets não marcados como clutter preservam alcance anterior.
+- Culling usa distância dinâmica do preset durante desenho; trocar qualidade não exige recarregar tile ou mapa.
+- Com opção de clutter desligada, `FoliageStorageV2` deixa de copiar matrizes descartadas para listas runtime. Blob ainda é lido no worker para preservar formato, integridade e ordem.
+- Prefabs `Projectile` de armas e magazines usam `Bundle.loadDeferred`; master bundles abrem payload somente no primeiro uso. Bundles legados, `-NoDeferAssets` e validação continuam eager.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes; `git diff --check` sem erros. Ganho precisa ser medido em floresta densa, boot frio e loading do mesmo mapa.
+
+### 2026-07-13 — Render de modelos e animação invisível
+
+- Faixa base de `QualitySettings.lodBias` mudou de `[2,5]` para `[1,4]`, usando mesmo slider de draw distance. LODs leves entram antes em árvores, casas, personagens, itens e demais prefabs com `LODGroup`.
+- No menor draw distance, alcance relativo de cada LOD cai 50%; no maior, 20%. Distâncias de rede, colisão, hitbox e simulação não mudaram.
+- Players remotos em cliente puro e `Zombie_Client` usam `AnimationCullingType.BasedOnRenderers`. Unity deixa de avaliar animação legacy quando nenhum renderer estiver visível.
+- NPC client já usava mesmo culling. Player local, servidor, listen server e dedicated server mantêm `AlwaysAnimate` para não afetar viewmodel, hitboxes ou lógica autoritativa.
+- Árvores e casas já usam regiões, layers, `LevelBatching`, `LODGroup` e proxies skybox quando configurados. Itens dropados já usam layer `ITEM` com distância curta. Novo manager duplicaria trabalho existente.
+- Sugestão para mapas: todo modelo grande/caro deve possuir `LODGroup` com meshes reais de menor custo; sem LOD criado no asset, ajuste de bias não consegue reduzir triângulos.
+
+### 2026-07-13 — Matemática em loops quentes
+
+- Scan de sentry testa cone de visão com produto escalar e distância ao quadrado antes de calcular raiz quadrada e normalizar direção. Alvos fora do cone deixam de pagar `sqrt`.
+- Mesma diferença vetorial e distância ao quadrado são reutilizadas nos scans de players, zombies, animais e veículos.
+- Sentry calcula distância do alvo, normalização de alcance e `cos` de spread uma vez por disparo, não uma vez por pellet. Chance e sequência de `Random` permanecem iguais.
+- Flankers removem normalização antes de produto escalar usado somente para testar sinal. Zombies em habilidade especial passam vetor horizontal direto para `Quaternion.LookRotation`, que depende da direção, não do comprimento.
+- Validação server-side de alcance balístico compara distâncias ao quadrado, removendo raiz por resultado processado sem alterar limite aceito.
+- Fórmulas rápidas e cálculos configuráveis, como expoentes de física dos veículos, não foram alterados sem captura. Aproximações e lookup tables não foram adicionados.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes; captura de horda e sentries com armas multi-pellet ainda precisa medir ganho.
+
 ## Investigação de cold start
 
 Medição em Unity Editor `2022.3.62f3`, mesma sessão e mesmo mapa de startup:

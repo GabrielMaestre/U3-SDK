@@ -1018,7 +1018,7 @@ Animation:
   m_WrapMode: 0
   m_PlayAutomatically: 1
   m_AnimatePhysics: 0
-  m_CullingType: 0
+  m_CullingType: 1
 --- !u!205 &20500000
 LODGroup:
   m_ObjectHideFlags: 0

@@ -853,6 +853,11 @@ namespace SDG.Framework.Foliage
 					continue;
 				}
 
+				if (list.isClutter && sqrDistance > FoliageSettings.sqrClutterDrawDistance)
+				{
+					continue;
+				}
+
 				// If there is more than one list then every list except the last should have 1023 instances.
 				// Probably not very common? I suspect this is from when foliage was first added.
 				if (listBatchCount > 1)

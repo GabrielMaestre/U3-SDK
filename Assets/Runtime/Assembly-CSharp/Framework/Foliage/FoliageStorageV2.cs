@@ -423,6 +423,12 @@ namespace SDG.Framework.Foliage
 				}
 
 				FoliageInstanceList list = tile.getOrAddList(perAssetData.assetRef);
+				if (list.shouldSkipInstances)
+				{
+					// Worker must read the blob, but main thread does not need discarded matrix lists.
+					continue;
+				}
+
 				for (int matrixIndex = 0; matrixIndex < perAssetData.matrices.Count; ++matrixIndex)
 				{
 					Matrix4x4 matrix = perAssetData.matrices[matrixIndex];
@@ -475,6 +481,10 @@ namespace SDG.Framework.Foliage
 					}
 
 					FoliageInstanceList list = tile.getOrAddList(assetRef);
+					if (list.shouldSkipInstances)
+					{
+						shouldAddInstances = false;
+					}
 
 					int matrixCount = reader.ReadInt32();
 					for (int matrixIndex = 0; matrixIndex < matrixCount; matrixIndex++)

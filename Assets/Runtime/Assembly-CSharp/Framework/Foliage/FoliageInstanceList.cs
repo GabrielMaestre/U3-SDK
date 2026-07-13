@@ -26,6 +26,8 @@ namespace SDG.Framework.Foliage
 		}
 
 		internal bool isLoadedAndRenderable;
+		internal bool isClutter;
+		internal bool shouldSkipInstances;
 		internal int maxMatricesPerBatch;
 
 		public bool isAssetLoaded
@@ -69,6 +71,8 @@ namespace SDG.Framework.Foliage
 
 			isAssetLoaded = false;
 			isLoadedAndRenderable = false;
+			isClutter = false;
+			shouldSkipInstances = false;
 			maxMatricesPerBatch = FoliageSystem.NON_UNIFORM_SCALE_INSTANCES_PER_BATCH;
 		}
 
@@ -211,8 +215,10 @@ namespace SDG.Framework.Foliage
 				return;
 			}
 
-			if (asset.IsClutter && Level.ShouldSkipInstantiatingClutter)
+			isClutter = asset.IsClutter;
+			if (isClutter && Level.ShouldSkipInstantiatingClutter)
 			{
+				shouldSkipInstances = true;
 				return;
 			}
 
@@ -227,6 +233,13 @@ namespace SDG.Framework.Foliage
 					asset = assetReference.Find();
 					if (asset == null)
 					{
+						return;
+					}
+
+					isClutter = asset.IsClutter;
+					if (isClutter && Level.ShouldSkipInstantiatingClutter)
+					{
+						shouldSkipInstances = true;
 						return;
 					}
 				}

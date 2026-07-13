@@ -592,36 +592,32 @@ namespace SDG.Unturned
 							float bulletDamageMultiplier = GetBulletDamageMultiplier(quality);
 
 							byte pellets = attachments.magazineAsset.pellets;
+							Transform targetTransform = null;
+							if (targetPlayer != null)
+							{
+								targetTransform = targetPlayer.transform;
+							}
+							else if (targetZombie != null)
+							{
+								targetTransform = targetZombie.transform;
+							}
+							else if (targetAnimal != null)
+							{
+								targetTransform = targetAnimal.transform;
+							}
+
+							float chanceToHit = 0.0f;
+							if (targetTransform != null)
+							{
+								float targetDistance = (targetTransform.position - transform.position).magnitude;
+								float normalizedTargetDistance = Mathf.Clamp01(targetDistance / ((ItemWeaponAsset) displayAsset).range);
+								chanceToHit = (1.0f - normalizedTargetDistance) * CalculateChanceToHitSpreadMultiplier(spreadAngleRadians) * 0.75f;
+							}
+
 							for (byte pellet = 0; pellet < pellets; pellet++)
 							{
 								EPlayerKill kill = EPlayerKill.NONE;
 								uint xp = 0;
-
-								Transform targetTransform = null;
-								float targetDistance = 0.0f;
-
-								if (targetPlayer != null)
-								{
-									targetTransform = targetPlayer.transform;
-								}
-								else if (targetZombie != null)
-								{
-									targetTransform = targetZombie.transform;
-								}
-								else if (targetAnimal != null)
-								{
-									targetTransform = targetAnimal.transform;
-								}
-
-								if (targetTransform != null)
-								{
-									targetDistance = (targetTransform.position - transform.position).magnitude;
-								}
-
-								float normalizedTargetDistance = Mathf.Clamp01(targetDistance / ((ItemWeaponAsset) displayAsset).range);
-								float chanceToHit = 1.0f - normalizedTargetDistance;
-								chanceToHit *= CalculateChanceToHitSpreadMultiplier(spreadAngleRadians);
-								chanceToHit *= 0.75f;
 
 								if (targetTransform == null || Random.value > chanceToHit)
 								{
@@ -1023,6 +1019,12 @@ namespace SDG.Unturned
 			}
 		}
 
+		private static bool IsOutsideTargetingCone(Vector3 direction, float sqrDistance, Vector3 forward)
+		{
+			float forwardDistance = Vector3.Dot(direction, forward);
+			return forwardDistance < 0.0f || forwardDistance * forwardDistance < sqrDistance * 0.25f;
+		}
+
 		public void AlertDamagedBy(Player player)
 		{
 			if (targetPlayer != null || targetZombie != null || targetAnimal != null || targetVehicle != null)
@@ -1117,24 +1119,21 @@ namespace SDG.Unturned
 						}
 					}
 
-					float sqrDistance = (player.look.aim.position - fromPoint).sqrMagnitude;
+					Vector3 diff = player.look.aim.position - fromPoint;
+					float sqrDistance = diff.sqrMagnitude;
 
 					if (player != targetPlayer && sqrDistance > sqrClosestDistance)
 					{
 						continue;
 					}
 
-					Vector3 diff = player.look.aim.position - fromPoint;
-					float dist = diff.magnitude;
-					Vector3 norm = diff / dist;
-
-					if (player != targetPlayer)
+					if (player != targetPlayer && IsOutsideTargetingCone(diff, sqrDistance, aimTransform.forward))
 					{
-						if (Vector3.Dot(norm, aimTransform.forward) < 0.5f)
-						{
-							continue;
-						}
+						continue;
 					}
+
+					float dist = Mathf.Sqrt(sqrDistance);
+					Vector3 norm = diff / dist;
 
 					if (dist > 0.025f)
 					{
@@ -1197,24 +1196,21 @@ namespace SDG.Unturned
 							break;
 					}
 
-					float sqrDistance = (toPoint - fromPoint).sqrMagnitude;
+					Vector3 diff = toPoint - fromPoint;
+					float sqrDistance = diff.sqrMagnitude;
 
 					if (zombie != targetZombie && sqrDistance > sqrClosestDistance)
 					{
 						continue;
 					}
 
-					Vector3 diff = toPoint - fromPoint;
-					float dist = diff.magnitude;
-					Vector3 norm = diff / dist;
-
-					if (zombie != targetZombie)
+					if (zombie != targetZombie && IsOutsideTargetingCone(diff, sqrDistance, aimTransform.forward))
 					{
-						if (Vector3.Dot(norm, aimTransform.forward) < 0.5f)
-						{
-							continue;
-						}
+						continue;
 					}
+
+					float dist = Mathf.Sqrt(sqrDistance);
+					Vector3 norm = diff / dist;
 
 					if (dist > 0.025f)
 					{
@@ -1262,24 +1258,21 @@ namespace SDG.Unturned
 
 					Vector3 toPoint = animal.transform.position;
 
-					float sqrDistance = (toPoint - fromPoint).sqrMagnitude;
+					Vector3 diff = toPoint - fromPoint;
+					float sqrDistance = diff.sqrMagnitude;
 
 					if (animal != targetAnimal && sqrDistance > sqrClosestDistance)
 					{
 						continue;
 					}
 
-					Vector3 diff = toPoint - fromPoint;
-					float dist = diff.magnitude;
-					Vector3 norm = diff / dist;
-
-					if (animal != targetAnimal)
+					if (animal != targetAnimal && IsOutsideTargetingCone(diff, sqrDistance, aimTransform.forward))
 					{
-						if (Vector3.Dot(norm, aimTransform.forward) < 0.5f)
-						{
-							continue;
-						}
+						continue;
 					}
+
+					float dist = Mathf.Sqrt(sqrDistance);
+					Vector3 norm = diff / dist;
 
 					if (dist > 0.025f)
 					{
@@ -1334,24 +1327,21 @@ namespace SDG.Unturned
 						continue;
 
 					Vector3 vehiclePoint = vehicle.GetSentryTargetingPoint();
-					float sqrDistance = (vehiclePoint - fromPoint).sqrMagnitude;
+					Vector3 diff = vehiclePoint - fromPoint;
+					float sqrDistance = diff.sqrMagnitude;
 
 					if (vehicle != targetVehicle && sqrDistance > sqrClosestDistance)
 					{
 						continue;
 					}
 
-					Vector3 diff = vehiclePoint - fromPoint;
-					float dist = diff.magnitude;
-					Vector3 norm = diff / dist;
-
-					if (vehicle != targetVehicle)
+					if (vehicle != targetVehicle && IsOutsideTargetingCone(diff, sqrDistance, aimTransform.forward))
 					{
-						if (Vector3.Dot(norm, aimTransform.forward) < 0.5f)
-						{
-							continue;
-						}
+						continue;
 					}
+
+					float dist = Mathf.Sqrt(sqrDistance);
+					Vector3 norm = diff / dist;
 
 					if (dist > 0.025f)
 					{

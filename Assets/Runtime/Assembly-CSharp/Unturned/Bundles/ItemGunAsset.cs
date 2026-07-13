@@ -93,7 +93,8 @@ namespace SDG.Unturned
 		}
 
 		protected GameObject _projectile;
-		public GameObject projectile => _projectile;
+		private IDeferredAsset<GameObject> deferredProjectile;
+		public GameObject projectile => GetOrLoad(ref _projectile, ref deferredProjectile);
 
 		public override bool shouldFriendlySentryTargetUser => true;
 
@@ -322,7 +323,7 @@ namespace SDG.Unturned
 				builder.Append(PlayerDashboardInventoryUI.localization.format("ItemDescription_DamageFalloff", start, end, $"{damageFalloffMultiplier:P}"), DescSort_GunStat);
 			}
 
-			if (_projectile != null)
+			if (projectile != null)
 			{
 				BuildExplosiveDescription(builder, itemInstance);
 			}
@@ -930,7 +931,7 @@ namespace SDG.Unturned
 			_chamberJammedSound = LoadRedirectableAsset<AudioClip>(p.bundle, "ChamberJammed", p.data, "ChamberJammedAudioClip");
 			fireDelaySound = LoadRedirectableAsset<AudioClip>(p.bundle, "FireDelay", p.data, "FireDelayAudioClip");
 
-			_projectile = p.bundle.load<GameObject>("Projectile");
+			p.bundle.loadDeferred("Projectile", out deferredProjectile);
 
 			ammoMin = p.data.ParseUInt8("Ammo_Min");
 			ammoMax = p.data.ParseUInt8("Ammo_Max");

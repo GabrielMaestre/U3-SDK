@@ -714,39 +714,22 @@ namespace SDG.Unturned
 		{
 			if (step == 0)
 			{
-				for (byte x = 0; x < Regions.WORLD_SIZE; x++)
+				foreach (Vector2Int coord in Regions.GetCoordinateBoundsInt(old_x, old_y, RESOURCE_REGIONS))
 				{
-					for (byte y = 0; y < Regions.WORLD_SIZE; y++)
+					byte x = (byte) coord.x;
+					byte y = (byte) coord.y;
+					if (Provider.isServer)
 					{
-						//if(player.channel.isOwner)
-						//{
-						//	if(regions[x, y].isMarked && !Regions.checkArea(x, y, new_x, new_y, RESOURCE_REGIONS))
-						//	{
-						//		regions[x, y].isMarked = false;
-						//		regions[x, y].isNetworked = false;
-						//	}
-						//}
-
-						//if(Provider.isServer)
-						//{
-						//	if(player.movement.loadedRegions[x, y].isResourcesLoaded && !Regions.checkArea(x, y, new_x, new_y, RESOURCE_REGIONS))
-						//	{
-						//		player.movement.loadedRegions[x, y].isResourcesLoaded = false;
-						//	}
-						//}
-						if (Provider.isServer)
+						if (player.movement.loadedRegions[x, y].isResourcesLoaded && !Regions.checkArea(x, y, new_x, new_y, RESOURCE_REGIONS))
 						{
-							if (player.movement.loadedRegions[x, y].isResourcesLoaded && !Regions.checkArea(x, y, new_x, new_y, RESOURCE_REGIONS))
-							{
-								player.movement.loadedRegions[x, y].isResourcesLoaded = false;
-							}
+							player.movement.loadedRegions[x, y].isResourcesLoaded = false;
 						}
-						else if (player.channel.IsLocalPlayer)
+					}
+					else if (player.channel.IsLocalPlayer)
+					{
+						if (regions[x, y].isNetworked && !Regions.checkArea(x, y, new_x, new_y, RESOURCE_REGIONS))
 						{
-							if (regions[x, y].isNetworked && !Regions.checkArea(x, y, new_x, new_y, RESOURCE_REGIONS))
-							{
-								regions[x, y].isNetworked = false;
-							}
+							regions[x, y].isNetworked = false;
 						}
 					}
 				}

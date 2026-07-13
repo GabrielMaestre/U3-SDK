@@ -34,6 +34,23 @@ namespace SDG.Framework.Foliage
 			set => _drawFocusDistance = value;
 		}
 
+		/// <summary>
+		/// Radial draw distance in 32-meter tiles for decorative foliage marked Is_Clutter.
+		/// Kept separate so grass and small rocks can be culled before important foliage.
+		/// </summary>
+		private static int _clutterDrawDistance = 0;
+		public static int clutterDrawDistance
+		{
+			get => _clutterDrawDistance;
+			set
+			{
+				_clutterDrawDistance = value;
+				sqrClutterDrawDistance = value * value;
+			}
+		}
+
+		internal static int sqrClutterDrawDistance { get; private set; }
+
 		internal static float _instanceDensity = 0;
 		public static float instanceDensity
 		{

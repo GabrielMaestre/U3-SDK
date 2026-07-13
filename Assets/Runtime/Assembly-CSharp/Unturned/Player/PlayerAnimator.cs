@@ -1690,6 +1690,12 @@ namespace SDG.Unturned
 						thirdRenderer_1 = (SkinnedMeshRenderer) thirdAnimator.transform.Find("Model_1").GetComponent<Renderer>();
 					}
 
+					if (!Provider.isServer)
+					{
+						// Listen server needs remote animation for authoritative hitboxes.
+						thirdAnimator.GetComponent<Animation>().cullingType = AnimationCullingType.BasedOnRenderers;
+					}
+
 					_thirdSkeleton = thirdAnimator.transform.Find("Skeleton");
 				}
 			}

@@ -15,10 +15,16 @@ namespace SDG.Unturned
 		/// <summary>
 		/// If set and gun is a Projectile launcher, overrides Projectile prefab.
 		/// </summary>
+		private GameObject projectilePrefabOverride;
+		private IDeferredAsset<GameObject> deferredProjectilePrefabOverride;
 		public GameObject ProjectilePrefabOverride
 		{
-			get;
-			set;
+			get => GetOrLoad(ref projectilePrefabOverride, ref deferredProjectilePrefabOverride);
+			set
+			{
+				projectilePrefabOverride = value;
+				deferredProjectilePrefabOverride = null;
+			}
 		}
 
 		private byte _pellets;
@@ -202,7 +208,7 @@ namespace SDG.Unturned
 			base.PopulateAsset(in p);
 
 			_magazine = loadRequiredAsset<GameObject>(p.bundle, "Magazine");
-			ProjectilePrefabOverride = p.bundle.load<GameObject>("Projectile");
+			p.bundle.loadDeferred("Projectile", out deferredProjectilePrefabOverride);
 
 			_pellets = p.data.ParseUInt8("Pellets");
 			if (pellets < 1)

@@ -162,17 +162,6 @@ namespace SDG.Unturned
 
 	public class ItemAsset : Asset, ISkinableAsset, IBlueprintOwner
 	{
-		private static T GetOrLoad<T>(ref T loadedAsset, ref IDeferredAsset<T> deferredAsset) where T : UnityEngine.Object
-		{
-			if (deferredAsset != null)
-			{
-				loadedAsset = deferredAsset.getOrLoad();
-				deferredAsset = null;
-			}
-
-			return loadedAsset;
-		}
-
 		/// <summary>
 		/// Helper for plugins that want item prefabs server-side.
 		/// e.g. Allows item icons to be captured on dedicated server.

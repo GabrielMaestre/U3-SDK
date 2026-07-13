@@ -1993,9 +1993,10 @@ namespace SDG.Unturned
 				return;
 			}
 
-			float delta = Time.time - lastTick;
-			lastTick = Time.time;
-			lastPull = Time.time;
+			float currentTime = Time.time;
+			float delta = currentTime - lastTick;
+			lastTick = currentTime;
+			lastPull = currentTime;
 
 			//lastWander = Time.realtimeSinceStartup;
 
@@ -2026,7 +2027,7 @@ namespace SDG.Unturned
 			}
 			else if (huntType == EHuntType.POINT)
 			{
-				if ((!isMoving || isStuck) && Time.time - lastHunted > 3f)
+				if ((!isMoving || isStuck) && currentTime - lastHunted > 3f)
 				{
 					stop();
 					return;
@@ -2070,7 +2071,7 @@ namespace SDG.Unturned
 
 			if (isStuck)
 			{
-				float timeSinceStuck = Time.time - lastStuck;
+				float timeSinceStuck = currentTime - lastStuck;
 				if (timeSinceStuck > 0.75f)
 				{
 					stuckSearchTimer += delta;
@@ -2090,9 +2091,9 @@ namespace SDG.Unturned
 					stuckSearchTimer = 0.0f;
 				}
 
-				if (timeSinceStuck > 5.0f && zombieRegion.hasBeacon && Time.time - lastAttack > 10.0f)
+				if (timeSinceStuck > 5.0f && zombieRegion.hasBeacon && currentTime - lastAttack > 10.0f)
 				{
-					lastStuck = Time.time;
+					lastStuck = currentTime;
 					stuckSearchTimer = 0.0f;
 					// Zombie has been stuck for a while during horde beacon which prevents it from being completed,
 					// though only if not attacking recently because the zombie might be stuck while attacking buildable.
@@ -2204,7 +2205,7 @@ namespace SDG.Unturned
 							seeker.CanTurn = true;
 							target.position += (player.transform.right * 9.0f) + (player.transform.forward * -4.0f);
 						}
-						else if (sqrHorizontalDistanceFromTarget > 20 || Vector3.Dot((transform.position - player.transform.position).normalized, player.transform.forward) > 0.0f)
+						else if (sqrHorizontalDistanceFromTarget > 20 || Vector3.Dot(transform.position - player.transform.position, player.transform.forward) > 0.0f)
 						{
 							seeker.CanTurn = true;
 							target.position += (player.transform.right * 3.0f) + (player.transform.forward * -3.0f);
@@ -2230,7 +2231,7 @@ namespace SDG.Unturned
 							seeker.CanTurn = true;
 							target.position += (player.transform.right * -9.0f) + (player.transform.forward * -4.0f);
 						}
-						else if (sqrHorizontalDistanceFromTarget > 20 || Vector3.Dot((transform.position - player.transform.position).normalized, player.transform.forward) > 0.0f)
+						else if (sqrHorizontalDistanceFromTarget > 20 || Vector3.Dot(transform.position - player.transform.position, player.transform.forward) > 0.0f)
 						{
 							seeker.CanTurn = true;
 							target.position += (player.transform.right * -3.0f) + (player.transform.forward * -3.0f);
@@ -2320,7 +2321,7 @@ namespace SDG.Unturned
 
 			if (player != null || targetBarricade != null || targetStructure != null || targetObstructionVehicle != null || targetPassengerVehicle != null || targetObject != null)
 			{
-				if (player != null && Time.time - lastStartle > specialStartleDelay && Time.time - lastAttack > specialAttackDelay && Time.time - lastSpecial > specialUseDelay)
+				if (player != null && currentTime - lastStartle > specialStartleDelay && currentTime - lastAttack > specialAttackDelay && currentTime - lastSpecial > specialUseDelay)
 				{
 					availableAbilityChoices.Clear();
 
@@ -2361,7 +2362,7 @@ namespace SDG.Unturned
 						}
 					}
 
-					if ((speciality == EZombieSpeciality.BOSS_KUWAIT || speciality.IsFromBuakMap()) && Time.time - lastFlashbang > flashbangDelay)
+					if ((speciality == EZombieSpeciality.BOSS_KUWAIT || speciality.IsFromBuakMap()) && currentTime - lastFlashbang > flashbangDelay)
 					{
 						if (sqrHorizontalDistanceFromTarget > 4 && sqrHorizontalDistanceFromTarget < 32 * 32)
 						{
@@ -2371,7 +2372,7 @@ namespace SDG.Unturned
 
 					if (availableAbilityChoices.Count > 0)
 					{
-						lastSpecial = Time.time;
+						lastSpecial = currentTime;
 
 						EAbilityChoice abilityChoice = availableAbilityChoices.RandomOrDefault();
 						if (abilityChoice == EAbilityChoice.ThrowBoulder)
@@ -2417,7 +2418,7 @@ namespace SDG.Unturned
 						{
 							specialUseDelay = Random.Range(1.0f, 2.0f);
 
-							lastFlashbang = Time.time;
+							lastFlashbang = currentTime;
 							flashbangDelay = Random.Range(30.0f, 45.0f);
 
 							EffectAsset flashbangEffect = speciality == EZombieSpeciality.BOSS_KUWAIT ? KuwaitBossFlashbangRef.Find() : BuakBossFlashbangRef.Find();
@@ -2438,11 +2439,11 @@ namespace SDG.Unturned
 
 				if ((targetStructure != null || sqrHorizontalDistanceFromTarget < GetHorizontalAttackRangeSquared()) && verticalDistanceFromTarget < GetVerticalAttackRange())
 				{
-					if (speciality == EZombieSpeciality.SPRINTER || Time.time - lastTarget > (Dedicator.IsDedicatedServer ? 0.5f : 0.1f))
+					if (speciality == EZombieSpeciality.SPRINTER || currentTime - lastTarget > (Dedicator.IsDedicatedServer ? 0.5f : 0.1f))
 					{
 						if (isAttacking)
 						{
-							if (Time.time - lastAttack > attackTime / 2)
+							if (currentTime - lastAttack > attackTime / 2)
 							{
 								isAttacking = false;
 								byte damage = (byte) (LevelZombies.tables[type].damage * (isHyper ? 1.5f : 1));
@@ -2467,7 +2468,7 @@ namespace SDG.Unturned
 
 										isStuck = false;
 
-										lastStuck = Time.time;
+										lastStuck = currentTime;
 										stuckSearchTimer = 0.0f;
 									}
 								}
@@ -2676,7 +2677,7 @@ namespace SDG.Unturned
 						}
 						else
 						{
-							if (Time.time - lastAttack > 1)
+							if (currentTime - lastAttack > 1)
 							{
 								isAttacking = true;
 
@@ -2698,7 +2699,7 @@ namespace SDG.Unturned
 				}
 				else
 				{
-					lastTarget = Time.time;
+					lastTarget = currentTime;
 					isAttacking = false;
 				}
 			}
@@ -2800,7 +2801,7 @@ namespace SDG.Unturned
 				{
 					if (player != null)
 					{
-						Vector3 dir = (player.transform.position - transform.position).normalized;
+						Vector3 dir = player.transform.position - transform.position;
 						dir.y = 0;
 						Quaternion rotation = Quaternion.LookRotation(dir);
 

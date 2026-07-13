@@ -26,6 +26,17 @@ namespace SDG.Unturned
 
 	public abstract class Asset : IAssetErrorContext
 	{
+		protected static T GetOrLoad<T>(ref T loadedAsset, ref IDeferredAsset<T> deferredAsset) where T : UnityEngine.Object
+		{
+			if (deferredAsset != null)
+			{
+				loadedAsset = deferredAsset.getOrLoad();
+				deferredAsset = null;
+			}
+
+			return loadedAsset;
+		}
+
 		public virtual string getFilePath()
 		{
 			return absoluteOriginFilePath;

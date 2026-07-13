@@ -113,6 +113,24 @@ namespace SDG.Unturned
 			return new RegionBoundsInt(min, max);
 		}
 
+		/// <summary>
+		/// Get inclusive coordinate bounds around a valid region, clamped to the legacy world grid.
+		/// Invalid centers return empty bounds.
+		/// </summary>
+		public static RegionBoundsInt GetCoordinateBoundsInt(int centerX, int centerY, int radius)
+		{
+			if (!checkSafe(centerX, centerY))
+			{
+				return new RegionBoundsInt(Vector2Int.zero, -Vector2Int.one);
+			}
+
+			radius = Mathf.Max(radius, 0);
+			int lastCoordinate = WORLD_SIZE - 1;
+			Vector2Int min = new Vector2Int(Mathf.Max(centerX - radius, 0), Mathf.Max(centerY - radius, 0));
+			Vector2Int max = new Vector2Int(Mathf.Min(centerX + radius, lastCoordinate), Mathf.Min(centerY + radius, lastCoordinate));
+			return new RegionBoundsInt(min, max);
+		}
+
 		public static bool IsVector2IntWithinLegacyRange(Vector2Int coord)
 		{
 			return coord.x >= 0 && coord.y >= 0 && coord.x < WORLD_SIZE && coord.y < WORLD_SIZE;

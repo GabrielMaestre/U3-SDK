@@ -2853,31 +2853,30 @@ namespace SDG.Unturned
 		{
 			if (step == 0)
 			{
-				for (byte x = 0; x < Regions.WORLD_SIZE; x++)
+				foreach (Vector2Int coord in Regions.GetCoordinateBoundsInt(old_x, old_y, BARRICADE_REGIONS))
 				{
-					for (byte y = 0; y < Regions.WORLD_SIZE; y++)
+					byte x = (byte) coord.x;
+					byte y = (byte) coord.y;
+					if (Provider.isServer)
 					{
-						if (Provider.isServer)
+						if (player.movement.loadedRegions[x, y].isBarricadesLoaded && !Regions.checkArea(x, y, new_x, new_y, BARRICADE_REGIONS))
 						{
-							if (player.movement.loadedRegions[x, y].isBarricadesLoaded && !Regions.checkArea(x, y, new_x, new_y, BARRICADE_REGIONS))
-							{
-								player.movement.loadedRegions[x, y].isBarricadesLoaded = false;
-							}
+							player.movement.loadedRegions[x, y].isBarricadesLoaded = false;
 						}
-						else if (player.channel.IsLocalPlayer)
+					}
+					else if (player.channel.IsLocalPlayer)
+					{
+						if (regions[x, y].isNetworked && !Regions.checkArea(x, y, new_x, new_y, BARRICADE_REGIONS))
 						{
-							if (regions[x, y].isNetworked && !Regions.checkArea(x, y, new_x, new_y, BARRICADE_REGIONS))
+							if (regions[x, y].drops.Count > 0)
 							{
-								if (regions[x, y].drops.Count > 0)
-								{
-									// Defer cleanup.
-									regions[x, y].isPendingDestroy = true;
-									regionsPendingDestroy.Add(regions[x, y]);
-								}
-								PlaceableInstantiationManager.CancelInstantiationsInRegion(regions[x, y], NETIDS_PER_BARRICADE);
-
-								regions[x, y].isNetworked = false;
+								// Defer cleanup.
+								regions[x, y].isPendingDestroy = true;
+								regionsPendingDestroy.Add(regions[x, y]);
 							}
+							PlaceableInstantiationManager.CancelInstantiationsInRegion(regions[x, y], NETIDS_PER_BARRICADE);
+
+							regions[x, y].isNetworked = false;
 						}
 					}
 				}

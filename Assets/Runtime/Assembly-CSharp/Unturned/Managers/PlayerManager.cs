@@ -170,6 +170,8 @@ namespace SDG.Unturned
 				}
 
 				Vector3 recipientPosition = client.model.transform.position;
+				bool recipientCanSeeAllPlayers = (client.player.AdminUsageFlags & EPlayerAdminUsageFlags.SpectatorStatsOverlay) != 0
+					|| client.player.ServerAllowKnowledgeOfAllClientPositions;
 
 				ushort updateCount = 0;
 				playersToSend.Clear();
@@ -193,8 +195,7 @@ namespace SDG.Unturned
 					// Please refer to that method's comment for explanation (e.g., culling in vehicles).
 					bool newIsCulled;
 					if (!player.isMemberOfSameGroupAs(client)
-						&& !client.player.AdminUsageFlags.HasFlag(EPlayerAdminUsageFlags.SpectatorStatsOverlay)
-						&& !client.player.ServerAllowKnowledgeOfAllClientPositions)
+						&& !recipientCanSeeAllPlayers)
 					{
 						Vector3 sendPosition;
 						if (!player.player.movement.hasMostRecentlyAddedUpdate)

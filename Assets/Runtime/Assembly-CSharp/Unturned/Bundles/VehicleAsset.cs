@@ -1488,13 +1488,16 @@ namespace SDG.Unturned
 		public TurretInfo[] turrets => _turrets;
 
 		protected Texture2D _albedoBase;
-		public Texture albedoBase => _albedoBase;
+		private IDeferredAsset<Texture2D> deferredAlbedoBase;
+		public Texture albedoBase => GetOrLoad(ref _albedoBase, ref deferredAlbedoBase);
 
 		protected Texture2D _metallicBase;
-		public Texture metallicBase => _metallicBase;
+		private IDeferredAsset<Texture2D> deferredMetallicBase;
+		public Texture metallicBase => GetOrLoad(ref _metallicBase, ref deferredMetallicBase);
 
 		protected Texture2D _emissionBase;
-		public Texture emissionBase => _emissionBase;
+		private IDeferredAsset<Texture2D> deferredEmissionBase;
+		public Texture emissionBase => GetOrLoad(ref _emissionBase, ref deferredEmissionBase);
 
 		/// <summary>
 		/// To non-explosions.
@@ -2464,9 +2467,9 @@ namespace SDG.Unturned
 			// Only official content has skins, so we only check the official ID range of [1, 2000).
 			if (!Dedicator.IsDedicatedServer && id < 2000)
 			{
-				_albedoBase = p.bundle.load<Texture2D>("Albedo_Base");
-				_metallicBase = p.bundle.load<Texture2D>("Metallic_Base");
-				_emissionBase = p.bundle.load<Texture2D>("Emission_Base");
+				p.bundle.loadDeferred("Albedo_Base", out deferredAlbedoBase);
+				p.bundle.loadDeferred("Metallic_Base", out deferredMetallicBase);
+				p.bundle.loadDeferred("Emission_Base", out deferredEmissionBase);
 			}
 
 			CanDecay = engine != EEngine.TRAIN && (isVulnerable | isVulnerableToExplosions | isVulnerableToEnvironment | isVulnerableToBumper);

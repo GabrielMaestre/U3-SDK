@@ -21,7 +21,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Definir limites de regressão e ruído aceitável por métrica.
 - [ ] Manter resultados de benchmark fora do repositório quando forem binários ou grandes; versionar só resumo textual.
 
-## P1 — Boot e loading — 9/X
+## P1 — Boot e loading — 12/X
 
 - [x] Carregar master bundles direto do disco com `LoadFromFileAsync`, sem copiar arquivo inteiro para memória; manter SHA-1 de integridade.
 - [x] Suspender leitores de assets ociosos com `SemaphoreSlim.WaitAsync`, eliminando busy-spin durante varredura de diretórios.
@@ -32,6 +32,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Adiar quatro prefabs visuais de 81 `MythicAsset` até primeiro uso.
 - [x] Remover cleanup intermediário do mapa que custou `256,43 ms` e recuperou somente `76,6 KB`; preservar cleanup final.
 - [x] Adiar prefab `Item`, animações e três texturas base de skin de `ItemAsset` até primeiro uso, preservando modos eager existentes.
+- [x] Adiar três texturas base de skin de `VehicleAsset` até primeiro uso, reutilizando helper lazy compartilhado.
+- [x] Adiar prefabs `Projectile` de armas e magazines até primeiro uso em master bundles, preservando modos eager existentes.
+- [x] Não copiar matrizes de foliage clutter para listas runtime quando opção de clutter estiver desligada.
 - [ ] Repetir cold start após reiniciar Unity e comparar contra baseline de `76,96 s`.
 - [ ] Traçar ordem e duração de inicializadores, cenas, subsistemas, bundles, Workshop e conexão Steam.
 - [ ] Remover inicialização duplicada, bloqueante ou não usada antes do menu.
@@ -49,9 +52,17 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time — 1/X
+## P1 — CPU e frame time — 9/X
 
 - [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
+- [x] Consultar distância de `LightLOD` já distante a cada oito frames, mantendo transição próxima por frame.
+- [x] Ler `Time.time` uma vez por `Zombie.tick` e reutilizar valor nos timers da mesma simulação.
+- [x] Limitar limpeza de regiões ao anel anteriormente carregado em seis sistemas, evitando varreduras globais de `64×64`.
+- [x] Usar culling nativo de animação nos prefabs client de players e zombies quando nenhum renderer estiver visível.
+- [x] Rejeitar candidatos fora do cone da sentry com matemática ao quadrado antes de calcular raiz e normalização.
+- [x] Calcular distância e multiplicador trigonométrico da sentry uma vez por disparo, não por pellet.
+- [x] Remover normalizações sem efeito em testes de sinal e rotação horizontal de zombies.
+- [x] Validar alcance balístico por distância ao quadrado, sem raiz por resultado de tiro no servidor.
 - [ ] Inventariar `Update`, `LateUpdate`, `FixedUpdate`, coroutines e callbacks mais caros.
 - [ ] Remover polling substituível por eventos existentes.
 - [ ] Distribuir trabalho não urgente entre frames com orçamento explícito.
@@ -81,9 +92,11 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 1/X
+## P1 — GPU e renderização — 3/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
+- [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
+- [x] Reduzir faixa base de LOD bias de `[2,5]` para `[1,4]`, fazendo modelos leves entrarem antes pelo slider existente.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
@@ -99,9 +112,12 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
 - [ ] Validar APIs gráficas e GPUs suportadas após cada mudança de shader.
 
-## P1 — Distância de renderização e streaming — 1/X
+## P1 — Distância de renderização e streaming — 4/X
 
 - [x] Materializar proxies `Skybox` de `LevelObject` sob demanda pela região existente; preservar editor e level batching.
+- [x] Desativar objetos, itens, recursos, barricadas e estruturas somente dentro dos bounds da região anterior; centro inicial inválido produz bounds vazios.
+- [x] Separar distância de clutter da distância geral de foliage e aplicar cap dinâmico por preset.
+- [x] Antecipar transições de `LODGroup` globalmente sem alterar distâncias de rede, física ou streaming regional.
 - [ ] Separar distância por categoria: terreno, estruturas, itens, jogadores, veículos, IA, vegetação, sombras e efeitos.
 - [ ] Definir limites mínimo/máximo por preset e opção manual.
 - [ ] Adaptar distância por orçamento de frame time com histerese e cooldown para evitar oscilação.
@@ -115,7 +131,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Definir fallback estável quando CPU, GPU, memória ou I/O saturarem.
 - [ ] Testar teleporte, voo rápido, veículos, escopos, mapas grandes e hardware lento.
 
-## P1 — Pathfinding e IA
+## P1 — Pathfinding e IA — 1/X
+
+- [x] Compartilhar relógio por tick de zumbi, reduzindo chamadas Unity nativas sem mudar timers ou decisões.
 
 - [ ] Medir chamadas, duração, nós visitados, falhas, repaths e agentes simultâneos.
 - [ ] Catalogar agentes e necessidades: zumbi, animal, NPC e casos especiais.
@@ -137,7 +155,10 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Comparar qualidade e custo contra implementação atual antes de substituir.
 - [ ] Entregar atrás de flag até paridade funcional e migração de mapas.
 
-## P1 — Rede e servidor dedicado
+## P1 — Rede e servidor dedicado — 2/X
+
+- [x] Limitar limpeza de flags carregadas ao anel anterior por jogador em itens, objetos, recursos, barricadas e estruturas.
+- [x] Cachear permissão de visibilidade global uma vez por destinatário durante snapshot de jogadores.
 
 - [ ] Medir bytes, pacotes, mensagens, serialização e CPU por jogador/sistema.
 - [ ] Mapear mensagens confiáveis, não confiáveis, ordenadas e redundantes.

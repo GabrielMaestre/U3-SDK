@@ -1023,21 +1023,20 @@ namespace SDG.Unturned
 			}
 
 #if !FORCE_LOW_LOD
-			for (byte x = 0; x < Regions.WORLD_SIZE; x++)
+			foreach (Vector2Int coord in Regions.GetCoordinateBoundsInt(old_x, old_y, OBJECT_REGIONS))
 			{
-				for (byte y = 0; y < Regions.WORLD_SIZE; y++)
+				byte x = (byte) coord.x;
+				byte y = (byte) coord.y;
+				if (regions[x, y] && !Regions.checkArea(x, y, new_x, new_y, OBJECT_REGIONS))
 				{
-					if (regions[x, y] && !Regions.checkArea(x, y, new_x, new_y, OBJECT_REGIONS))
-					{
-						regions[x, y] = false;
+					regions[x, y] = false;
 
-						if (Level.isEditor)
+					if (Level.isEditor)
+					{
+						List<LevelBuildableObject> oldBuildables = buildables[x, y];
+						for (int index = 0; index < oldBuildables.Count; index++)
 						{
-							List<LevelBuildableObject> oldBuildables = buildables[x, y];
-							for (int index = 0; index < oldBuildables.Count; index++)
-							{
-								oldBuildables[index].disable();
-							}
+							oldBuildables[index].disable();
 						}
 					}
 				}

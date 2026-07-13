@@ -1942,7 +1942,8 @@ namespace SDG.Unturned
 					{
 						if (Provider.modeConfigData.Gameplay.Ballistics)
 						{
-							if ((info.point - bullet.position).magnitude > (equippedGunAsset.ballisticTravel * (bullet.steps + 1 + PlayerInput.SAMPLES)) + 4.0f)
+							float maxTravelDistance = (equippedGunAsset.ballisticTravel * (bullet.steps + 1 + PlayerInput.SAMPLES)) + 4.0f;
+							if ((info.point - bullet.position).sqrMagnitude > MathfEx.Square(maxTravelDistance))
 							{
 								bullets.RemoveAt(0);
 								continue;

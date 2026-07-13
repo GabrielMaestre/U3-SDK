@@ -19,6 +19,8 @@ namespace SDG.Unturned
 
 		private float sqrTransitionStart;
 		private float sqrTransitionEnd;
+		private bool isFar;
+		private int updateFrameOffset;
 
 		private void apply()
 		{
@@ -37,6 +39,7 @@ namespace SDG.Unturned
 
 			if (sqrMagnitude < sqrTransitionStart)
 			{
+				isFar = false;
 				if (!targetLight.enabled)
 				{
 					targetLight.intensity = intensityStart;
@@ -45,6 +48,7 @@ namespace SDG.Unturned
 			}
 			else if (sqrMagnitude > sqrTransitionEnd)
 			{
+				isFar = true;
 				if (targetLight.enabled)
 				{
 					targetLight.intensity = 0.0f;
@@ -53,6 +57,7 @@ namespace SDG.Unturned
 			}
 			else
 			{
+				isFar = false;
 				float magnitude = offset.magnitude;
 				float transition = (magnitude - transitionStart) / transitionMagnitude;
 
@@ -67,6 +72,10 @@ namespace SDG.Unturned
 
 		private void Update()
 		{
+			// ponytail: far lights only need periodic checks; near fades remain per-frame.
+			if (isFar && ((Time.frameCount + updateFrameOffset) & 7) != 0)
+				return;
+
 			apply();
 		}
 
@@ -86,6 +95,7 @@ namespace SDG.Unturned
 			}
 
 			intensityStart = targetLight.intensity;
+			updateFrameOffset = GetInstanceID() & 7;
 
 			if (targetLight.type == LightType.Point)
 			{

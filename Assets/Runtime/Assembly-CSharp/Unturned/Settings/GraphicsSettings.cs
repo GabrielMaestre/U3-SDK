@@ -866,7 +866,7 @@ namespace SDG.Unturned
 				LevelGround.ForceUpdateSkyboxActive();
 			}
 
-			float lodBias = 2 + (normalizedDrawDistance * 3); // [2, 5]
+			float lodBias = 1 + (normalizedDrawDistance * 3); // [1, 4]
 			lodBias += Mathf.Clamp(Provider.preferenceData.Graphics.LOD_Bias, 0.0f, 5.0f); // Prevent negative or extended LOD exploits.
 			if (WantsCinematicMode)
 			{
@@ -1060,6 +1060,7 @@ namespace SDG.Unturned
 				case EGraphicQuality.OFF:
 					SDG.Framework.Foliage.FoliageSettings.enabled = false;
 					SDG.Framework.Foliage.FoliageSettings.drawDistance = 0;
+					SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = 0;
 					SDG.Framework.Foliage.FoliageSettings.instanceDensity = 0;
 
 					SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = 0;
@@ -1068,6 +1069,7 @@ namespace SDG.Unturned
 				case EGraphicQuality.LOW:
 					SDG.Framework.Foliage.FoliageSettings.enabled = true;
 					SDG.Framework.Foliage.FoliageSettings.drawDistance = 2;
+					SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = 1;
 					SDG.Framework.Foliage.FoliageSettings.instanceDensity = 0.25f;
 
 					SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = 1;
@@ -1075,6 +1077,7 @@ namespace SDG.Unturned
 				case EGraphicQuality.MEDIUM:
 					SDG.Framework.Foliage.FoliageSettings.enabled = true;
 					SDG.Framework.Foliage.FoliageSettings.drawDistance = 3;
+					SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = 2;
 					SDG.Framework.Foliage.FoliageSettings.instanceDensity = 0.5f;
 
 					SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = 2;
@@ -1082,6 +1085,7 @@ namespace SDG.Unturned
 				case EGraphicQuality.HIGH:
 					SDG.Framework.Foliage.FoliageSettings.enabled = true;
 					SDG.Framework.Foliage.FoliageSettings.drawDistance = 4;
+					SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = 3;
 					SDG.Framework.Foliage.FoliageSettings.instanceDensity = 0.75f;
 
 					SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = 3;
@@ -1089,6 +1093,7 @@ namespace SDG.Unturned
 				case EGraphicQuality.ULTRA:
 					SDG.Framework.Foliage.FoliageSettings.enabled = true;
 					SDG.Framework.Foliage.FoliageSettings.drawDistance = 5;
+					SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = 4;
 					SDG.Framework.Foliage.FoliageSettings.instanceDensity = 1;
 
 					SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = 4;
@@ -1096,6 +1101,7 @@ namespace SDG.Unturned
 				default:
 					SDG.Framework.Foliage.FoliageSettings.enabled = true;
 					SDG.Framework.Foliage.FoliageSettings.drawDistance = 2;
+					SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = 1;
 					SDG.Framework.Foliage.FoliageSettings.instanceDensity = 0.25f;
 
 					SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = 1;

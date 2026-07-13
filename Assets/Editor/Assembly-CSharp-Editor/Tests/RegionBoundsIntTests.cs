@@ -87,6 +87,25 @@ internal class RegionBoundsIntTests
 		RunTest(bounds, expectedCoords);
 	}
 
+	[Test]
+	public void TestCoordinateRadiusBounds()
+	{
+		RegionBoundsInt bounds = Regions.GetCoordinateBoundsInt(0, 0, 1);
+		RunTest(bounds, new List<Vector2Int>()
+		{
+			new Vector2Int(0, 0),
+			new Vector2Int(1, 0),
+			new Vector2Int(0, 1),
+			new Vector2Int(1, 1),
+		});
+	}
+
+	[Test]
+	public void TestInvalidCoordinateRadiusBoundsAreEmpty()
+	{
+		RunTest(Regions.GetCoordinateBoundsInt(byte.MaxValue, byte.MaxValue, 1), new List<Vector2Int>());
+	}
+
 	private void RunTest(RegionBoundsInt bounds, List<Vector2Int> expectedCoords)
 	{
 		List<Vector2Int> actualCoords = new List<Vector2Int>();
