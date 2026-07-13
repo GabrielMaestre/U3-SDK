@@ -12,6 +12,10 @@ namespace SDG.Unturned
 		{
 			Provider._modeConfigData = new ModeConfigData(Provider.mode);
 
+			byte worldChunkRadius;
+			reader.ReadUInt8(out worldChunkRadius);
+			Provider._modeConfigData.Gameplay.World_Chunk_Radius = Regions.ClampWorldChunkRadius(worldChunkRadius);
+
 			byte repairLevelMax;
 			reader.ReadUInt8(out repairLevelMax);
 			Provider._modeConfigData.Gameplay.Repair_Level_Max = repairLevelMax;

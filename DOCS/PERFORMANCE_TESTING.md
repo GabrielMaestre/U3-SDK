@@ -7,6 +7,7 @@ Comparar builds no mesmo hardware, mapa, rota e preset. Captura local mede frame
 ## Captura rápida
 
 1. Gere `Build Test` ou Development Build Windows 64-bit.
+   `Building Test player successful!` confirma sucesso. Erro IMGUI `EndLayoutGroup` posterior era do Build Tool e foi corrigido agendando build fora de `OnGUI`.
 2. Desative VSync e mantenha resolução, preset gráfico, mapa e mods idênticos.
 3. Execute:
 
@@ -30,6 +31,14 @@ No Editor, habilite `Window > Unturned > Editor Settings > Misc > Performance Me
 6. Para medir efeito, capture mesmo local com modo desligado/ligado e compare `Camera.Render`, `Culling`, `Render.OpaqueGeometry`, `BatchRenderer.Flush`, draw calls e batches.
 
 Não use modo como baseline visual ou comparação com build. Desative toggle antes de validar pop-in, LOD e distância final.
+
+## Testar chunks de mundo
+
+- Singleplayer: abra configuração avançada e altere `Gameplay > World Chunk Radius`.
+- Servidor: em `Servers/<id>/Config.txt`, defina `World_Chunk_Radius` dentro de `Gameplay`. Reinicie servidor; valor é replicado ao cliente ao conectar.
+- Cada unidade equivale a `128 m`. Padrão `8` ≈ `1024 m`; teste inicial recomendado `4` ≈ `512 m`. Valores são limitados a `1–32`.
+- Compare `8`, `4` e `2` no mesmo ponto/rota. Registre `Camera.Render`, `Culling`, `Render.OpaqueGeometry`, draws, entidades ativas e tick do servidor.
+- Valide teleporte, escopo, veículos rápidos, fronteira de região, dois jogadores distantes, zombie perseguindo e animal cruzando limite. Cinematic Mode ignora limite visual, mas servidor ainda limita simulação.
 
 ## Métricas CSV
 

@@ -4801,6 +4801,7 @@ namespace SDG.Unturned
 
 			NetMessages.SendMessageToClient(EClientMessage.ReplicateConfig, ENetReliability.Reliable, clientId, (NetPakWriter writer) =>
 			{
+				writer.WriteUInt8(Regions.WorldChunkRadius);
 				writer.WriteUInt8((byte) modeConfigData.Gameplay.Repair_Level_Max);
 				writer.WriteFloat(modeConfigData.Players.Skill_Cost_Multiplier);
 				writer.WriteBit(modeConfigData.Players.Skillset_Reduces_Skill_Cost);

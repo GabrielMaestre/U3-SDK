@@ -13,6 +13,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Medir boot frio/quente até menu no Unity Editor: `76,96 s` frio contra `11,88–12,15 s` quente.
 - [ ] Medir loading de mapa, entrada em servidor e primeiro frame controlável.
 - [x] Definir cenários reproduzíveis de baseline, cidade, floresta, horda, veículos, multiplayer e soak; execução e baselines continuam constantes por build.
+- [x] Executar ações do Build Tool após evento IMGUI, removendo falso erro `EndLayoutGroup` ao concluir `Build Test`.
 - [ ] Registrar CPU/GPU frame time p50/p95/p99, GC, RAM, VRAM, I/O, rede e tick do servidor.
 - [ ] Separar métricas de Editor, Development Build, Release e servidor dedicado.
 - [ ] Criar smoke test de boot, criação de mundo, conexão, spawn, inventário, combate, veículo e shutdown.
@@ -53,7 +54,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time — 14/X
+## P1 — CPU e frame time — 15/X
 
 - [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
 - [x] Consultar distância de `LightLOD` já distante a cada oito frames, mantendo transição próxima por frame.
@@ -69,6 +70,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Remover iteradores de jogadores dos efeitos periódicos de clima, mantendo filtro e ordem dos atributos.
 - [x] Consumir filas ordenadas de itens, barricadas e estruturas pela cauda, evitando `RemoveRange(0, N)` e deslocamento da fila restante a cada frame.
 - [x] Adicionar modo opt-in exclusivo do Unity Editor que limita far clip a `768 m`, reduzindo culling e submissão de renderers distantes sem alterar Player build.
+- [x] Pausar `Update`/tick server-side de animais e tick de zombies fora do raio regional de todos os jogadores, preservando relógio do tick.
 - [ ] Inventariar `Update`, `LateUpdate`, `FixedUpdate`, coroutines e callbacks mais caros.
 - [ ] Remover polling substituível por eventos existentes.
 - [ ] Distribuir trabalho não urgente entre frames com orçamento explícito.
@@ -101,12 +103,13 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 4/X
+## P1 — GPU e renderização — 5/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
 - [x] Reduzir faixa base de LOD bias de `[2,5]` para `[1,4]`, fazendo modelos leves entrarem antes pelo slider existente.
 - [x] Classificar captura do Editor: CPU `12,85 ms` contra GPU `5,09 ms`; `Render.OpaqueGeometry`, `BatchRenderer.Flush` e `Batch.DrawStatic` confirmam custo principal de submissão/culling, não shader saturando GPU.
+- [x] Limitar far clip e visibilidade regional por `Gameplay.World_Chunk_Radius`, reutilizando chunks de `128 m` existentes.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
@@ -123,13 +126,14 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
 - [ ] Validar APIs gráficas e GPUs suportadas após cada mudança de shader.
 
-## P1 — Distância de renderização e streaming — 5/X
+## P1 — Distância de renderização e streaming — 6/X
 
 - [x] Materializar proxies `Skybox` de `LevelObject` sob demanda pela região existente; preservar editor e level batching.
 - [x] Desativar objetos, itens, recursos, barricadas e estruturas somente dentro dos bounds da região anterior; centro inicial inválido produz bounds vazios.
 - [x] Separar distância de clutter da distância geral de foliage e aplicar cap dinâmico por preset.
 - [x] Antecipar transições de `LODGroup` globalmente sem alterar distâncias de rede, física ou streaming regional.
 - [x] Preservar prioridade próxima e budgets regionais de itens/estruturas enquanto remoção O(1) reduz custo de filas grandes.
+- [x] Replicar raio de chunks do servidor ao cliente e aplicar mesmo limite visual/simulação no singleplayer e multiplayer.
 - [ ] Separar distância por categoria: terreno, estruturas, itens, jogadores, veículos, IA, vegetação, sombras e efeitos.
 - [ ] Definir limites mínimo/máximo por preset e opção manual.
 - [ ] Adaptar distância por orçamento de frame time com histerese e cooldown para evitar oscilação.

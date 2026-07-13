@@ -132,6 +132,20 @@ Metas principais:
 - Novo `Editor Performance Mode`, disponível em `Window > Unturned > Editor Settings > Playing in Unity`, limita far clip a `768 m` somente sob `UNITY_EDITOR`. Menos renderers distantes chegam ao culling e GBuffer; Player build permanece idêntico. Cinematic Mode preserva distância original.
 - Ganho deve ser medido no mesmo ponto do mapa. Modo reduz fidelidade de distância e serve para iteração rápida, não baseline final.
 
+### 2026-07-13 — Build Tool e IMGUI
+
+- `Build Test` já concluía com sucesso, mas iniciava `BuildPipeline` dentro de `OnGUI`. Reload do Editor invalidava pilha IMGUI e gerava `EndLayoutGroup: BeginLayoutGroup must be called first` após build.
+- Três ações de build agora usam `EditorApplication.delayCall`; execução começa depois do evento de layout. Processo e saída do build não mudaram.
+
+### 2026-07-13 — Chunks de mundo e interesse do servidor
+
+- Mundo já usa grade `64×64` com regiões de `128 m`. Objetos, árvores e estradas já alternavam visibilidade regional; itens usam raio `1`, estruturas/barricadas/recursos raio `2`, e zombies possuem regiões de navegação.
+- Nova configuração server-side `Gameplay.World_Chunk_Radius` controla raio ativo, é replicada ao cliente e aparece na configuração avançada do singleplayer. Intervalo `1–32`; padrão `8` equivale a aproximadamente `1024 m`.
+- Replicação adiciona campo ao protocolo de configuração; cliente e servidor precisam usar mesmo build desta fork.
+- Fora do Cinematic Mode, far clip, objetos, árvores, proxies e estradas respeitam limite. Reduz renderers entregues ao culling/GBuffer; opções gráficas locais ainda podem escolher distância menor.
+- No servidor, `Animal.Update`, tick de animais e tick de zombies retornam cedo quando entidade não está dentro do raio regional de nenhum jogador. Relógio do tick continua atualizado para evitar salto de simulação ao reativar.
+- Itens e estruturas preservam streaming existente. Respawn regional, descarregamento físico e máscara compartilhada de regiões ficam abertos até nova captura.
+
 ### 2026-07-13 — Update, LateUpdate, FixedUpdate e GC
 
 - `Animal.Update`, `InteractableSentry.Update`, `HumanAnimator.LateUpdate` e `FlickeringLight.Update` leem relógio Unity uma vez por callback e reutilizam valor. Timers e interpolações preservam mesmo instante do frame.

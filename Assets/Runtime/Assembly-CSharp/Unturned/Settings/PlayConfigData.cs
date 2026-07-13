@@ -2139,6 +2139,12 @@ namespace SDG.Unturned
 	public class GameplayConfigData
 	{
 		/// <summary>
+		/// Radius of active world regions around each player. Each region is 128 meters.
+		/// Limits client render distance and server animal/zombie simulation. Clamped to [1, 32].
+		/// </summary>
+		public uint World_Chunk_Radius;
+
+		/// <summary>
 		/// Blueprints requiring a repair skill level higher than this cannot be crafted.
 		/// Restricts players from repairing higher-tier items.
 		/// </summary>
@@ -2392,6 +2398,7 @@ namespace SDG.Unturned
 
 		public GameplayConfigData(EGameMode mode)
 		{
+			World_Chunk_Radius = 8;
 			Repair_Level_Max = 3;
 
 			switch (mode)

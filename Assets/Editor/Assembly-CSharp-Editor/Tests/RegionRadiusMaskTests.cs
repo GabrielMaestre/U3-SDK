@@ -8,6 +8,17 @@ using UnityEngine;
 
 internal class RegionRadiusMaskTests
 {
+	[TestCase(0u, (byte) 1)]
+	[TestCase(1u, (byte) 1)]
+	[TestCase(8u, (byte) 8)]
+	[TestCase(32u, (byte) 32)]
+	[TestCase(33u, (byte) 32)]
+	[TestCase(uint.MaxValue, (byte) 32)]
+	public void WorldChunkRadiusIsClamped(uint radius, byte expected)
+	{
+		Assert.AreEqual(expected, Regions.ClampWorldChunkRadius(radius));
+	}
+
 	[Test]
 	public void ZeroRadius()
 	{

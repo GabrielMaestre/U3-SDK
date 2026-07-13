@@ -745,6 +745,10 @@ namespace SDG.Unturned
 			{
 				farClipPlane = 4096;
 			}
+			if (!WantsCinematicMode)
+			{
+				farClipPlane = Mathf.Min(farClipPlane, Regions.WorldChunkRenderDistance);
+			}
 			if (WantsCinematicMode)
 			{
 				QualitySettings.shadowDistance = farClipPlane;
@@ -821,10 +825,10 @@ namespace SDG.Unturned
 			LevelObjects.RegularObjectMaxDistance = Mathf.Min(defaultCullDistance, 447.0f);
 			LevelGround.RegularTreeMaxDistance = LevelObjects.RegularObjectMaxDistance;
 
-			LevelObjects.SkyboxObjectMaxDistance = landmarkQuality > EGraphicQuality.OFF ? LevelObjects.RegularObjectMaxDistance + landmarkExtraDistance : 0.0f;
-			LevelGround.SkyboxTreeMaxDistance = landmarkQuality >= EGraphicQuality.MEDIUM ? LevelGround.RegularTreeMaxDistance + landmarkExtraDistance : 0.0f;
+			LevelObjects.SkyboxObjectMaxDistance = landmarkQuality > EGraphicQuality.OFF ? Mathf.Min(LevelObjects.RegularObjectMaxDistance + landmarkExtraDistance, farClipPlane) : 0.0f;
+			LevelGround.SkyboxTreeMaxDistance = landmarkQuality >= EGraphicQuality.MEDIUM ? Mathf.Min(LevelGround.RegularTreeMaxDistance + landmarkExtraDistance, farClipPlane) : 0.0f;
 
-			LevelRoads.RoadMaxDistance = landmarkQuality >= EGraphicQuality.ULTRA ? (defaultCullDistance + landmarkExtraDistance) : defaultCullDistance;
+			LevelRoads.RoadMaxDistance = Mathf.Min(landmarkQuality >= EGraphicQuality.ULTRA ? (defaultCullDistance + landmarkExtraDistance) : defaultCullDistance, farClipPlane);
 
 			if (WantsCinematicMode)
 			{

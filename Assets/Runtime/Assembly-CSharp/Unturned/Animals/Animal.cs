@@ -948,6 +948,10 @@ namespace SDG.Unturned
 			{
 				return;
 			}
+			if (Provider.isServer && !Regions.IsPositionWithinPlayerSimulationRange(transform.position))
+			{
+				return;
+			}
 
 			double currentTime = Time.timeAsDouble;
 
@@ -1143,6 +1147,10 @@ namespace SDG.Unturned
 		{
 			float delta = (float) (Time.timeAsDouble - lastTick);
 			lastTick = Time.timeAsDouble;
+			if (Provider.isServer && !Regions.IsPositionWithinPlayerSimulationRange(transform.position))
+			{
+				return;
+			}
 
 			undergroundTestTimer -= delta;
 			if (undergroundTestTimer < 0.0f)

@@ -32,7 +32,7 @@ namespace SDG.Unturned.Tools
 
 			if (GUILayout.Button("Build Standalone Platforms"))
 			{
-				BuildMethods.runBuild(standalonePlatforms: true, test: false);
+				EditorApplication.delayCall += () => BuildMethods.runBuild(standalonePlatforms: true, test: false);
 			}
 
 			if (GUILayout.Button("Code Documentation"))
@@ -48,12 +48,12 @@ namespace SDG.Unturned.Tools
 
 			if (GUILayout.Button("Build Test"))
 			{
-				BuildMethods.runBuild(standalonePlatforms: false, test: true);
+				EditorApplication.delayCall += () => BuildMethods.runBuild(standalonePlatforms: false, test: true);
 			}
 
 			if (GUILayout.Button("Build Test (Scripts Only)"))
 			{
-				BuildMethods.runBuild(standalonePlatforms: false, test: true, scriptsOnly: true);
+				EditorApplication.delayCall += () => BuildMethods.runBuild(standalonePlatforms: false, test: true, scriptsOnly: true);
 			}
 
 			GUILayout.Space(20);

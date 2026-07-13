@@ -1997,6 +1997,10 @@ namespace SDG.Unturned
 			float delta = currentTime - lastTick;
 			lastTick = currentTime;
 			lastPull = currentTime;
+			if (Provider.isServer && !Regions.IsPositionWithinPlayerSimulationRange(transform.position))
+			{
+				return;
+			}
 
 			//lastWander = Time.realtimeSinceStartup;
 

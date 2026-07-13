@@ -34,6 +34,35 @@ namespace SDG.Unturned
 		public static readonly byte WORLD_SIZE = CONST_WORLD_SIZE;
 		internal const byte CONST_REGION_SIZE = 8192 / CONST_WORLD_SIZE;
 		public static readonly byte REGION_SIZE = CONST_REGION_SIZE;
+		internal const byte MIN_WORLD_CHUNK_RADIUS = 1;
+		internal const byte MAX_WORLD_CHUNK_RADIUS = 32;
+
+		public static byte ClampWorldChunkRadius(uint radius)
+		{
+			if (radius < MIN_WORLD_CHUNK_RADIUS)
+				return MIN_WORLD_CHUNK_RADIUS;
+			if (radius > MAX_WORLD_CHUNK_RADIUS)
+				return MAX_WORLD_CHUNK_RADIUS;
+			return (byte) radius;
+		}
+
+		public static byte WorldChunkRadius => ClampWorldChunkRadius(Provider.modeConfigData?.Gameplay?.World_Chunk_Radius ?? MAX_WORLD_CHUNK_RADIUS);
+		public static float WorldChunkRenderDistance => (WorldChunkRadius * REGION_SIZE) - 1.0f;
+
+		public static bool IsPositionWithinPlayerSimulationRange(Vector3 position)
+		{
+			if (!tryGetCoordinate(position, out byte x, out byte y))
+				return true; // Keep recovery logic active for entities outside world bounds.
+
+			// ponytail: Linear scan avoids another spatial index; replace with shared active-region mask if measured.
+			byte radius = WorldChunkRadius;
+			foreach (SteamPlayer client in Provider.clients)
+			{
+				if (client.player != null && checkArea(x, y, client.player.movement.region_x, client.player.movement.region_y, radius))
+					return true;
+			}
+			return false;
+		}
 
 		public static void getRegionsInRadius(Vector3 center, float radius, List<RegionCoordinate> result)
 		{
