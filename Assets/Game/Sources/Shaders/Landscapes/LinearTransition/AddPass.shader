@@ -75,19 +75,23 @@ Shader "Landscapes/LinearTransition/AddPass"
 			float4 tex1 = landscapeTriplanarSample4(_Splat1, IN.worldPos, blend);
 			float4 tex2 = landscapeTriplanarSample4(_Splat2, IN.worldPos, blend);
 			float4 tex3 = landscapeTriplanarSample4(_Splat3, IN.worldPos, blend);
+#ifdef IS_SNOWING
 			float4 mask0 = landscapeTriplanarSample4(_Normal0, IN.worldPos, blend);
 			float4 mask1 = landscapeTriplanarSample4(_Normal1, IN.worldPos, blend);
 			float4 mask2 = landscapeTriplanarSample4(_Normal2, IN.worldPos, blend);
 			float4 mask3 = landscapeTriplanarSample4(_Normal3, IN.worldPos, blend);
+#endif
 #else
 			float4 tex0 = landscapePlanarSample4(_Splat0, IN.worldPos);
 			float4 tex1 = landscapePlanarSample4(_Splat1, IN.worldPos);
 			float4 tex2 = landscapePlanarSample4(_Splat2, IN.worldPos);
 			float4 tex3 = landscapePlanarSample4(_Splat3, IN.worldPos);
+#ifdef IS_SNOWING
 			float4 mask0 = landscapePlanarSample4(_Normal0, IN.worldPos);
 			float4 mask1 = landscapePlanarSample4(_Normal1, IN.worldPos);
 			float4 mask2 = landscapePlanarSample4(_Normal2, IN.worldPos);
 			float4 mask3 = landscapePlanarSample4(_Normal3, IN.worldPos);
+#endif
 #endif
 
 			OUT.Albedo = tex0.rgb * sc.r + tex1.rgb * sc.g + tex2 * sc.b + tex3 * sc.a;

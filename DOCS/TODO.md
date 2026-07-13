@@ -9,6 +9,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 ## P0 — Baseline e segurança
 
 - [ ] Fixar máquinas, SO, resolução, presets, mapas, rotas e número de bots/jogadores para benchmarks.
+- [x] Criar ranking inicial dos 50 agressores e separar medição de candidatos estáticos em `TOPLAG.md`.
 - [x] Medir boot frio/quente até menu no Unity Editor: `76,96 s` frio contra `11,88–12,15 s` quente.
 - [ ] Medir loading de mapa, entrada em servidor e primeiro frame controlável.
 - [ ] Criar cenas/cenários de benchmark: cidade densa, floresta, combate, horda, veículos e servidor cheio.
@@ -20,13 +21,17 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Definir limites de regressão e ruído aceitável por métrica.
 - [ ] Manter resultados de benchmark fora do repositório quando forem binários ou grandes; versionar só resumo textual.
 
-## P1 — Boot e loading — 5/X
+## P1 — Boot e loading — 9/X
 
 - [x] Carregar master bundles direto do disco com `LoadFromFileAsync`, sem copiar arquivo inteiro para memória; manter SHA-1 de integridade.
 - [x] Suspender leitores de assets ociosos com `SemaphoreSlim.WaitAsync`, eliminando busy-spin durante varredura de diretórios.
 - [x] Calcular hash de recursos por stream sequencial, sem duplicar arquivos em `MemoryStream`.
 - [x] Enumerar DLLs de módulos sob demanda e remover log duplicado durante descoberta.
 - [x] Adiar geração `Auto_Skybox` de 27 recursos até primeiro uso no loading do mapa.
+- [x] Adiar prefabs de 176 `EffectAsset` até preload ou primeiro uso, preservando bundles legados e validação eager.
+- [x] Adiar quatro prefabs visuais de 81 `MythicAsset` até primeiro uso.
+- [x] Remover cleanup intermediário do mapa que custou `256,43 ms` e recuperou somente `76,6 KB`; preservar cleanup final.
+- [x] Adiar prefab `Item`, animações e três texturas base de skin de `ItemAsset` até primeiro uso, preservando modos eager existentes.
 - [ ] Repetir cold start após reiniciar Unity e comparar contra baseline de `76,96 s`.
 - [ ] Traçar ordem e duração de inicializadores, cenas, subsistemas, bundles, Workshop e conexão Steam.
 - [ ] Remover inicialização duplicada, bloqueante ou não usada antes do menu.
@@ -44,8 +49,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time
+## P1 — CPU e frame time — 1/X
 
+- [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
 - [ ] Inventariar `Update`, `LateUpdate`, `FixedUpdate`, coroutines e callbacks mais caros.
 - [ ] Remover polling substituível por eventos existentes.
 - [ ] Distribuir trabalho não urgente entre frames com orçamento explícito.
@@ -75,8 +81,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização
+## P1 — GPU e renderização — 1/X
 
+- [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
@@ -92,8 +99,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
 - [ ] Validar APIs gráficas e GPUs suportadas após cada mudança de shader.
 
-## P1 — Distância de renderização e streaming
+## P1 — Distância de renderização e streaming — 1/X
 
+- [x] Materializar proxies `Skybox` de `LevelObject` sob demanda pela região existente; preservar editor e level batching.
 - [ ] Separar distância por categoria: terreno, estruturas, itens, jogadores, veículos, IA, vegetação, sombras e efeitos.
 - [ ] Definir limites mínimo/máximo por preset e opção manual.
 - [ ] Adaptar distância por orçamento de frame time com histerese e cooldown para evitar oscilação.

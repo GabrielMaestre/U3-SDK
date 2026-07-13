@@ -8,6 +8,16 @@ namespace SDG.Unturned
 {
 	public class MythicAsset : Asset
 	{
+		private static GameObject GetOrLoad(ref GameObject loadedAsset, ref IDeferredAsset<GameObject> deferredAsset)
+		{
+			if (deferredAsset != null)
+			{
+				loadedAsset = deferredAsset.getOrLoad();
+				deferredAsset = null;
+			}
+			return loadedAsset;
+		}
+
 		public string particleTagName
 		{
 			get;
@@ -15,16 +25,20 @@ namespace SDG.Unturned
 		}
 
 		protected GameObject _systemArea;
-		public GameObject systemArea => _systemArea;
+		private IDeferredAsset<GameObject> deferredSystemArea;
+		public GameObject systemArea => GetOrLoad(ref _systemArea, ref deferredSystemArea);
 
 		protected GameObject _systemHook;
-		public GameObject systemHook => _systemHook;
+		private IDeferredAsset<GameObject> deferredSystemHook;
+		public GameObject systemHook => GetOrLoad(ref _systemHook, ref deferredSystemHook);
 
 		protected GameObject _systemFirst;
-		public GameObject systemFirst => _systemFirst;
+		private IDeferredAsset<GameObject> deferredSystemFirst;
+		public GameObject systemFirst => GetOrLoad(ref _systemFirst, ref deferredSystemFirst);
 
 		protected GameObject _systemThird;
-		public GameObject systemThird => _systemThird;
+		private IDeferredAsset<GameObject> deferredSystemThird;
+		public GameObject systemThird => GetOrLoad(ref _systemThird, ref deferredSystemThird);
 
 		/// <summary>
 		/// If true, vest and backpack spawn System_Area instead of System_Hook.
@@ -54,10 +68,10 @@ namespace SDG.Unturned
 					particleTagName = name;
 				}
 
-				_systemArea = p.bundle.load<GameObject>("System_Area");
-				_systemHook = p.bundle.load<GameObject>("System_Hook");
-				_systemFirst = p.bundle.load<GameObject>("System_First");
-				_systemThird = p.bundle.load<GameObject>("System_Third");
+				p.bundle.loadDeferred("System_Area", out deferredSystemArea);
+				p.bundle.loadDeferred("System_Hook", out deferredSystemHook);
+				p.bundle.loadDeferred("System_First", out deferredSystemFirst);
+				p.bundle.loadDeferred("System_Third", out deferredSystemThird);
 
 				ShouldBodyCosmeticsUseAreaPrefab = p.data.ParseBool("Body_Cosmetics_Use_System_Area");
 
@@ -88,7 +102,8 @@ namespace SDG.Unturned
 					}
 				}
 
-				if (systemArea == null && systemHook == null && systemFirst == null && systemThird == null)
+				bool shouldCheckPrefabsNow = Assets.shouldDeferLoadingAssets == false || p.bundle is not MasterBundle;
+				if (shouldCheckPrefabsNow && systemArea == null && systemHook == null && systemFirst == null && systemThird == null)
 				{
 					Assets.ReportError(this, "missing all effect prefabs");
 				}

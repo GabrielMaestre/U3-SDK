@@ -52,6 +52,32 @@ Metas principais:
 - Compatibilidade preservada: primeiro getter gera escala e material antes de instanciar skybox.
 - Validação: callers revisados e `Assembly-CSharp.csproj` compilando com 0 erros; novo cold start ainda precisa ser medido após reiniciar Unity.
 
+### 2026-07-13 — Efeitos, mythics e cleanup do mapa
+
+- `EffectAsset` adia prefab principal e splatters até preload ou primeiro uso; 176 definições oficiais deixam de abrir visual no boot.
+- `MythicAsset` adia quatro prefabs visuais por asset; 81 definições oficiais passam a carregar somente quando exibidas ou validadas.
+- Reutilizado `Bundle.loadDeferred`; bundles legados, `-NoDeferAssets` e validação mantêm comportamento eager.
+- Removido primeiro `UnloadUnusedAssets` + `GC.Collect` do loading de mapa: log mediu `256,43 ms` para somente `76,6 KB`; cleanup final de `7,9 MB` permanece.
+- Preservados preload/pool de efeitos e validação. Nenhum cache ou dependência nova.
+- Validação: 176 efeitos, 81 mythics e 8.163 `.dat` inventariados; `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes. Cold boot e mapa precisam ser repetidos.
+
+### 2026-07-13 — Água e terreno
+
+- `LevelLighting` obtém estado submerso e superfície próxima com uma única consulta aos volumes de água por frame; antes percorria os mesmos volumes duas vezes.
+- Consulta é ignorada quando efeitos submersos estão desativados. APIs públicas de água e comportamento visual permanecem compatíveis.
+- Seis passes de terreno deixam de amostrar quatro máscaras quando variante `IS_SNOWING` não está ativa; neve continua usando mesmas máscaras e resultado visual.
+- Mudança da água foi inspirada pela causa descrita na [issue #5514](https://github.com/SmartlyDressedGames/U3-SDK/issues/5514), com helper interno próprio e sem copiar gerenciador proposto.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes; estrutura condicional dos seis shaders está balanceada. Capturas CPU Timeline e GPU ainda precisam medir ganho real.
+
+### 2026-07-13 — Top 2: payloads de itens e streaming regional
+
+- `ItemAsset` mantém metadados, blueprints e configuração no catálogo, mas adia prefab `Item`, objeto `Animations` e três texturas base de skin até primeiro acesso.
+- Reutilizado `Bundle.loadDeferred`: bundles legados, `-NoDeferAssets`, `-ValidateAssets` e `-AlwaysLoadItemPrefab` preservam carregamento eager quando solicitado.
+- `LevelObject` adia criação do proxy visual `Skybox` até acesso público ou ativação da região de skybox; atualização incremental existente distribui materialização entre frames.
+- Editor e level batching continuam materializando proxies necessários. Modelo principal, colisão, nav, triggers, estado, saves e rede não foram alterados.
+- Esta é primeira fatia segura das duas iniciativas. Catálogo totalmente persistente e unload de objetos físicos por chunk continuam abertos porque exigem invalidação, restauração de estado e prova com Memory Profiler.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes. Cold boot, loading do mesmo mapa e primeiro acesso precisam ser medidos.
+
 ## Investigação de cold start
 
 Medição em Unity Editor `2022.3.62f3`, mesma sessão e mesmo mapa de startup:
@@ -160,4 +186,5 @@ Item termina somente quando:
 ## Documentos
 
 - [SKILLS.md](SKILLS.md): competências e responsabilidades necessárias.
+- [TOPLAG.md](TOPLAG.md): ranking dos 50 principais candidatos de CPU, memória, GPU e loading.
 - [TODO.md](TODO.md): backlog priorizado de melhorias.

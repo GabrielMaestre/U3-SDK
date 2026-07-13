@@ -2104,15 +2104,16 @@ namespace SDG.Unturned
 			UnityEngine.Profiling.Profiler.EndSample();
 			UnityEngine.Profiling.Profiler.BeginSample("Water");
 
-			UnityEngine.Profiling.Profiler.BeginSample("getWaterSurfaceElevation");
-			float surfaceLevel = SDG.Framework.Water.WaterUtility.getWaterSurfaceElevation(point);
-			UnityEngine.Profiling.Profiler.EndSample();
-			if (!enableUnderwaterEffects)
+			bool isUnderwater = false;
+			float surfaceLevel = -1024;
+			if (enableUnderwaterEffects)
 			{
-				surfaceLevel = -1024;
+				UnityEngine.Profiling.Profiler.BeginSample("getViewerWaterInfo");
+				SDG.Framework.Water.WaterUtility.getViewerWaterInfo(point, out isUnderwater, out surfaceLevel);
+				UnityEngine.Profiling.Profiler.EndSample();
 			}
 
-			if (enableUnderwaterEffects && SDG.Framework.Water.WaterUtility.isPointUnderwater(point))
+			if (isUnderwater)
 			{
 				waterAudio.volume = 0;
 				belowAudio.volume = 1;

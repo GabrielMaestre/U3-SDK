@@ -55,6 +55,7 @@ namespace SDG.Unturned
 	public class LevelObject
 	{
 		private static List<Rigidbody> reuseableRigidbodyList = new List<Rigidbody>();
+		private static List<Renderer> reuseableSkyboxRendererList = new List<Renderer>();
 
 		/// <summary>
 		/// If true, object is within a culling volume.
@@ -78,7 +79,14 @@ namespace SDG.Unturned
 		}
 
 		private Transform _skybox;
-		public Transform skybox => _skybox;
+		public Transform skybox
+		{
+			get
+			{
+				EnsureSkyboxInstantiated();
+				return _skybox;
+			}
+		}
 
 		private List<Renderer> renderers;
 
@@ -226,9 +234,9 @@ namespace SDG.Unturned
 				transform.gameObject.SetActive(isActive);
 			}
 
-			if (skybox != null)
+			if (_skybox != null)
 			{
-				skybox.gameObject.SetActive(false);
+				_skybox.gameObject.SetActive(false);
 			}
 
 #if !DEDICATED_SERVER
@@ -245,9 +253,9 @@ namespace SDG.Unturned
 				Object.Destroy(transform.gameObject);
 			}
 
-			if (skybox)
+			if (_skybox)
 			{
-				Object.Destroy(skybox.gameObject);
+				Object.Destroy(_skybox.gameObject);
 			}
 
 #if !DEDICATED_SERVER
@@ -285,10 +293,10 @@ namespace SDG.Unturned
 			if (materialOverride == null)
 				return;
 
-			if (skybox != null)
+			if (_skybox != null)
 			{
 				renderers.Clear();
-				skybox.GetComponentsInChildren(true, renderers);
+				_skybox.GetComponentsInChildren(true, renderers);
 				foreach (Renderer renderer in renderers)
 				{
 					renderer.sharedMaterial = materialOverride;
@@ -742,31 +750,6 @@ namespace SDG.Unturned
 				renderers = new List<Renderer>();
 				Material materialOverride = GetMaterialOverride();
 
-				GameObject skyboxPrefab = asset.skyboxGameObject?.getOrLoad();
-				if (skyboxPrefab != null)
-				{
-					GameObject skyboxGameObject = Object.Instantiate(skyboxPrefab, newPoint, newRotation);
-					_skybox = skyboxGameObject.transform;
-					skyboxGameObject.name = asset.name + "_Skybox";
-
-					if (asset.useScale)
-					{
-						skybox.localScale = newScale;
-					}
-
-					skybox.GetComponentsInChildren(true, renderers);
-					for (int index = 0; index < renderers.Count; index++)
-					{
-						renderers[index].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-						if (materialOverride != null)
-						{
-							renderers[index].sharedMaterial = materialOverride;
-						}
-					}
-					renderers.Clear();
-				}
-
 				transform.GetComponentsInChildren(true, renderers);
 				if (materialOverride != null)
 				{
@@ -777,6 +760,11 @@ namespace SDG.Unturned
 				}
 
 				UpdateActiveAndRenderersEnabled();
+
+				if (Level.isEditor)
+				{
+					EnsureSkyboxInstantiated();
+				}
 			}
 
 			if (transform != null)
@@ -1090,11 +1078,57 @@ namespace SDG.Unturned
 #pragma warning restore
 
 #if !DEDICATED_SERVER
-			if (skybox != null)
+			bool shouldBeActive = !isActiveInRegion && isSkyboxActiveInRegion && isLandmarkQualityMet
+				&& areConditionsMet && !GraphicsSettings.WantsCinematicMode;
+			if (shouldBeActive)
 			{
-				skybox.gameObject.SetActive(!isActiveInRegion && isSkyboxActiveInRegion && isLandmarkQualityMet
-					&& areConditionsMet && !GraphicsSettings.WantsCinematicMode);
+				EnsureSkyboxInstantiated();
 			}
+
+			if (_skybox != null)
+			{
+				_skybox.gameObject.SetActive(shouldBeActive);
+			}
+#endif // !DEDICATED_SERVER
+		}
+
+		private void EnsureSkyboxInstantiated()
+		{
+#if !DEDICATED_SERVER
+			if (_skybox != null || Dedicator.IsDedicatedServer || asset == null || transform == null
+				|| (asset.IsClutter && Level.ShouldSkipInstantiatingClutter))
+			{
+				return;
+			}
+
+			GameObject skyboxPrefab = asset.skyboxGameObject?.getOrLoad();
+			if (skyboxPrefab == null)
+			{
+				return;
+			}
+
+			GameObject skyboxGameObject = Object.Instantiate(skyboxPrefab, transform.position, transform.rotation);
+			_skybox = skyboxGameObject.transform;
+			skyboxGameObject.name = asset.name + "_Skybox";
+			skyboxGameObject.SetActive(false);
+
+			if (asset.useScale)
+			{
+				_skybox.localScale = transform.localScale;
+			}
+
+			Material materialOverride = GetMaterialOverride();
+			reuseableSkyboxRendererList.Clear();
+			_skybox.GetComponentsInChildren(true, reuseableSkyboxRendererList);
+			foreach (Renderer renderer in reuseableSkyboxRendererList)
+			{
+				renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+				if (materialOverride != null)
+				{
+					renderer.sharedMaterial = materialOverride;
+				}
+			}
+			reuseableSkyboxRendererList.Clear();
 #endif // !DEDICATED_SERVER
 		}
 

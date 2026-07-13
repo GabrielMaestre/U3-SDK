@@ -1937,6 +1937,9 @@ namespace SDG.Unturned
 			LoadingUI.NotifyLevelLoadingProgress(17 / STEPS);
 			yield return null;
 
+			// Unload unused assets to free up memory before we start spawning objects.
+			// But some times this cost ~300ms and the cleanup is about ~100kb up to 10mb
+			// Let's keep at this moment.
 			Resources.UnloadUnusedAssets();
 			System.GC.Collect();
 

@@ -12,10 +12,22 @@ namespace SDG.Unturned
 	public class EffectAsset : Asset
 	{
 		protected GameObject _effect;
+		private IDeferredAsset<GameObject> deferredEffect;
 		/// <summary>
 		/// Note: as of 2025-04-23 this *can* be null. (E.g., audio-only effects.)
 		/// </summary>
-		public GameObject effect => _effect;
+		public GameObject effect
+		{
+			get
+			{
+				if (deferredEffect != null)
+				{
+					_effect = deferredEffect.getOrLoad();
+					deferredEffect = null;
+				}
+				return _effect;
+			}
+		}
 
 #if !DEDICATED_SERVER
 		/// <summary>
@@ -25,7 +37,26 @@ namespace SDG.Unturned
 #endif // !DEDICATED_SERVER
 
 		protected GameObject[] _splatters;
-		public GameObject[] splatters => _splatters;
+		private IDeferredAsset<GameObject>[] deferredSplatters;
+		public GameObject[] splatters
+		{
+			get
+			{
+				if (deferredSplatters != null)
+				{
+					for (int index = 0; index < deferredSplatters.Length; ++index)
+					{
+						_splatters[index] = deferredSplatters[index].getOrLoad();
+						if (_splatters[index] == null)
+						{
+							Assets.ReportError(this, string.Format("missing 'Splatter_{0}' gameobject", index));
+						}
+					}
+					deferredSplatters = null;
+				}
+				return _splatters;
+			}
+		}
 
 		private bool _gore;
 		public bool gore => _gore;
@@ -119,7 +150,7 @@ namespace SDG.Unturned
 				throw new System.NotSupportedException("ID < 200");
 			}
 
-			_effect = p.bundle.load<GameObject>("Effect");
+			p.bundle.loadDeferred("Effect", out deferredEffect);
 
 #if !DEDICATED_SERVER
 			OneShotAudio = p.data.ReadAudioReference("OneShotAudio", p.bundle);
@@ -127,15 +158,16 @@ namespace SDG.Unturned
 
 			_gore = p.data.ContainsKey("Gore");
 
-			_splatters = new GameObject[p.data.ParseUInt8("Splatter")];
-			for (int index = 0; index < splatters.Length; index++)
+			int splatterPrefabCount = p.data.ParseUInt8("Splatter");
+			_splatters = new GameObject[splatterPrefabCount];
+			deferredSplatters = new IDeferredAsset<GameObject>[splatterPrefabCount];
+			for (int index = 0; index < splatterPrefabCount; index++)
 			{
-				splatters[index] = p.bundle.load<GameObject>("Splatter_" + index);
-
-				if (splatters[index] == null)
-				{
-					Assets.ReportError(this, string.Format("missing 'Splatter_{0}' gameobject", index));
-				}
+				p.bundle.loadDeferred("Splatter_" + index, out deferredSplatters[index]);
+			}
+			if (Assets.shouldDeferLoadingAssets == false || p.bundle is not MasterBundle)
+			{
+				_ = splatters; // Preserve eager validation for legacy bundles and -NoDeferAssets.
 			}
 
 			_splatter = p.data.ParseUInt8("Splatters");
@@ -186,7 +218,9 @@ namespace SDG.Unturned
 			}
 			else
 			{
-				_splatterPreload = (byte) (Mathf.CeilToInt(splatter / (float) splatters.Length) * preload);
+				_splatterPreload = splatterPrefabCount > 0
+					? (byte) (Mathf.CeilToInt(splatter / (float) splatterPrefabCount) * preload)
+					: (byte) 0;
 			}
 
 			_blast = p.data.ParseGuidOrLegacyId("Blast", out blastmarkEffectGuid);

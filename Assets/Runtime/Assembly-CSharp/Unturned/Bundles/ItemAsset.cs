@@ -162,6 +162,17 @@ namespace SDG.Unturned
 
 	public class ItemAsset : Asset, ISkinableAsset, IBlueprintOwner
 	{
+		private static T GetOrLoad<T>(ref T loadedAsset, ref IDeferredAsset<T> deferredAsset) where T : UnityEngine.Object
+		{
+			if (deferredAsset != null)
+			{
+				loadedAsset = deferredAsset.getOrLoad();
+				deferredAsset = null;
+			}
+
+			return loadedAsset;
+		}
+
 		/// <summary>
 		/// Helper for plugins that want item prefabs server-side.
 		/// e.g. Allows item icons to be captured on dedicated server.
@@ -469,12 +480,13 @@ namespace SDG.Unturned
 		public bool isEligibleForAutoStatDescriptions;
 
 		protected GameObject _item;
+		private IDeferredAsset<GameObject> deferredItem;
 		/// <summary>
 		/// Nelson 2024-12-11: This can now be null for cosmetic items (<see cref="isPro"/>). For those items it wasn't
 		/// used outside of the main menu 3D item preview, in which case the clothing prefab is typically a better
 		/// visualization.
 		/// </summary>
-		public GameObject item => _item;
+		public GameObject item => GetOrLoad(ref _item, ref deferredItem);
 
 		/// <summary>
 		/// Optional alternative item prefab specifically for the PlayerEquipment prefab spawned.
@@ -503,7 +515,19 @@ namespace SDG.Unturned
 		public AudioClip equip => _equip;
 
 		protected AnimationClip[] _animations;
-		public AnimationClip[] animations => _animations;
+		private IDeferredAsset<GameObject> deferredAnimations;
+		public AnimationClip[] animations
+		{
+			get
+			{
+				if (deferredAnimations != null)
+				{
+					deferredAnimations.getOrLoad();
+					deferredAnimations = null;
+				}
+				return _animations;
+			}
+		}
 
 		/// <summary>
 		/// Sound to play when inspecting the equipped item.
@@ -563,13 +587,16 @@ namespace SDG.Unturned
 		}
 
 		protected Texture2D _albedoBase;
-		public Texture albedoBase => _albedoBase;
+		private IDeferredAsset<Texture2D> deferredAlbedoBase;
+		public Texture albedoBase => GetOrLoad(ref _albedoBase, ref deferredAlbedoBase);
 
 		protected Texture2D _metallicBase;
-		public Texture metallicBase => _metallicBase;
+		private IDeferredAsset<Texture2D> deferredMetallicBase;
+		public Texture metallicBase => GetOrLoad(ref _metallicBase, ref deferredMetallicBase);
 
 		protected Texture2D _emissionBase;
-		public Texture emissionBase => _emissionBase;
+		private IDeferredAsset<Texture2D> deferredEmissionBase;
+		public Texture emissionBase => GetOrLoad(ref _emissionBase, ref deferredEmissionBase);
 
 		public void applySkinBaseTextures(Material material)
 		{
@@ -741,6 +768,51 @@ namespace SDG.Unturned
 		}
 
 		private static List<AnimationClip> tempAnimations = new List<AnimationClip>();
+
+		private void onItemLoaded(GameObject loadedItem)
+		{
+			_item = loadedItem;
+			if (loadedItem == null)
+			{
+				if (!isPro)
+				{
+					throw new System.NotSupportedException("missing \"Item\" GameObject");
+				}
+
+				return;
+			}
+
+			Transform icon = loadedItem.transform.Find("Icon");
+			if (icon != null && icon.GetComponent<Camera>() != null)
+			{
+				throw new System.NotSupportedException("'Icon' has a camera attached!");
+			}
+
+			if (id < 2000 && (type == EItemType.GUN || type == EItemType.MELEE) && loadedItem.transform.Find("Stat_Tracker") == null)
+			{
+				Assets.ReportError(this, "missing 'Stat_Tracker' Transform");
+			}
+
+			AssetValidation.searchGameObjectForErrors(this, loadedItem);
+
+			if (Assets.shouldValidateAssets)
+			{
+				MeshCollider mc = loadedItem.GetComponentInChildren<MeshCollider>();
+				if (mc != null && !mc.convex)
+				{
+					ReportAssetError($"contains non-convex MeshCollider at {mc.GetSceneHierarchyPath()}");
+				}
+			}
+		}
+
+		private void onAnimationsLoaded(GameObject animationsGameObject)
+		{
+			if (animationsGameObject != null)
+			{
+				initAnimations(animationsGameObject);
+			}
+		}
+
 		private void initAnimations(GameObject anim)
 		{
 			Animation animation = anim.GetComponent<Animation>();
@@ -1003,16 +1075,7 @@ namespace SDG.Unturned
 
 				if (!isPro)
 				{
-					GameObject anim = p.bundle.load<GameObject>("Animations");
-
-					if (anim != null)
-					{
-						initAnimations(anim);
-					}
-					else
-					{
-						_animations = new AnimationClip[0];
-					}
+					p.bundle.loadDeferred("Animations", out deferredAnimations, onAnimationsLoaded);
 				}
 			}
 
@@ -1032,45 +1095,10 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer || type == EItemType.GUN || type == EItemType.MELEE || shouldAlwaysLoadItemPrefab)
 			{
-				_item = p.bundle.load<GameObject>("Item");
-
-				if (item == null)
+				p.bundle.loadDeferred("Item", out deferredItem, onItemLoaded);
+				if (shouldAlwaysLoadItemPrefab)
 				{
-					// Nelson 2025-08-25: hackily removing this shirt/pants check for unobtainable zip/oversize fallback shirt.
-					//bool isPremiumAndDoesntNeedItem = isPro && type != EItemType.SHIRT && type != EItemType.PANTS;
-					if (!isPro)
-					{
-						throw new System.NotSupportedException($"missing \"Item\" GameObject (expected at {p.bundle.WhereLoadLookedToString("Item")})");
-					}
-				}
-				else
-				{
-					if (item.transform.Find("Icon") != null)
-					{
-						if (item.transform.Find("Icon").GetComponent<Camera>() != null)
-						{
-							throw new System.NotSupportedException("'Icon' has a camera attached!");
-						}
-					}
-
-					if (id < 2000 && (type == EItemType.GUN || type == EItemType.MELEE))
-					{
-						if (item.transform.Find("Stat_Tracker") == null)
-						{
-							Assets.ReportError(this, "missing 'Stat_Tracker' Transform");
-						}
-					}
-
-					AssetValidation.searchGameObjectForErrors(this, item);
-
-					if (Assets.shouldValidateAssets)
-					{
-						MeshCollider mc = _item.GetComponentInChildren<MeshCollider>();
-						if (mc != null && !mc.convex)
-						{
-							ReportAssetError($"contains non-convex MeshCollider at {mc.GetSceneHierarchyPath()}");
-						}
-					}
+					_ = item;
 				}
 			}
 
@@ -1225,9 +1253,9 @@ namespace SDG.Unturned
 			// Only official content has skins, so we only check the official ID range of [1, 2000).
 			if (!Dedicator.IsDedicatedServer && id < 2000 && doesItemTypeHaveSkins)
 			{
-				_albedoBase = p.bundle.load<Texture2D>("Albedo_Base");
-				_metallicBase = p.bundle.load<Texture2D>("Metallic_Base");
-				_emissionBase = p.bundle.load<Texture2D>("Emission_Base");
+				p.bundle.loadDeferred("Albedo_Base", out deferredAlbedoBase);
+				p.bundle.loadDeferred("Metallic_Base", out deferredMetallicBase);
+				p.bundle.loadDeferred("Emission_Base", out deferredEmissionBase);
 			}
 
 			if (p.data.TryGetDictionary("Fishing_Catchable", out IDatDictionary dict))
@@ -2420,9 +2448,9 @@ namespace SDG.Unturned
 
 		protected void ValidateEquipableHasAnimation(string name)
 		{
-			if (_animations != null)
+			if (animations != null)
 			{
-				foreach (AnimationClip clip in _animations)
+				foreach (AnimationClip clip in animations)
 				{
 					if (clip != null && string.Equals(clip.name, name, System.StringComparison.Ordinal))
 					{

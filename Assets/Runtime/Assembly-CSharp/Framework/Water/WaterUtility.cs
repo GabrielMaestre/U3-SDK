@@ -60,40 +60,42 @@ namespace SDG.Framework.Water
 		/// </summary>
 		public static float getWaterSurfaceElevation(Vector3 point)
 		{
-			bool foundSurface = false;
-			float surfaceElevation = -1024;
+			getViewerWaterInfo(point, out _, out float surfaceElevation);
+			return surfaceElevation;
+		}
+
+		/// <summary>
+		/// Gets underwater state and nearby surface with one volume lookup.
+		/// </summary>
+		internal static void getViewerWaterInfo(Vector3 point, out bool isUnderwater, out float surfaceElevation)
+		{
+			isUnderwater = false;
+			surfaceElevation = -1024;
 
 			List<WaterVolume> volumesToTest = WaterVolumeManager.Get().GetOverlapTestVolumes(point);
-			if (volumesToTest != null)
+			if (volumesToTest == null)
 			{
-				foreach (WaterVolume volume in volumesToTest)
+				return;
+			}
+
+			Ray ray = new Ray(point, Vector3.down);
+			foreach (WaterVolume volume in volumesToTest)
+			{
+				if (volume.IsPositionInsideVolume(point))
 				{
-					if (volume.IsPositionInsideVolume(point))
+					isUnderwater = true;
+					surfaceElevation = getWaterSurfaceElevation(volume, point);
+					return;
+				}
+
+				if (volume.volumeCollider.Raycast(ray, out RaycastHit hit, 2048))
+				{
+					if (hit.point.y > surfaceElevation)
 					{
-						return getWaterSurfaceElevation(volume, point);
-					}
-					else
-					{
-						Ray ray = new Ray(point, new Vector3(0, -1, 0));
-						RaycastHit hit;
-						if (volume.volumeCollider.Raycast(ray, out hit, 2048))
-						{
-							if (hit.point.y > surfaceElevation)
-							{
-								surfaceElevation = hit.point.y;
-								foundSurface = true;
-							}
-						}
+						surfaceElevation = hit.point.y;
 					}
 				}
 			}
-
-			if (foundSurface)
-			{
-				return surfaceElevation;
-			}
-
-			return -1024;
 		}
 
 		public static void getUnderwaterInfo(Vector3 point, out bool isUnderwater, out float surfaceElevation)
