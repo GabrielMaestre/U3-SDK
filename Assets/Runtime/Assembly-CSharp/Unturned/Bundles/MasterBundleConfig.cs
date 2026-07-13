@@ -290,10 +290,10 @@ namespace SDG.Unturned
 		/// <summary>
 		/// Load the underlying asset bundle.
 		/// </summary>
-		public void StartLoad(byte[] inputData, byte[] inputHash)
+		public void StartLoad(byte[] inputHash)
 		{
 			UnturnedLog.info($"Loading asset bundle \"{assetBundleName}\" from \"{directoryPath}\"...");
-			assetBundleCreateRequest = AssetBundle.LoadFromMemoryAsync(inputData);
+			assetBundleCreateRequest = AssetBundle.LoadFromFileAsync(getAssetBundlePath());
 			hash = inputHash;
 			loadStartTime = Time.realtimeSinceStartupAsDouble;
 		}

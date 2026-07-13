@@ -37,7 +37,6 @@ namespace SDG.Unturned
 			public override EResultType ResultType => EResultType.MasterBundle;
 
 			public MasterBundleConfig config;
-			public byte[] assetBundleData;
 			public byte[] hash;
 		}
 
@@ -194,7 +193,7 @@ namespace SDG.Unturned
 			Interlocked.Increment(ref totalSearchLocationsFinishedSearching);
 		}
 
-		private async void ReaderThreadMain(object untypedState)
+		private void ReaderThreadMain(object untypedState)
 		{
 			WorkerThreadState state = (WorkerThreadState) untypedState;
 
@@ -214,24 +213,17 @@ namespace SDG.Unturned
 							IDatDictionary configData = state.ReadFileWithoutHash(workItem.filePath);
 							string dirPath = Path.GetDirectoryName(workItem.filePath);
 							MasterBundleConfig config = new MasterBundleConfig(dirPath, configData, state.origin);
-
-							byte[] data;
 							byte[] hash;
-
-							using (FileStream fileStream = new FileStream(config.getAssetBundlePath(), FileMode.Open, FileAccess.Read, FileShare.Read))
-							using (SHA1Stream hashStream = new SHA1Stream(fileStream))
-							using (MemoryStream memoryStream = new MemoryStream())
+							using (FileStream stream = new FileStream(config.getAssetBundlePath(), FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.SequentialScan))
+							using (System.Security.Cryptography.SHA1 algorithm = System.Security.Cryptography.SHA1.Create())
 							{
-								await hashStream.CopyToAsync(memoryStream);
-								data = memoryStream.ToArray();
-								hash = hashStream.Hash;
+								hash = algorithm.ComputeHash(stream);
 							}
 
 							Interlocked.Increment(ref totalMasterBundlesRead);
 							state.owner.resultItems.Enqueue(new MasterBundle
 							{
 								config = config,
-								assetBundleData = data,
 								hash = hash,
 							});
 						}

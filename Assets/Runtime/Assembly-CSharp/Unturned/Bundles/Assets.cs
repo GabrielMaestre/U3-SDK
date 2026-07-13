@@ -2137,7 +2137,7 @@ namespace SDG.Unturned
 							AssetsWorker.MasterBundle mb = (AssetsWorker.MasterBundle) nextItem;
 							MasterBundleConfig config = mb.config;
 							pendingMasterBundles.Add(config);
-							config.StartLoad(mb.assetBundleData, mb.hash);
+							config.StartLoad(mb.hash);
 							loadingStats.isLoadingAssetBundles = true;
 							break;
 						}
