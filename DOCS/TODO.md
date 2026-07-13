@@ -8,11 +8,11 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 
 ## P0 — Baseline e segurança
 
-- [ ] Fixar máquinas, SO, resolução, presets, mapas, rotas e número de bots/jogadores para benchmarks.
+- [x] Definir matriz de hardware, resolução, presets, mapas, rotas e entidades em `PERFORMANCE_TESTING.md`; preencher valores reais por máquina em cada captura.
 - [x] Criar ranking inicial dos 50 agressores e separar medição de candidatos estáticos em `TOPLAG.md`.
 - [x] Medir boot frio/quente até menu no Unity Editor: `76,96 s` frio contra `11,88–12,15 s` quente.
 - [ ] Medir loading de mapa, entrada em servidor e primeiro frame controlável.
-- [ ] Criar cenas/cenários de benchmark: cidade densa, floresta, combate, horda, veículos e servidor cheio.
+- [x] Definir cenários reproduzíveis de baseline, cidade, floresta, horda, veículos, multiplayer e soak; execução e baselines continuam constantes por build.
 - [ ] Registrar CPU/GPU frame time p50/p95/p99, GC, RAM, VRAM, I/O, rede e tick do servidor.
 - [ ] Separar métricas de Editor, Development Build, Release e servidor dedicado.
 - [ ] Criar smoke test de boot, criação de mundo, conexão, spawn, inventário, combate, veículo e shutdown.
@@ -21,7 +21,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Definir limites de regressão e ruído aceitável por métrica.
 - [ ] Manter resultados de benchmark fora do repositório quando forem binários ou grandes; versionar só resumo textual.
 
-## P1 — Boot e loading — 12/X
+## P1 — Boot e loading — 13/X
 
 - [x] Carregar master bundles direto do disco com `LoadFromFileAsync`, sem copiar arquivo inteiro para memória; manter SHA-1 de integridade.
 - [x] Suspender leitores de assets ociosos com `SemaphoreSlim.WaitAsync`, eliminando busy-spin durante varredura de diretórios.
@@ -35,6 +35,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Adiar três texturas base de skin de `VehicleAsset` até primeiro uso, reutilizando helper lazy compartilhado.
 - [x] Adiar prefabs `Projectile` de armas e magazines até primeiro uso em master bundles, preservando modos eager existentes.
 - [x] Não copiar matrizes de foliage clutter para listas runtime quando opção de clutter estiver desligada.
+- [x] Ler GUIDs comuns de arquivos `River` no buffer compartilhado, removendo um `byte[16]` por GUID durante loading de mapas.
 - [ ] Repetir cold start após reiniciar Unity e comparar contra baseline de `76,96 s`.
 - [ ] Traçar ordem e duração de inicializadores, cenas, subsistemas, bundles, Workshop e conexão Steam.
 - [ ] Remover inicialização duplicada, bloqueante ou não usada antes do menu.
@@ -52,7 +53,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time — 9/X
+## P1 — CPU e frame time — 14/X
 
 - [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
 - [x] Consultar distância de `LightLOD` já distante a cada oito frames, mantendo transição próxima por frame.
@@ -63,6 +64,11 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Calcular distância e multiplicador trigonométrico da sentry uma vez por disparo, não por pellet.
 - [x] Remover normalizações sem efeito em testes de sinal e rotação horizontal de zombies.
 - [x] Validar alcance balístico por distância ao quadrado, sem raiz por resultado de tiro no servidor.
+- [x] Compartilhar relógio por callback em animal, sentry, animação humana e luz oscilante.
+- [x] Compartilhar tempo de onda, modo client/server e damping entre voxels de cada `Buoyancy.FixedUpdate`.
+- [x] Remover iteradores de jogadores dos efeitos periódicos de clima, mantendo filtro e ordem dos atributos.
+- [x] Consumir filas ordenadas de itens, barricadas e estruturas pela cauda, evitando `RemoveRange(0, N)` e deslocamento da fila restante a cada frame.
+- [x] Adicionar modo opt-in exclusivo do Unity Editor que limita far clip a `768 m`, reduzindo culling e submissão de renderers distantes sem alterar Player build.
 - [ ] Inventariar `Update`, `LateUpdate`, `FixedUpdate`, coroutines e callbacks mais caros.
 - [ ] Remover polling substituível por eventos existentes.
 - [ ] Distribuir trabalho não urgente entre frames com orçamento explícito.
@@ -78,7 +84,10 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Detectar long frames e atribuir custo por sistema.
 - [ ] Definir orçamento de tick para cliente e servidor dedicado.
 
-## P1 — Memória e GC
+## P1 — Memória e GC — 2/X
+
+- [x] Remover alocações dos iteradores `yield` nos efeitos periódicos de clima.
+- [x] Remover array temporário de 16 bytes por GUID no caminho comum de `River.readGUID`, com teste de alocação.
 
 - [ ] Capturar snapshots em boot, loading, gameplay prolongado, troca de mapa e disconnect.
 - [ ] Localizar objetos gerenciados, nativos e assets retidos após descarregamento.
@@ -92,14 +101,16 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 3/X
+## P1 — GPU e renderização — 4/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
 - [x] Reduzir faixa base de LOD bias de `[2,5]` para `[1,4]`, fazendo modelos leves entrarem antes pelo slider existente.
+- [x] Classificar captura do Editor: CPU `12,85 ms` contra GPU `5,09 ms`; `Render.OpaqueGeometry`, `BatchRenderer.Flush` e `Batch.DrawStatic` confirmam custo principal de submissão/culling, não shader saturando GPU.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
+- [ ] Medir no Frame Debugger árvores, pedras, itens e estruturas repetidas. Instanciar somente grupos com mesmo mesh, material, lightmap, sombras e estado de renderer; foliage já usa `DrawMeshInstanced` e mapas já podem usar `LevelBatching`.
 - [ ] Corrigir bounds excessivos que impedem frustum e occlusion culling.
 - [ ] Criar LODs para personagens, veículos, objetos, vegetação e efeitos caros.
 - [ ] Revisar transições de LOD para evitar popping e custo simultâneo excessivo.
@@ -112,12 +123,13 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
 - [ ] Validar APIs gráficas e GPUs suportadas após cada mudança de shader.
 
-## P1 — Distância de renderização e streaming — 4/X
+## P1 — Distância de renderização e streaming — 5/X
 
 - [x] Materializar proxies `Skybox` de `LevelObject` sob demanda pela região existente; preservar editor e level batching.
 - [x] Desativar objetos, itens, recursos, barricadas e estruturas somente dentro dos bounds da região anterior; centro inicial inválido produz bounds vazios.
 - [x] Separar distância de clutter da distância geral de foliage e aplicar cap dinâmico por preset.
 - [x] Antecipar transições de `LODGroup` globalmente sem alterar distâncias de rede, física ou streaming regional.
+- [x] Preservar prioridade próxima e budgets regionais de itens/estruturas enquanto remoção O(1) reduz custo de filas grandes.
 - [ ] Separar distância por categoria: terreno, estruturas, itens, jogadores, veículos, IA, vegetação, sombras e efeitos.
 - [ ] Definir limites mínimo/máximo por preset e opção manual.
 - [ ] Adaptar distância por orçamento de frame time com histerese e cooldown para evitar oscilação.
@@ -130,6 +142,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Impedir pop-in crítico de jogadores, ameaças, tiros e veículos.
 - [ ] Definir fallback estável quando CPU, GPU, memória ou I/O saturarem.
 - [ ] Testar teleporte, voo rápido, veículos, escopos, mapas grandes e hardware lento.
+- [ ] Medir tamanho, idade e tempo das filas existentes; depois adicionar cancelamento por geração de região, histerese entre anéis e prioridade por direção de movimento.
+- [ ] Separar I/O de ativação: worker lê/decodifica dados puros; main thread cria objetos Unity sob orçamento. Nunca acessar Unity API no worker.
+- [ ] Manter teleporte/carga crítica síncronos até provar que colisão, stance, nav e primeiro frame permanecem corretos.
 
 ## P1 — Pathfinding e IA — 1/X
 
@@ -154,6 +169,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Criar testes de caminho válido, inalcançável, dinâmico, estreito e longa distância.
 - [ ] Comparar qualidade e custo contra implementação atual antes de substituir.
 - [ ] Entregar atrás de flag até paridade funcional e migração de mapas.
+- [ ] Implementar scheduler compartilhado de repath quando implementação ASPFP estiver disponível: teto de buscas e milissegundos por tick, prioridade por ameaça/distância, cooldown, histerese e cancelamento. SDK atual contém fallback vazio, sem busca real para orçar.
 
 ## P1 — Rede e servidor dedicado — 2/X
 
@@ -222,6 +238,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir frequência/custo de animais, zombies, jogadores, veículos, barricadas e estruturas.
 - [ ] Aplicar níveis de simulação por distância e relevância sem alterar resultados críticos.
 - [ ] Reduzir física de objetos dormindo e entidades fora de interesse.
+- [ ] Prototipar três níveis somente após captura: próximo com física completa; médio com frequência reduzida para lógica não crítica; distante dormindo/event-driven. Servidor mantém colisões e resultados autoritativos.
+- [ ] Produzir colliders simples offline para assets dominantes e validar contatos, veículos, projéteis e exploits. Não trocar collider crítico em runtime apenas por distância.
 - [ ] Revisar frequência de raycasts de armas, interação e percepção de IA.
 - [ ] Corrigir diferenças entre `Update` e `FixedUpdate` dependentes de frame rate.
 - [ ] Revisar determinismo e drift em timers, cooldowns e status.
@@ -268,25 +286,25 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Fazer soak tests de cliente e servidor por longos períodos.
 - [ ] Agrupar crashes por assinatura e atacar maior frequência primeiro.
 
-## P2 — Ferramentas, testes e CI
+## P2 — Ferramentas, testes e CI — 1/X
 
 - [ ] Automatizar build limpo de cliente e servidor suportados.
 - [ ] Executar testes existentes de `SDG.NetPak` e `UnturnedDat`.
 - [ ] Adicionar testes unitários somente para lógica pura crítica ou regressão real.
 - [ ] Criar integração mínima para boot, load, conexão e save.
-- [ ] Criar benchmark executável sem interação manual quando possível.
+- [x] Adicionar captura standalone opt-in `-PerformanceMetrics` com CSV e duração limitada; automação de rota continua aberta quando houver replay determinístico.
 - [ ] Comparar performance em hardware fixo; não bloquear CI compartilhada por ruído aleatório.
 - [ ] Detectar assets duplicados, referências quebradas e variantes excessivas.
 - [ ] Verificar compatibilidade de protocolo e formato de save.
 - [ ] Gerar relatório curto de regressões por build.
 - [ ] Manter símbolos e dumps úteis para builds de diagnóstico.
 
-## P2 — Observabilidade
+## P2 — Observabilidade — 2/X
 
 - [ ] Padronizar categorias, severidade e contexto de logs.
 - [ ] Remover spam e logs caros de hot paths em builds normais.
-- [ ] Adicionar contadores baratos para frame, tick, entidades, filas, memória e rede.
-- [ ] Permitir captura temporária por sistema sem recompilar.
+- [x] Adicionar contadores opt-in de frame, CPU, GPU, GC, memória e render; tick, entidades, filas e rede continuam abertos por subsistema.
+- [x] Permitir captura temporária geral com `-PerformanceMetrics` e `-PerformanceMetricsSeconds=N`, sem recompilar.
 - [ ] Correlacionar sessão, conexão e evento sem dados pessoais desnecessários.
 - [ ] Gerar relatório de crash com versão, plataforma, mapa e mods.
 - [ ] Proteger logs contra injeção, dados sensíveis e crescimento sem limite.

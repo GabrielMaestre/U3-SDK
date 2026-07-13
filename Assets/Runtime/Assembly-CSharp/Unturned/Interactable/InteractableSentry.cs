@@ -414,13 +414,16 @@ namespace SDG.Unturned
 
 		private void Update()
 		{
+			double currentTime = Time.timeAsDouble;
+			float deltaTime = Time.deltaTime;
+
 			if (Provider.isServer && isPowered)
 			{
 				Vector3 fromPoint = transform.position + new Vector3(0.0f, 0.65f, 0.0f);
 
-				if (Time.timeAsDouble - lastScan > 0.1f)
+				if (currentTime - lastScan > 0.1f)
 				{
-					lastScan = Time.timeAsDouble;
+					lastScan = currentTime;
 					ScanForTargets(fromPoint);
 				}
 
@@ -473,9 +476,9 @@ namespace SDG.Unturned
 
 				if (isAiming)
 				{
-					if (Time.timeAsDouble - lastAim > Provider.UPDATE_TIME)
+					if (currentTime - lastAim > Provider.UPDATE_TIME)
 					{
-						lastAim = Time.timeAsDouble;
+						lastAim = currentTime;
 
 						Transform targetTransform = null;
 						Vector3 toPoint = Vector3.zero;
@@ -540,12 +543,12 @@ namespace SDG.Unturned
 						hasEnoughAmmoToFire = displayItem.state[10] >= ((ItemGunAsset) displayAsset).ammoPerShot;
 					}
 
-					if (hasEnoughAmmoToFire && Time.timeAsDouble - lastFire > fireTime)
+					if (hasEnoughAmmoToFire && currentTime - lastFire > fireTime)
 					{
 						lastFire += fireTime;
-						if (Time.timeAsDouble - lastFire > fireTime)
+						if (currentTime - lastFire > fireTime)
 						{
-							lastFire = Time.timeAsDouble;
+							lastFire = currentTime;
 						}
 
 						float quality = displayItem.quality / 100f;
@@ -778,7 +781,7 @@ namespace SDG.Unturned
 				}
 			}
 
-			bool newAlert = Time.timeAsDouble - lastAlert < 1.0;
+			bool newAlert = currentTime - lastAlert < 1.0;
 			if (newAlert != isAlert)
 			{
 				isAlert = newAlert;
@@ -807,18 +810,18 @@ namespace SDG.Unturned
 				{
 					if (isAlert)
 					{
-						lastDrift = Time.timeAsDouble;
-						yaw = Mathf.LerpAngle(yaw, targetYaw, 4.0f * Time.deltaTime);
+						lastDrift = currentTime;
+						yaw = Mathf.LerpAngle(yaw, targetYaw, 4.0f * deltaTime);
 					}
 					else
 					{
-						float period = (float) (Time.timeAsDouble - lastDrift);
+						float period = (float) (currentTime - lastDrift);
 						period *= MathfEx.TAU;
 						period /= sentryAsset.SweepPeriod;
-						yaw = Mathf.LerpAngle(yaw, targetYaw + (Mathf.Sin(period) * sentryAsset.SweepHalfYaw), 4.0f * Time.deltaTime);
+						yaw = Mathf.LerpAngle(yaw, targetYaw + (Mathf.Sin(period) * sentryAsset.SweepHalfYaw), 4.0f * deltaTime);
 					}
 
-					pitch = Mathf.LerpAngle(pitch, targetPitch, 4.0f * Time.deltaTime);
+					pitch = Mathf.LerpAngle(pitch, targetPitch, 4.0f * deltaTime);
 
 					if (yawTransform != null)
 					{
@@ -863,7 +866,7 @@ namespace SDG.Unturned
 						offMaterial.SetColor("_EmissionColor", !isAlert && isPowered ? offMaterial.color * 2f : Color.black);
 					}
 
-					if (Time.timeAsDouble - lastShot > 0.05)
+					if (currentTime - lastShot > 0.05)
 					{
 						if (muzzleLight != null)
 						{

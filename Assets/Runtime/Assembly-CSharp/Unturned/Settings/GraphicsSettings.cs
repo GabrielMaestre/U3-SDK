@@ -333,6 +333,10 @@ namespace SDG.Unturned
 		/// </summary>
 		private static CommandLineFloat clFarClipDistance = new CommandLineFloat("-FarClipDistance");
 
+#if UNITY_EDITOR
+		private static CommandLineFlag clEditorPerformanceMode = new CommandLineFlag(false, "-EditorPerformanceMode");
+#endif // UNITY_EDITOR
+
 		/// <summary>
 		/// Multiplier for far clip plane distance.
 		/// Clamped within [0, 1] range to prevent editing config files for an advantage.
@@ -840,6 +844,14 @@ namespace SDG.Unturned
 					layerCullDistances[index] *= editorFarClipMultiplier;
 				}
 			}
+
+#if UNITY_EDITOR
+			// Keep Play Mode representative while avoiding most distant renderer submission and culling work.
+			if (clEditorPerformanceMode && !WantsCinematicMode)
+			{
+				farClipPlane = Mathf.Min(farClipPlane, 768.0f);
+			}
+#endif // UNITY_EDITOR
 
 			if (!LevelObjects.shouldInstantlyLoad && !LevelGround.shouldInstantlyLoad
 				&& LevelObjects.objects != null)

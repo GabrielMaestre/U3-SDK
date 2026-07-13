@@ -21,6 +21,10 @@ namespace SDG.Unturned
 
 		private void FixedUpdate()
 		{
+			bool predictWaves = !Dedicator.IsDedicatedServer;
+			float waveTime = predictWaves ? Time.time : 0.0f;
+			float dampingMultiplier = 0.1f * rootRigidbody.mass;
+
 			foreach (Vector3 localPoint in voxels)
 			{
 				Vector3 worldPoint = transform.TransformPoint(localPoint);
@@ -39,16 +43,16 @@ namespace SDG.Unturned
 
 				if (isUnderwater)
 				{
-					if (!Dedicator.IsDedicatedServer)
+					if (predictWaves)
 					{
 						// Locally predict some waves, but don't do it on the server to save bandwidth.
-						surfaceElevation += Mathf.Sin(((worldPoint.x + worldPoint.z) * 8f) + Time.time) * 0.1f;
+						surfaceElevation += Mathf.Sin(((worldPoint.x + worldPoint.z) * 8f) + waveTime) * 0.1f;
 					}
 
 					if (worldPoint.y - voxelHalfHeight < surfaceElevation)
 					{
 						Vector3 velocity = rootRigidbody.GetPointVelocity(worldPoint);
-						Vector3 localDampingForce = -velocity * 0.1f * rootRigidbody.mass;
+						Vector3 localDampingForce = -velocity * dampingMultiplier;
 						Vector3 force = localDampingForce + (Mathf.Sqrt(Mathf.Clamp01(((surfaceElevation - worldPoint.y) / (2 * voxelHalfHeight)) + 0.5f)) * localArchimedesForce);
 						rootRigidbody.AddForceAtPosition(force, worldPoint);
 					}

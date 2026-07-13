@@ -103,6 +103,7 @@ namespace SDG.Unturned.Tools
 					}
 
 					prefCheckbox("-DedicatedServerInEditor");
+					prefCheckbox("-EditorPerformanceMode");
 					prefCheckbox("-LoadCoreAssetBundleFromSteamInstall");
 					prefCheckbox("-NoGoldUpgrade");
 				}
@@ -115,6 +116,7 @@ namespace SDG.Unturned.Tools
 				foldoutMisc = EditorGUILayout.BeginFoldoutHeaderGroup(foldoutMisc, "Misc");
 				if (foldoutMisc)
 				{
+					prefCheckbox("-PerformanceMetrics");
 					prefCheckbox("-BypassWorkshopDownloadRestrictions");
 					prefCheckbox("-IgnoreServerWorkshopFiles");
 					prefCheckbox("-Cinematic");

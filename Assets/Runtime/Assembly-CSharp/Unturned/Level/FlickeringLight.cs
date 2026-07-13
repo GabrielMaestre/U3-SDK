@@ -17,15 +17,16 @@ namespace SDG.Unturned
 
 		private void Update()
 		{
+			float currentTime = Time.time;
 			float intensity = Random.Range(0.9f, 1.4f);
 
-			if (Time.time - blackoutTime < 0.15f)
+			if (currentTime - blackoutTime < 0.15f)
 			{
 				intensity = 0.15f;
 			}
-			else if (Time.time - blackoutTime > blackoutDelay)
+			else if (currentTime - blackoutTime > blackoutDelay)
 			{
-				blackoutTime = Time.time;
+				blackoutTime = currentTime;
 				blackoutDelay = Random.Range(7.3f, 13.2f);
 			}
 

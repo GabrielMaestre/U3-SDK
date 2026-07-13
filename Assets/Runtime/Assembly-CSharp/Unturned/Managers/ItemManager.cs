@@ -35,7 +35,8 @@ namespace SDG.Unturned
 
 		public int CompareTo(ItemInstantiationParameters other)
 		{
-			return sortOrder.CompareTo(other.sortOrder);
+			// Keep nearest instantiations at the tail so processing does not shift the remaining list.
+			return other.sortOrder.CompareTo(sortOrder);
 		}
 	}
 
@@ -1153,15 +1154,15 @@ namespace SDG.Unturned
 				{
 					Profiler.BeginSample("PendingInstantiations");
 					instantiationTimer.Restart();
-					int instantiationIndex = 0;
+					int instantiationCount = 0;
 					do
 					{
-						ItemInstantiationParameters instantiation = pendingInstantiations[instantiationIndex];
+						ItemInstantiationParameters instantiation = pendingInstantiations.GetTail();
 						spawnItem(instantiation.region_x, instantiation.region_y, instantiation.assetId, instantiation.amount, instantiation.quality, instantiation.state, instantiation.point, instantiation.instanceID, instantiation.shouldPlayEffect);
-						++instantiationIndex;
+						pendingInstantiations.RemoveTail();
+						++instantiationCount;
 					}
-					while (instantiationIndex < pendingInstantiations.Count && (instantiationTimer.ElapsedMilliseconds < 1 || instantiationIndex < MIN_INSTANTIATIONS_PER_FRAME));
-					pendingInstantiations.RemoveRange(0, instantiationIndex);
+					while (pendingInstantiations.Count > 0 && (instantiationTimer.ElapsedMilliseconds < 1 || instantiationCount < MIN_INSTANTIATIONS_PER_FRAME));
 					instantiationTimer.Stop();
 					Profiler.EndSample();
 				}

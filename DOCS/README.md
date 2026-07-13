@@ -116,6 +116,54 @@ Metas principais:
 - Fórmulas rápidas e cálculos configuráveis, como expoentes de física dos veículos, não foram alterados sem captura. Aproximações e lookup tables não foram adicionados.
 - Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes; captura de horda e sentries com armas multi-pellet ainda precisa medir ganho.
 
+### 2026-07-13 — Stress e observabilidade local
+
+- Captura opt-in `-PerformanceMetrics` grava CSV por um período limitado, sem telemetria remota ou impacto em builds executados sem flag.
+- Janela de um segundo registra frame time médio/p50/p95/p99/máximo, main/render thread, CPU/GPU frame time, GC, memória, draw calls, batches, SetPass e triângulos.
+- `Window > Unturned > Editor Settings > Misc > Performance Metrics` permite smoke test no Editor; comparação válida permanece em Development Build standalone.
+- Cenários de baseline, floresta, cidade, horda, veículos, multiplayer e soak estão definidos em `PERFORMANCE_TESTING.md`.
+- Validação: `Assembly-CSharp.csproj` e `Assembly-CSharp-Editor.csproj` compilam com 0 erros e 14 warnings preexistentes; primeira baseline standalone ainda precisa ser capturada.
+
+### 2026-07-13 — Culling e geometria opaca no Unity Editor
+
+- Captura no Play Mode: CPU `12,85 ms`, GPU `5,09 ms`; `Render.OpaqueGeometry` consumiu `40,2%` da CPU com `397` draw calls.
+- Dentro do passe opaco, `BatchRenderer.Flush` consumiu `26,6%` e `Batch.DrawStatic` `21,7%`, com somente `63` draws estáticos. Perfil indica gargalo de culling/submissão na CPU, não saturação da GPU.
+- Static Batching, Dynamic Batching e Graphics Jobs para Windows já estão ativos. Trocar static batching por instancing genérico ou reescrever culling na GPU não foi aplicado: static batching tem prioridade e mudança ampla pode aumentar draws, memória ou incompatibilidade.
+- Novo `Editor Performance Mode`, disponível em `Window > Unturned > Editor Settings > Playing in Unity`, limita far clip a `768 m` somente sob `UNITY_EDITOR`. Menos renderers distantes chegam ao culling e GBuffer; Player build permanece idêntico. Cinematic Mode preserva distância original.
+- Ganho deve ser medido no mesmo ponto do mapa. Modo reduz fidelidade de distância e serve para iteração rápida, não baseline final.
+
+### 2026-07-13 — Update, LateUpdate, FixedUpdate e GC
+
+- `Animal.Update`, `InteractableSentry.Update`, `HumanAnimator.LateUpdate` e `FlickeringLight.Update` leem relógio Unity uma vez por callback e reutilizam valor. Timers e interpolações preservam mesmo instante do frame.
+- `Buoyancy.FixedUpdate` calcula modo de ondas, tempo e damping uma vez por passo de física, não por voxel.
+- Efeitos de status de clima percorrem `Provider.clients` diretamente. Iteradores `yield` aninhados deixam de alocar por atributo aplicado; filtro `WeatherMask` e ordem de stamina/health/food/water/virus permanecem.
+- LOD adicional não foi gerado em runtime: meshes reduzidas precisam ser produzidas nos assets e medidas. Bias global, `LODGroup`, LightLOD distribuído e culling de animação já cobrem caminho seguro.
+- Frequência de `FixedUpdate`, física, IA, raycasts e polling não mudou sem captura standalone. Pooling, jobs e novos managers não foram adicionados.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes. Unity Profiler e Memory Profiler ainda precisam confirmar CPU por callback e `GC.Alloc`.
+
+### 2026-07-13 — GC de loading e filas regionais
+
+- “Aumentar alocação GC” foi interpretado como reduzir alocações e pressão sobre GC. Aumentar heap ou coleta não corrige causa e pode ampliar pausas.
+- `River.readGUID` reutiliza buffer existente no caso normal de 16 bytes. Loading de objetos de mapa deixa de criar um `byte[16]` para cada GUID; fallback de dados inesperados preserva comportamento anterior.
+- Filas ordenadas de itens, barricadas e estruturas continuam priorizando instâncias próximas e respeitando budgets existentes de `1 ms` e `2 ms`.
+- Ordem interna foi invertida para consumir cauda da `List<T>` em O(1). Processamento anterior removia começo da lista e deslocava toda fila restante por frame.
+- Streaming amplo não foi reescrito: `RegionIncrementalVisibilityTracker`, atualização incremental de objetos e budgets dos managers já fornecem base correta. Próximo passo é medir backlog, tempo e cancelamentos antes de unificar filas.
+- Teste de `River` cobre round-trip e zero bytes gerenciados em 100 leituras comuns de GUID. Validação runtime: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes.
+
+## Baseline standalone de `Builds/perf.csv`
+
+Captura contém `262` janelas: `12` de startup, `6` de menu e `244` de jogo. Após `60 s` de aquecimento, `224` janelas de gameplay mostram:
+
+- FPS mediano `103,2`; frame médio mediano `9,663 ms`;
+- p95 mediano `11,220 ms`; p99 mediano `12,417 ms`;
+- main thread média mediana `9,567 ms` contra GPU mediana `3,433 ms`: cenário principalmente limitado por CPU;
+- draw calls medianos `3.674`, batches `1.048`, SetPass `450` e `384.436` triângulos;
+- GC médio mediano baixo, `0,224 KiB/frame`, mas loading atingiu `1.577.748,555 KiB` em um frame;
+- loading teve frame de `11.583,790 ms` e main thread de `11.678,792 ms`;
+- gameplay aquecido ainda teve hitches de `470,161 ms`, com GPU de `4,559 ms` e quase nenhum GC nesse pico.
+
+Conclusão: captura confirma duas classes distintas. Loading possui trabalho e alocação síncronos extremos; gameplay possui hitches de main thread não explicados por GPU nem GC. CSV não contém call stacks, portanto CPU Timeline deve identificar método antes da próxima mudança ampla.
+
 ## Investigação de cold start
 
 Medição em Unity Editor `2022.3.62f3`, mesma sessão e mesmo mapa de startup:
@@ -130,6 +178,8 @@ Conclusão: diferença não está na abertura do `core.masterbundle`. Cache quen
 Cache persistente não foi adicionado porque invalidação incorreta quebraria mods, Workshop e reload de assets; cache de SHA-1 também reduziria garantia de integridade. Próxima opção segura: converter loads eager para lazy-load por tipo, com benchmark e regressão individual. Foram localizados 67 pontos de load eager em 25 tipos de asset.
 
 ## Profiling recomendado
+
+Cenários, comando de captura CSV e procedimento estão em [PERFORMANCE_TESTING.md](PERFORMANCE_TESTING.md).
 
 Ordem de uso:
 
@@ -225,4 +275,5 @@ Item termina somente quando:
 
 - [SKILLS.md](SKILLS.md): competências e responsabilidades necessárias.
 - [TOPLAG.md](TOPLAG.md): ranking dos 50 principais candidatos de CPU, memória, GPU e loading.
+- [PERFORMANCE_TESTING.md](PERFORMANCE_TESTING.md): stress, métricas, Profiler, traces e comparação reproduzível.
 - [TODO.md](TODO.md): backlog priorizado de melhorias.

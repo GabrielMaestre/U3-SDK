@@ -949,6 +949,8 @@ namespace SDG.Unturned
 				return;
 			}
 
+			double currentTime = Time.timeAsDouble;
+
 			if (Provider.isServer)
 			{
 				if (!isUpdated)
@@ -961,17 +963,17 @@ namespace SDG.Unturned
 						isUpdated = true;
 						AnimalManager.updates++;
 
-						if (isStuck && Time.timeAsDouble - lastStuck > 0.5f)
+						if (isStuck && currentTime - lastStuck > 0.5f)
 						{
 							isStuck = false;
-							lastStuck = Time.timeAsDouble;
+							lastStuck = currentTime;
 						}
 					}
 					else
 					{
 						if (isMoving)
 						{
-							if (Time.timeAsDouble - lastStuck > 0.125f)
+							if (currentTime - lastStuck > 0.125f)
 							{
 								isStuck = true;
 							}
@@ -979,7 +981,7 @@ namespace SDG.Unturned
 						else
 						{
 							isStuck = false;
-							lastStuck = Time.timeAsDouble;
+							lastStuck = currentTime;
 						}
 					}
 				}
@@ -1033,13 +1035,13 @@ namespace SDG.Unturned
 				{
 					// Nelson 2023-08-18: checking time since last attack is a placeholder-ish fix
 					// to prevent idle animations immediately playing after an attack. (public issue #4073)
-					if (Time.timeAsDouble - lastAttack > attackInterval + 0.5)
+					if (currentTime - lastAttack > attackInterval + 0.5)
 					{
-						if (asset.eatAnimVariantsCount > 0 && Time.timeAsDouble - lastEat > eatDelay)
+						if (asset.eatAnimVariantsCount > 0 && currentTime - lastEat > eatDelay)
 						{
 							askEat();
 						}
-						else if (asset.glanceAnimVariantsCount > 0 && Time.timeAsDouble - lastGlance > glanceDelay)
+						else if (asset.glanceAnimVariantsCount > 0 && currentTime - lastGlance > glanceDelay)
 						{
 							askGlance();
 						}
@@ -1051,18 +1053,18 @@ namespace SDG.Unturned
 			{
 				if (isStuck)
 				{
-					if (Time.timeAsDouble - lastStuck > 0.75f)
+					if (currentTime - lastStuck > 0.75f)
 					{
-						lastStuck = Time.timeAsDouble;
+						lastStuck = currentTime;
 
 						getWanderTarget();
 					}
 				}
 				else if (!isFleeing && !isHunting)
 				{
-					if (Time.timeAsDouble - lastWander > wanderDelay)
+					if (currentTime - lastWander > wanderDelay)
 					{
-						lastWander = Time.timeAsDouble;
+						lastWander = currentTime;
 						wanderDelay = Random.Range(8f, 16f);
 
 						getWanderTarget();
@@ -1070,34 +1072,34 @@ namespace SDG.Unturned
 				}
 				else
 				{
-					lastWander = Time.timeAsDouble;
+					lastWander = currentTime;
 				}
 			}
 
 			if (isPlayingEat)
 			{
-				if (Time.timeAsDouble - lastEat > eatTime)
+				if (currentTime - lastEat > eatTime)
 				{
 					isPlayingEat = false;
 				}
 			}
 			else if (isPlayingGlance)
 			{
-				if (Time.timeAsDouble - lastGlance > glanceTime)
+				if (currentTime - lastGlance > glanceTime)
 				{
 					isPlayingGlance = false;
 				}
 			}
 			else if (isPlayingStartleAnimation)
 			{
-				if (Time.timeAsDouble > startleAnimationCompletionTime)
+				if (currentTime > startleAnimationCompletionTime)
 				{
 					isPlayingStartleAnimation = false;
 				}
 			}
 			else if (isPlayingAttack)
 			{
-				if (Time.timeAsDouble - lastAttack > attackDuration)
+				if (currentTime - lastAttack > attackDuration)
 				{
 					isPlayingAttack = false;
 				}
@@ -1123,9 +1125,9 @@ namespace SDG.Unturned
 
 			if (Provider.isServer)
 			{
-				if (health < asset.health && Time.timeAsDouble - lastRegen > asset.regen)
+				if (health < asset.health && currentTime - lastRegen > asset.regen)
 				{
-					lastRegen = Time.timeAsDouble;
+					lastRegen = currentTime;
 					health++; // Potential timing issues, but not big deal. In most cases the server framerate is higher than this update rate.
 				}
 			}

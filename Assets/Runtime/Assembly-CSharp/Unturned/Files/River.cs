@@ -185,9 +185,21 @@ namespace SDG.Unturned
 			}
 			else
 			{
-				GuidBuffer buffer = new GuidBuffer();
-				buffer.Read(readBytes(), 0);
-				return buffer.GUID;
+				ushort length = readUInt16();
+				if (length == 16)
+				{
+					stream.Read(buffer, 0, 16);
+					GuidBuffer guidBuffer = new GuidBuffer();
+					guidBuffer.Read(buffer, 0);
+					return guidBuffer.GUID;
+				}
+
+				// Preserve behavior for malformed or unexpected legacy data.
+				byte[] values = new byte[length];
+				stream.Read(values, 0, values.Length);
+				GuidBuffer fallbackBuffer = new GuidBuffer();
+				fallbackBuffer.Read(values, 0);
+				return fallbackBuffer.GUID;
 			}
 		}
 

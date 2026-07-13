@@ -49,7 +49,8 @@ namespace SDG.Unturned
 
 		public int CompareTo(PlaceableInstantiationParameters other)
 		{
-			return sortOrder.CompareTo(other.sortOrder);
+			// Keep nearest instantiations at the tail so processing does not shift the remaining list.
+			return other.sortOrder.CompareTo(sortOrder);
 		}
 
 		public override string ToString()
@@ -109,10 +110,10 @@ namespace SDG.Unturned
 			}
 			Profiler.BeginSample("PendingInstantiations");
 			instantiationTimer.Restart();
-			int instantiationIndex = 0;
+			int instantiationCount = 0;
 			do
 			{
-				PlaceableInstantiationParameters instantiation = pendingInstantiations[instantiationIndex];
+				PlaceableInstantiationParameters instantiation = pendingInstantiations.GetTail();
 				try
 				{
 					switch (instantiation.type)
@@ -131,10 +132,10 @@ namespace SDG.Unturned
 					// Wondering if reports of some regions not loading are an exception here? :/
 					UnturnedLog.exception(exception, $"Caught exception handling placeable instantiation: {instantiation}");
 				}
-				++instantiationIndex;
+				pendingInstantiations.RemoveTail();
+				++instantiationCount;
 			}
-			while (instantiationIndex < pendingInstantiations.Count && (instantiationTimer.ElapsedMilliseconds < 2 || instantiationIndex < MIN_INSTANTIATIONS_PER_FRAME));
-			pendingInstantiations.RemoveRange(0, instantiationIndex);
+			while (pendingInstantiations.Count > 0 && (instantiationTimer.ElapsedMilliseconds < 2 || instantiationCount < MIN_INSTANTIATIONS_PER_FRAME));
 			instantiationTimer.Stop();
 			Profiler.EndSample();
 		}

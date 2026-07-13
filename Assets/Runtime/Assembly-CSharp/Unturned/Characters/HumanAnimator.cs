@@ -66,10 +66,12 @@ namespace SDG.Unturned
 
 		private void LateUpdate()
 		{
+			float deltaTime = Time.deltaTime;
+
 			UnityEngine.Profiling.Profiler.BeginSample("Lerp");
-			_lean = Mathf.LerpAngle(_lean, Mathf.Clamp(lean, -1.0f, 1.0f), 4 * Time.deltaTime);
-			_pitch = Mathf.LerpAngle(_pitch, Mathf.Clamp(pitch, 1.0f, 179.0f) - 90.0f, 8 * Time.deltaTime);
-			_offset = Mathf.Lerp(_offset, offset, 4 * Time.deltaTime);
+			_lean = Mathf.LerpAngle(_lean, Mathf.Clamp(lean, -1.0f, 1.0f), 4 * deltaTime);
+			_pitch = Mathf.LerpAngle(_pitch, Mathf.Clamp(pitch, 1.0f, 179.0f) - 90.0f, 8 * deltaTime);
+			_offset = Mathf.Lerp(_offset, offset, 4 * deltaTime);
 			UnityEngine.Profiling.Profiler.EndSample();
 
 			UnityEngine.Profiling.Profiler.BeginSample("Apply");

@@ -125,9 +125,11 @@ namespace SDG.Unturned
 			{
 				staminaBuffer -= staminaInt;
 
-				foreach (Player player in EnumerateMaskedPlayers())
+				foreach (SteamPlayer client in Provider.clients)
 				{
-					player.life.serverModifyStamina(staminaInt);
+					Player player = client.player;
+					if (player != null && (player.movement.WeatherMask & asset.volumeMask) != 0)
+						player.life.serverModifyStamina(staminaInt);
 				}
 			}
 
@@ -136,9 +138,11 @@ namespace SDG.Unturned
 			{
 				healthBuffer -= healthInt;
 
-				foreach (Player player in EnumerateMaskedPlayers())
+				foreach (SteamPlayer client in Provider.clients)
 				{
-					player.life.serverModifyHealth(healthInt);
+					Player player = client.player;
+					if (player != null && (player.movement.WeatherMask & asset.volumeMask) != 0)
+						player.life.serverModifyHealth(healthInt);
 				}
 			}
 
@@ -147,9 +151,11 @@ namespace SDG.Unturned
 			{
 				foodBuffer -= foodInt;
 
-				foreach (Player player in EnumerateMaskedPlayers())
+				foreach (SteamPlayer client in Provider.clients)
 				{
-					player.life.serverModifyFood(foodInt);
+					Player player = client.player;
+					if (player != null && (player.movement.WeatherMask & asset.volumeMask) != 0)
+						player.life.serverModifyFood(foodInt);
 				}
 			}
 
@@ -158,9 +164,11 @@ namespace SDG.Unturned
 			{
 				waterBuffer -= waterInt;
 
-				foreach (Player player in EnumerateMaskedPlayers())
+				foreach (SteamPlayer client in Provider.clients)
 				{
-					player.life.serverModifyWater(waterInt);
+					Player player = client.player;
+					if (player != null && (player.movement.WeatherMask & asset.volumeMask) != 0)
+						player.life.serverModifyWater(waterInt);
 				}
 			}
 
@@ -169,9 +177,11 @@ namespace SDG.Unturned
 			{
 				virusBuffer -= virusInt;
 
-				foreach (Player player in EnumerateMaskedPlayers())
+				foreach (SteamPlayer client in Provider.clients)
 				{
-					player.life.serverModifyVirus(virusInt);
+					Player player = client.player;
+					if (player != null && (player.movement.WeatherMask & asset.volumeMask) != 0)
+						player.life.serverModifyVirus(virusInt);
 				}
 			}
 		}
