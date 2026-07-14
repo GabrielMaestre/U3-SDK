@@ -471,20 +471,6 @@ namespace SDG.Unturned
 				UnturnedLog.info("UnityEventMsg {0}: '{1}'", player.playerID.steamID, text);
 			}
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-			if (player != null)
-			{
-				if (text == "fly")
-				{
-					player.player.movement.enableFly = !player.player.movement.enableFly;
-				}
-				else if (text == "god")
-				{
-					player.player.life.enableGodMode = !player.player.life.enableGodMode;
-				}
-			}
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
-
 			Color color = Color.white;
 			if (player.isAdmin && !Provider.hideAdmins)
 			{
@@ -615,6 +601,11 @@ namespace SDG.Unturned
 			{
 				// OK at this rate we really need to add a local command handler
 				DrawAudioReverbZones();
+				return;
+			}
+			else if (string.Equals(text, "/drawchunks", System.StringComparison.InvariantCultureIgnoreCase))
+			{
+				ToggleDrawWorldChunks();
 				return;
 			}
 #endif // !DEDICATED_SERVER
@@ -884,6 +875,18 @@ namespace SDG.Unturned
 		}
 
 #if !DEDICATED_SERVER
+		internal static void ToggleDrawWorldChunks()
+		{
+			if (Player.LocalPlayer == null || !Player.LocalPlayer.channel.owner.isAdmin)
+			{
+				UnturnedLog.warn("Unable to draw world chunks without admin permissions");
+				return;
+			}
+
+			SDG.Framework.Landscapes.Landscape.IsChunkDebugVisible = !SDG.Framework.Landscapes.Landscape.IsChunkDebugVisible;
+			UnturnedLog.info("World chunk debug visualization: {0}", SDG.Framework.Landscapes.Landscape.IsChunkDebugVisible ? "enabled" : "disabled");
+		}
+
 		internal static void DrawAudioReverbZones()
 		{
 			if (!Player.LocalPlayer.channel.owner.isAdmin)

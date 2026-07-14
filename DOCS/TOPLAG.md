@@ -48,7 +48,7 @@ Ranking de iniciativas amplas, não de métodos isolados. Itens `1–2` têm med
 | 1 | Catálogo de assets em duas fases | Carregar índice, GUID, tipo e configuração necessária primeiro; abrir prefabs, materiais, áudio e outros payloads somente no primeiro uso. Adicionar manifesto persistente apenas após definir invalidação por versão e arquivo alterado. | Boot, RAM e I/O | `M/E`: cold start de `76,96 s`, cerca de `68 mil` objetos no menu e inventário inicial de 67 loads eager em 25 tipos. Fatias aplicadas a `ItemAsset`, `VehicleAsset`, projéteis de armas/magazines e outros tipos; restante continua aberto. |
 | 2 | Streaming regional do mundo | Manter manifesto leve por chunk; instanciar regiões próximas e direção de movimento com orçamento por frame; descarregar anéis distantes sem `GC.Collect` forçado. | Loading, RAM, GC e picos de frame time | `M`: pico de `1.043.752` objetos durante loading. Proxies `Skybox` são lazy; limpeza de seis sistemas examina anel anterior em vez das 4.096 regiões. Objetos físicos ainda aguardam Memory Profiler. |
 | 3 | Pipeline único de visibilidade e LOD | Reutilizar regiões para frustum/occlusion culling, LOD e distância por categoria; aplicar instancing, impóstores e orçamento separado para folhagem, terreno, água, luzes e sombras. | GPU, VRAM e CPU de render | `M/E/C`: captura do Editor mede `Render.OpaqueGeometry` em `40,2%` da CPU e GPU em `5,09 ms`; `World_Chunk_Radius` agora limita far clip, objetos, árvores, estradas e IA distante usando grade existente. Captura standalone ainda precisa medir raios `8/4/2`. |
-| 4 | Simulação e pathfinding por relevância | Atualizar entidades próximas em alta frequência, médias em frequência reduzida e distantes somente por evento; limitar repaths por tick e usar rota hierárquica/cache por versão quando medição justificar. | CPU, física e tick do servidor | `E/C`: `Zombie.tick` agora compartilha uma leitura de tempo; níveis de simulação e orçamento de repath continuam abertos até CPU Timeline separar IA, física e pathfinding. |
+| 4 | Simulação e pathfinding por relevância | Atualizar entidades próximas em alta frequência, médias em frequência reduzida e distantes somente por evento; limitar repaths por tick e usar rota hierárquica/cache por versão quando medição justificar. | CPU, física e tick do servidor | `E/C`: zombies/animais distantes já pausam e budgets dedicados agora são configuráveis em `50/25` por padrão. Repath separado continua aberto até CPU Timeline medir custo e latência. |
 | 5 | Replicação de rede por interesse e estado sujo | Usar mesmas regiões para relevância; enviar somente deltas alterados, agrupar mensagens pequenas e impor budgets/backpressure por conexão e sistema. | CPU do servidor, banda e escalabilidade | `E/C`: limpeza de flags usa anel anterior e snapshot cacheia permissão por destinatário. Deltas, budgets e backpressure continuam abertos até Network Profiler e load test. |
 
 Ordem segura: atacar `1`, explicar pico de `2`, depois medir e reordenar `3–5`. Reescrita completa sem baseline não entra no plano.
@@ -73,13 +73,20 @@ Ordem segura: atacar `1`, explicar pico de `2`, depois medir e reordenar `3–5`
 - Terreno: variantes sem neve dos seis passes removem quatro amostras de máscaras por fragmento; variante de neve permanece igual.
 - `ItemAsset`: prefab principal, animações e três texturas base de skin agora usam carregamento sob demanda em master bundles.
 - `LevelObject`: proxy `Skybox` passa a ser criado no primeiro acesso ou ativação regional; editor e batching preservam materialização necessária.
-- Foliage: clutter usa um tile a menos que distância geral por preset; opção desligada deixa de copiar matrizes descartadas para listas runtime.
+- Foliage: clutter usa um tile a menos que distância geral por preset; opção desligada deixa de copiar matrizes descartadas e nenhum foliage passa de `128 m` do jogador.
 - Armas/magazines: prefabs de projétil em master bundles carregam no primeiro acesso.
-- Modelos: LOD bias base reduzido de `[2,5]` para `[1,4]`; players e zombies client pausam animação legacy quando nenhum renderer está visível.
+- Modelos: LOD bias base reduzido de `[2,5]` para `[0,75,2]`; players e zombies client pausam animação legacy quando nenhum renderer está visível.
 - Loading/GC: leitura comum de GUID em `River` reutiliza buffer e elimina array temporário por identificador de objeto/material.
 - Streaming: filas de itens, barricadas e estruturas preservam prioridade próxima e budgets, mas agora removem cauda em O(1), sem deslocar toda fila pendente.
 - Editor: modo opt-in limita far clip a `768 m`, reduzindo renderers distantes enviados ao culling e GBuffer; build não contém mudança.
 - Chunks: configuração server-side limita janela visual e pausa animais/zombies fora do interesse de qualquer jogador; itens e estruturas preservam regiões nativas.
+- Terreno: heightmaps de tiles fora do raio deixam de renderizar; scan ocorre por região e mantém collider/dados carregados.
+- Fog: opção gráfica local controla fog atmosférico/barreira; início da barreira fica nos últimos 20% do raio.
+- Simulação: respawn normal de animais/zombies ignora áreas sem jogadores; Horde e beacon permanecem ativos.
+- IA: budgets de tick no dedicado deixam de ser constantes; `Zombies.Tick_Budget_Per_Frame=50` e `Animals.Tick_Budget_Per_Frame=25` preservam comportamento anterior e podem ser reduzidos após profiling.
+- Água: fog testa volumes candidatos do índice espacial, não lista global por câmera/render.
+- Memória: alerta do loading veio de memória paginada do sistema em `94%`; Unity ocupava `6,25 GB` e cleanup não reduziu total. 5.911 texturas/`1,88 GB` e 6.906 meshes/`1,43 GB` permanecem referenciadas.
+- Render atual: Deferred GBuffer/Lighting, `833` shadow casters, 316 RenderTextures/`257,6 MB` e 9.675 buffers/`0,71 GB` precedem otimização dos `177,3k` triângulos.
 - Resultado antes/depois ainda precisa de cold boot e loading do mesmo mapa; itens ficam parcialmente abertos até nova captura.
 
 ## Ranking atual

@@ -31,6 +31,7 @@ namespace SDG.Unturned
 			groundColorId = Shader.PropertyToID("_GroundColor");
 			inverseProjectionMatrixId = Shader.PropertyToID("_InverseProjectionMatrix");
 			cameraToWorldMatrixId = Shader.PropertyToID("_CameraToWorld");
+			distanceFogEnabledId = Shader.PropertyToID("_DistanceFogEnabled");
 
 			waterColorId = Shader.PropertyToID("_WaterColor");
 			isCameraUnderwaterId = Shader.PropertyToID("_IsCameraUnderwater");
@@ -51,6 +52,7 @@ namespace SDG.Unturned
 
 			sheet.properties.SetMatrix(inverseProjectionMatrixId, context.camera.projectionMatrix.inverse);
 			sheet.properties.SetMatrix(cameraToWorldMatrixId, context.camera.cameraToWorldMatrix);
+			sheet.properties.SetFloat(distanceFogEnabledId, GraphicsSettings.IsWorldChunkFogEnabled && !LevelLighting.isSea ? 1.0f : 0.0f);
 
 			FindRelevantWaterVolumes(context.camera.transform.position);
 			int waterCount = LevelLighting.enableUnderwaterEffects ? Mathf.Min(relevantWaterVolumes.Count, MAX_WATER_COUNT) : 0;
@@ -72,27 +74,26 @@ namespace SDG.Unturned
 		{
 			UnityEngine.Profiling.Profiler.BeginSample("FindRelevantWaterVolumes");
 			relevantWaterVolumes.Clear();
-			List<WaterVolume> allVolumes = WaterVolumeManager.Get().InternalGetAllVolumes();
-			if (allVolumes.Count > MAX_WATER_COUNT)
+			List<WaterVolume> volumesToTest = WaterVolumeManager.Get().GetOverlapTestVolumes(viewPosition);
+			if (volumesToTest == null)
 			{
-				foreach (WaterVolume volume in allVolumes)
-				{
-					Vector3 closestPoint = volume.GetClosestWorldPosition(viewPosition);
-					float sqrDistance = (viewPosition - closestPoint).sqrMagnitude;
-					//RuntimeGizmos.Get().Cube(closestPoint, 0.1f, Color.red);
-					if (sqrDistance < 4.0f)
-					{
-						relevantWaterVolumes.Add(new VolumeAlphaPair<WaterVolume>(volume, sqrDistance));
-					}
-				}
-				relevantWaterVolumes.Sort(volumeComparison);
+				UnityEngine.Profiling.Profiler.EndSample();
+				return;
 			}
-			else
+
+			foreach (WaterVolume volume in volumesToTest)
 			{
-				foreach (WaterVolume volume in allVolumes)
+				Vector3 closestPoint = volume.GetClosestWorldPosition(viewPosition);
+				float sqrDistance = (viewPosition - closestPoint).sqrMagnitude;
+				if (sqrDistance < 4.0f)
 				{
-					relevantWaterVolumes.Add(new VolumeAlphaPair<WaterVolume>(volume, 0f));
+					relevantWaterVolumes.Add(new VolumeAlphaPair<WaterVolume>(volume, sqrDistance));
 				}
+			}
+
+			if (relevantWaterVolumes.Count > MAX_WATER_COUNT)
+			{
+				relevantWaterVolumes.Sort(volumeComparison);
 			}
 			UnityEngine.Profiling.Profiler.EndSample();
 		}
@@ -104,6 +105,7 @@ namespace SDG.Unturned
 		private int groundColorId;
 		private int inverseProjectionMatrixId;
 		private int cameraToWorldMatrixId;
+		private int distanceFogEnabledId;
 
 		private int waterColorId;
 		private int isCameraUnderwaterId;

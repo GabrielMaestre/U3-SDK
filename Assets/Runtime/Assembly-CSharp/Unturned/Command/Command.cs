@@ -22,6 +22,32 @@ namespace SDG.Unturned
 		protected virtual void execute(CSteamID executorID, string parameter)
 		{ }
 
+		protected bool TryGetAdminPlayer(CSteamID executorID, out SteamPlayer steamPlayer)
+		{
+			steamPlayer = PlayerTool.getSteamPlayer(executorID);
+			if (steamPlayer == null || steamPlayer.player == null)
+			{
+				CommandWindow.LogError("Command requires a player executor.");
+				return false;
+			}
+
+			if (!steamPlayer.isAdmin && executorID != SteamAdminlist.ownerID)
+			{
+				ChatManager.say(executorID, "Admin or owner permission required.", Palette.SERVER, EChatMode.SAY);
+				return false;
+			}
+
+			return true;
+		}
+
+		protected void SendFeedback(CSteamID executorID, string message)
+		{
+			if (executorID == CSteamID.Nil)
+				CommandWindow.Log(message);
+			else
+				ChatManager.say(executorID, message, Palette.SERVER, EChatMode.SAY);
+		}
+
 		public virtual bool check(CSteamID executorID, string method, string parameter)
 		{
 			if (method.ToLower() == command.ToLower())
@@ -37,6 +63,73 @@ namespace SDG.Unturned
 		public int CompareTo(Command other)
 		{
 			return command.CompareTo(other.command);
+		}
+	}
+
+	public class CommandFly : Command
+	{
+		protected override void execute(CSteamID executorID, string parameter)
+		{
+			if (!Provider.isServer || !TryGetAdminPlayer(executorID, out SteamPlayer steamPlayer))
+				return;
+
+			bool enabled = !steamPlayer.player.movement.enableFly;
+			steamPlayer.player.movement.sendEnableFly(enabled);
+			SendFeedback(executorID, enabled ? "Fly enabled." : "Fly disabled.");
+		}
+
+		public CommandFly(Local newLocalization)
+		{
+			localization = newLocalization;
+			_command = "fly";
+			_info = "/fly or @fly";
+			_help = "Toggles flight for admin or owner.";
+		}
+	}
+
+	public class CommandGod : Command
+	{
+		protected override void execute(CSteamID executorID, string parameter)
+		{
+			if (!Provider.isServer || !TryGetAdminPlayer(executorID, out SteamPlayer steamPlayer))
+				return;
+
+			steamPlayer.player.life.enableGodMode = !steamPlayer.player.life.enableGodMode;
+			SendFeedback(executorID, steamPlayer.player.life.enableGodMode ? "God mode enabled." : "God mode disabled.");
+		}
+
+		public CommandGod(Local newLocalization)
+		{
+			localization = newLocalization;
+			_command = "god";
+			_info = "/god or @god";
+			_help = "Toggles damage immunity for admin or owner.";
+		}
+	}
+
+	public class CommandSpeed : Command
+	{
+		protected override void execute(CSteamID executorID, string parameter)
+		{
+			if (!Provider.isServer || !TryGetAdminPlayer(executorID, out SteamPlayer steamPlayer))
+				return;
+
+			if (!int.TryParse(parameter, out int multiplier) || multiplier < 1 || multiplier > 10)
+			{
+				SendFeedback(executorID, "Usage: /speed <1-10>");
+				return;
+			}
+
+			steamPlayer.player.movement.sendPluginSpeedMultiplier(multiplier);
+			SendFeedback(executorID, $"Speed multiplier set to {multiplier}x.");
+		}
+
+		public CommandSpeed(Local newLocalization)
+		{
+			localization = newLocalization;
+			_command = "speed";
+			_info = "/speed <1-10> or @speed <1-10>";
+			_help = "Sets movement speed multiplier for admin or owner.";
 		}
 	}
 }

@@ -99,8 +99,8 @@ Metas principais:
 
 ### 2026-07-13 — Render de modelos e animação invisível
 
-- Faixa base de `QualitySettings.lodBias` mudou de `[2,5]` para `[1,4]`, usando mesmo slider de draw distance. LODs leves entram antes em árvores, casas, personagens, itens e demais prefabs com `LODGroup`.
-- No menor draw distance, alcance relativo de cada LOD cai 50%; no maior, 20%. Distâncias de rede, colisão, hitbox e simulação não mudaram.
+- Faixa base de `QualitySettings.lodBias` mudou de `[2,5]` para `[0,75,2]`, usando mesmo slider de draw distance. LODs leves entram antes em árvores, casas, personagens, itens e demais prefabs com `LODGroup`.
+- Distâncias de rede, colisão, hitbox e simulação não mudaram. Cinematic Mode e override positivo do usuário continuam preservados.
 - Players remotos em cliente puro e `Zombie_Client` usam `AnimationCullingType.BasedOnRenderers`. Unity deixa de avaliar animação legacy quando nenhum renderer estiver visível.
 - NPC client já usava mesmo culling. Player local, servidor, listen server e dedicated server mantêm `AlwaysAnimate` para não afetar viewmodel, hitboxes ou lógica autoritativa.
 - Árvores e casas já usam regiões, layers, `LevelBatching`, `LODGroup` e proxies skybox quando configurados. Itens dropados já usam layer `ITEM` com distância curta. Novo manager duplicaria trabalho existente.
@@ -136,6 +136,7 @@ Metas principais:
 
 - `Build Test` já concluía com sucesso, mas iniciava `BuildPipeline` dentro de `OnGUI`. Reload do Editor invalidava pilha IMGUI e gerava `EndLayoutGroup: BeginLayoutGroup must be called first` após build.
 - Três ações de build agora usam `EditorApplication.delayCall`; execução começa depois do evento de layout. Processo e saída do build não mudaram.
+- `com.unity.postprocessing` foi alinhado de `3.4.0` para `3.3.0`, versão compatível com Unity `2022.3`. Versão `3.4.0` adicionou diretivas WebGPU que Unity `2022.3.62f3` não reconhece e gerava cinco warnings em `Uber`/`FinalPass`.
 
 ### 2026-07-13 — Chunks de mundo e interesse do servidor
 
@@ -145,6 +146,29 @@ Metas principais:
 - Fora do Cinematic Mode, far clip, objetos, árvores, proxies e estradas respeitam limite. Reduz renderers entregues ao culling/GBuffer; opções gráficas locais ainda podem escolher distância menor.
 - No servidor, `Animal.Update`, tick de animais e tick de zombies retornam cedo quando entidade não está dentro do raio regional de nenhum jogador. Relógio do tick continua atualizado para evitar salto de simulação ao reativar.
 - Itens e estruturas preservam streaming existente. Respawn regional, descarregamento físico e máscara compartilhada de regiões ficam abertos até nova captura.
+
+### 2026-07-13 — Fog, terreno, LOD, simulação e água
+
+- Nova opção local `World Chunk Fog` em configurações gráficas, padrão `true`. Cada usuário escolhe; servidor não replica fog. `false` desliga fog atmosférico e fog da barreira acima da água; fog submerso permanece ativo.
+- Fog da barreira começa nos últimos 20% do raio renderizado, mais próximo do limite. `World_Chunk_Radius` continua definindo posição da barreira visual.
+- Cliente desliga `Terrain.drawHeightmap` em tiles de terreno fora do raio, com margem de uma região para reduzir pop-in. Verificação ocorre ao cruzar região de `128 m`, não todo frame. Collider e `TerrainData` permanecem carregados; Cinematic Mode e captura de satélite preservam terreno completo.
+- LOD bias global agora varia de `[0,75,2]`. Mudança antecipa LODs distantes somente em assets que já possuem `LODGroup`; meshes sem LOD permanecem iguais.
+- Auditoria do conteúdo YAML aberto encontrou `LODGroup` em 9 prefabs de personagens/projéteis. Modelos de mapas e master bundles precisam ser auditados no Unity/Frame Debugger porque não aparecem como prefabs YAML editáveis neste SDK.
+- Servidor deixa de tentar respawn normal de animais e zombies fora da área de simulação de qualquer jogador. Horde e beacon preservam regras próprias. Ticks de entidades distantes já retornavam cedo.
+- Fog de água consulta índice espacial existente para testar somente volumes candidatos perto da câmera, em vez de percorrer todos os volumes a cada render.
+- Rede de itens, objetos, recursos, barricadas e estruturas já usa carregamento regional de raio `1–2`. Terreno vem dos arquivos locais do mapa e não é reenviado pelo servidor por frame; novo protocolo de streaming seria duplicação sem evidência.
+- Ticks de zombie: orçamento e chamada ficam em `ZombieManager.Update`; decisões, alvo e movimento ficam em `Zombie.tick`; ruído do jogador entra por `AlertTool.alert` e `Zombie.alert`. Implementação ASPFP não está neste SDK; build aberto usa `NonPathfindingZombieMovementComponent` para steering direto.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes. Teste standalone ainda precisa comparar raios `8/4/2`, fog ligado/desligado, travessia rápida de tiles, água e servidor com jogadores separados.
+
+### 2026-07-13 — Memória, Deferred e visualização de chunks
+
+- `Editor.log` confirmou alerta de memória do sistema: memória paginada chegou a `33,7/35,7 GB` (`94%`). Unity usava `6,25 GB` e descartou frames do Profiler para aliviar pressão. Loading continuou porque não ocorreu falha fatal de alocação.
+- Cleanup final encontrou 287 assets não usados, mas memória permaneceu em `6,25 GB`. Forçar `Resources.UnloadUnusedAssets` ou `GC.Collect` novamente não resolve assets ainda referenciados.
+- Snapshot: 5.911 texturas usam `1,88 GB` e 6.906 meshes usam `1,43 GB`, enquanto frame usa somente 123 texturas/`9,3 MB` e renderiza `177,3k` triângulos. Gargalo principal é residência/retenção, não quantidade visível de triângulos.
+- Repositório contém somente 90 imagens-fonte em `Assets`; maioria das texturas está em core/map/Workshop bundles. Memory Profiler deve fornecer top 20 por tamanho, nome e referência antes de alterar compressão ou importação.
+- `RenderDeferred.GBuffer` e `RenderDeferred.Lighting` confirmam custo do caminho Deferred. Primeiro teste seguro: comparar mesmo frame em `Render Mode = Forward`, depois reduzir `Lighting Quality`/sombras. `833` shadow casters, 316 RenderTextures/`257,6 MB` e 9.675 buffers/`0,71 GB` têm prioridade sobre reduzir os `177,3k` triângulos.
+- Static batching reduz cerca de 2.100 draws para 130 batches, mas gera meshes combinadas e custou `2.080 ms` no loading. Não desativar globalmente sem A/B de frame time e memória usando `-UseLevelBatching false`.
+- Admin pode executar `/drawchunks` localmente. Grade verde mostra área ativa, anel vermelho mostra primeira área inativa e amarelo marca chunk atual. Comando não envia dados ao servidor e não funciona para jogador sem admin.
 
 ### 2026-07-13 — Update, LateUpdate, FixedUpdate e GC
 
@@ -163,6 +187,16 @@ Metas principais:
 - Ordem interna foi invertida para consumir cauda da `List<T>` em O(1). Processamento anterior removia começo da lista e deslocava toda fila restante por frame.
 - Streaming amplo não foi reescrito: `RegionIncrementalVisibilityTracker`, atualização incremental de objetos e budgets dos managers já fornecem base correta. Próximo passo é medir backlog, tempo e cancelamentos antes de unificar filas.
 - Teste de `River` cobre round-trip e zero bytes gerenciados em 100 leituras comuns de GUID. Validação runtime: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes.
+
+### 2026-07-13 — Comandos administrativos, foliage e budget de IA
+
+- Novos comandos pessoais aceitam `/` ou `@`: `fly` alterna voo, `god` alterna imunidade a dano e `speed <1-10>` define multiplicador de movimento. Somente admin/owner conectado pode executar; console sem jogador não é alvo válido.
+- Voo usa caminho de movimento já existente e replica estado do servidor ao cliente. God mode permanece autoritativo no servidor. `/speed 1` restaura velocidade normal.
+- Limite visual server-side existente continua sendo `Gameplay.World_Chunk_Radius`: fora do Cinematic Mode, far clip, objetos, árvores, proxies, estradas e terreno distante respeitam raio. Servidor não “renderiza”; ele limita simulação e relevância de entidades.
+- Foliage client-side agora tem teto radial exato de uma região (`128 m`/quatro tiles de `32 m`) em todos presets e também no escopo. Qualidade menor ainda reduz densidade e distância abaixo desse teto.
+- `Zombies.Tick_Budget_Per_Frame` e `Animals.Tick_Budget_Per_Frame` substituem budgets fixos do servidor dedicado. Padrões preservados: `50` e `25`; runtime limita máximo a `1000` e interpreta `0`/campo ausente como padrão antigo. Valor menor suaviza pico de CPU, mas aumenta latência de reação quando há muitas entidades ativas.
+- Plantações não recebem budget: crescimento já usa timestamp e uma coroutine client que acorda no horário final, sem polling server-side contínuo.
+- Validação: runtime e Editor compilam com 0 erros; permanecem 14 warnings preexistentes.
 
 ## Baseline standalone de `Builds/perf.csv`
 

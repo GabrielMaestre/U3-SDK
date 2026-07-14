@@ -35,6 +35,7 @@ namespace SDG.Unturned
 		public bool IsClutterEnabled;
 		public bool IsDarkScopePeripheralEnabled;
 		public bool IsWindEnabled;
+		public bool IsWorldChunkFogEnabled;
 
 		/// <summary>
 		/// Far clip plane multiplier in-game.
@@ -84,6 +85,7 @@ namespace SDG.Unturned
 			this.IsNiceBlendEnabled = true;
 			this.IsGrassDisplacementEnabled = false;
 			this.IsWindEnabled = true;
+			this.IsWorldChunkFogEnabled = true;
 			this.IsFoliageFocusEnabled = false;
 			this.IsRagdollsEnabled = true;
 			this.IsDebrisEnabled = true;

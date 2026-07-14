@@ -35,10 +35,32 @@ Não use modo como baseline visual ou comparação com build. Desative toggle an
 ## Testar chunks de mundo
 
 - Singleplayer: abra configuração avançada e altere `Gameplay > World Chunk Radius`.
-- Servidor: em `Servers/<id>/Config.txt`, defina `World_Chunk_Radius` dentro de `Gameplay`. Reinicie servidor; valor é replicado ao cliente ao conectar.
+- Servidor: em `Servers/<id>/Config.txt`, defina `World_Chunk_Radius` dentro de `Gameplay`. Reinicie servidor; raio é replicado ao cliente ao conectar.
 - Cada unidade equivale a `128 m`. Padrão `8` ≈ `1024 m`; teste inicial recomendado `4` ≈ `512 m`. Valores são limitados a `1–32`.
 - Compare `8`, `4` e `2` no mesmo ponto/rota. Registre `Camera.Render`, `Culling`, `Render.OpaqueGeometry`, draws, entidades ativas e tick do servidor.
-- Valide teleporte, escopo, veículos rápidos, fronteira de região, dois jogadores distantes, zombie perseguindo e animal cruzando limite. Cinematic Mode ignora limite visual, mas servidor ainda limita simulação.
+- Em configurações gráficas de cada usuário, compare `World Chunk Fog` ligado/desligado; confirme fog da barreira nos últimos 20% do raio e fog submerso ativo nos dois casos.
+- No Frame Debugger, confirme ausência de draws de `Terrain` distante. Cruze fronteiras de `128 m` e valide margem sem buracos; collider deve continuar funcionando.
+- Valide teleporte, escopo, veículos rápidos, captura de satélite, fronteira de região, dois jogadores distantes, zombie perseguindo e animal cruzando limite. Cinematic Mode ignora limite visual, mas servidor ainda limita simulação.
+- No servidor, deixe áreas sem jogadores e monitore `ZombieManager.Update`, `AnimalManager.Update` e contagem de respawns. Horde e beacon devem continuar funcionando.
+- Perto de vários volumes de água, compare CPU de `SkyFogRenderer.FindRelevantWaterVolumes`; aparência acima/abaixo da água deve permanecer igual.
+- Como admin, execute `/drawchunks`: verde deve cobrir área ativa, vermelho primeira faixa inativa e amarelo chunk atual. Execute novamente para desligar.
+- Confirme que grass/pedras decorativas somem após `128 m`, inclusive em Foliage Ultra e ao usar escopo. Árvores e objetos seguem `World_Chunk_Radius`, não teto de foliage.
+
+## Testar comandos e budget de IA
+
+- Admin/owner: teste `/fly` duas vezes, `/god` com dano controlado e `/speed 2`, finalizando com `/speed 1`. Variantes `@fly`, `@god` e `@speed 2` devem produzir mesmo resultado.
+- Jogador sem admin: três comandos devem responder `Admin or owner permission required` e não alterar estado.
+- Em `Config.txt`, teste `Zombies.Tick_Budget_Per_Frame` e `Animals.Tick_Budget_Per_Frame` primeiro com padrões `50/25`, depois `20/10` e `10/5`. Reinicie servidor entre configurações.
+- Capture CPU Timeline e latência de aquisição de alvo/ataque com mesma contagem de entidades. Não reduza padrão se reação ficar visivelmente atrasada.
+- Valor `0` usa padrão antigo (`50/25`); valores acima de `1000` são limitados. Plantações não entram no teste: crescimento é calculado por timestamp, sem tick server contínuo.
+
+## Evitar alerta de memória durante profiling
+
+- Log observado: memória paginada `33,7/35,7 GB` (`94%`); Unity `6,25 GB`. Aumente pagefile do Windows ou use tamanho gerenciado pelo sistema em unidade com espaço livre.
+- Feche navegador, IDE e outros processos grandes. Não capture CPU Profiler e Memory Profiler simultaneamente durante loading.
+- Desative `Deep Profile`, limite módulos e grave somente janela necessária; pare gravação logo após hitch.
+- No Memory Profiler, ordene `Texture2D` e `Mesh` por `Size`, exporte top 20 com nome, tamanho e `Referenced By`. Otimize somente grupos dominantes.
+- Compare Deferred/Forward no mesmo ponto. Registre `RenderDeferred.GBuffer`, `RenderDeferred.Lighting`, SetPass, shadow casters, RenderTextures, buffers e GPU frame time.
 
 ## Métricas CSV
 

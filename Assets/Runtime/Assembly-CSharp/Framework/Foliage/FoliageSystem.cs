@@ -762,6 +762,8 @@ namespace SDG.Framework.Foliage
 		private static void drawTiles(Vector3 position, int drawDistance, Camera camera, Plane[] frustumPlanes)
 		{
 			batches.Clear();
+			const float maxPlayerDistance = Regions.CONST_REGION_SIZE;
+			const float sqrMaxPlayerDistance = maxPlayerDistance * maxPlayerDistance;
 
 			// 2026-02-09: initially, this simply swapped active and pool to avoid extra work pushing
 			// all instances from active onto pool. But, when rendering both main camera and scope
@@ -790,6 +792,14 @@ namespace SDG.Framework.Foliage
 				FoliageTile tile = getTile(tileCoord);
 
 				if (tile == null)
+				{
+					continue;
+				}
+
+				Vector3 closestPoint = tile.worldBounds.ClosestPoint(position);
+				float deltaX = closestPoint.x - position.x;
+				float deltaZ = closestPoint.z - position.z;
+				if ((deltaX * deltaX) + (deltaZ * deltaZ) > sqrMaxPlayerDistance)
 				{
 					continue;
 				}

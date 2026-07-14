@@ -882,6 +882,12 @@ namespace SDG.Unturned
 	public class ZombiesConfigData
 	{
 		/// <summary>
+		/// Maximum active zombies receiving expensive AI ticks per dedicated-server frame.
+		/// Lower values reduce frame spikes but increase AI response latency under load.
+		/// </summary>
+		public uint Tick_Budget_Per_Frame;
+
+		/// <summary>
 		/// Percentage [0 to 1] of zombie spawns to use.
 		/// For example, if set to 0.2 and an area has 100 zombie spawns, max 20 zombies will spawn at a time.
 		/// </summary>
@@ -1104,6 +1110,7 @@ namespace SDG.Unturned
 
 		public ZombiesConfigData(EGameMode mode)
 		{
+			Tick_Budget_Per_Frame = 50;
 			Respawn_Day_Time = 360.0f;
 			Respawn_Night_Time = 30.0f;
 			Respawn_Beacon_Time = 0.0f;
@@ -1206,6 +1213,12 @@ namespace SDG.Unturned
 	public class AnimalsConfigData
 	{
 		/// <summary>
+		/// Maximum active animals receiving expensive AI ticks per dedicated-server frame.
+		/// Lower values reduce frame spikes but increase AI response latency under load.
+		/// </summary>
+		public uint Tick_Budget_Per_Frame;
+
+		/// <summary>
 		/// How long (in seconds) before a dead animal respawns.
 		/// </summary>
 		public float Respawn_Time;
@@ -1254,6 +1267,7 @@ namespace SDG.Unturned
 
 		public AnimalsConfigData(EGameMode mode)
 		{
+			Tick_Budget_Per_Frame = 25;
 			Respawn_Time = 180.0f;
 
 			switch (mode)

@@ -124,5 +124,44 @@ namespace SDG.Unturned
 		{
 			writer.WriteFloat(newPluginSpeedMultiplier);
 		}
+		[NetInvokableGeneratedMethod(nameof(PlayerMovement.ReceiveEnableFly), ENetInvokableGeneratedMethodPurpose.Read)]
+		public static void ReceiveEnableFly_Read(in ClientInvocationContext context)
+		{
+			NetPakReader reader = context.reader;
+			NetId netId;
+			if (!reader.ReadNetId(out netId))
+			{
+				context.LogWarning("unable to read target instance net id");
+				return;
+			}
+
+			object voidNetObj = NetIdRegistry.Get(netId);
+			if (voidNetObj == null)
+				return;
+			PlayerMovement netObj = voidNetObj as PlayerMovement;
+			if (netObj == null)
+			{
+				context.LogWarning($"expected target instance with net id {netId} to be type PlayerMovement, but was {voidNetObj.GetType().Name}");
+				return;
+			}
+			System.Boolean newEnableFly;
+#if LOG_INVOKE_READ_ERRORS
+			bool newEnableFly_ReadSuccess =
+#endif // LOG_INVOKE_READ_ERRORS
+			reader.ReadBit(out newEnableFly);
+#if LOG_INVOKE_READ_ERRORS
+			if (!newEnableFly_ReadSuccess)
+			{
+				context.ReadParameterFailed(nameof(newEnableFly));
+				return;
+			}
+#endif // LOG_INVOKE_READ_ERRORS
+			netObj.ReceiveEnableFly(newEnableFly);
+		}
+		[NetInvokableGeneratedMethod(nameof(PlayerMovement.ReceiveEnableFly), ENetInvokableGeneratedMethodPurpose.Write)]
+		public static void ReceiveEnableFly_Write(NetPakWriter writer, System.Boolean newEnableFly)
+		{
+			writer.WriteBit(newEnableFly);
+		}
 	}
 }

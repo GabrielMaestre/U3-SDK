@@ -1365,6 +1365,8 @@ namespace SDG.Unturned
 				if (Time.realtimeSinceStartup - zombie.lastDead > respawnInterval)
 				{
 					ZombieSpawnpoint spawn = LevelZombies.zombies[respawnZombiesBound][Random.Range(0, LevelZombies.zombies[respawnZombiesBound].Count)];
+					if (!region.hasBeacon && Level.info.type != ELevelType.HORDE && !Regions.IsPositionWithinPlayerSimulationRange(spawn.point))
+						return;
 
 					if (!SafezoneManager.checkPointValid(spawn.point))
 					{
@@ -1747,7 +1749,11 @@ namespace SDG.Unturned
 				}
 
 				start = tickIndex;
-				end = start + 50;
+				uint configuredBudget = Provider.modeConfigData.Zombies.Tick_Budget_Per_Frame;
+				if (configuredBudget == 0)
+					configuredBudget = 50; // Backward compatibility for config files created before this option.
+				configuredBudget = System.Math.Min(configuredBudget, 1000u);
+				end = start + (int) configuredBudget;
 				if (end >= tickingZombies.Count)
 				{
 					end = tickingZombies.Count;

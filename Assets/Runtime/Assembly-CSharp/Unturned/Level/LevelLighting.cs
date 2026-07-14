@@ -2146,12 +2146,14 @@ namespace SDG.Unturned
 
 			if (isSea)
 			{
+				RenderSettings.fog = true;
 				RenderSettings.fogColor = getSeaColor("_BaseColor");
 				RenderSettings.fogDensity = Level.getAsset()?.UnderwaterFogDensity ?? LevelAsset.DEFAULT_UNDERWATER_FOG_DENSITY;
 				setAtmosphericFog(1.0f);
 			}
 			else
 			{
+				RenderSettings.fog = GraphicsSettings.IsWorldChunkFogEnabled;
 				RenderSettings.fogColor = levelFogColor;
 				RenderSettings.fogDensity = Mathf.Pow(levelFogIntensity, 3) * 0.025f;
 				setAtmosphericFog(levelAtmosphericFog);

@@ -150,9 +150,7 @@ namespace SDG.Unturned
 			}
 		}
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 		public bool enableGodMode;
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
 
 		private bool _isDead;
 		public bool isDead => _isDead;
@@ -575,10 +573,8 @@ namespace SDG.Unturned
 		{
 			kill = EPlayerKill.NONE;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 			if (enableGodMode)
 				return;
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
 
 			if (amount == 0 || isDead)
 			{

@@ -45,6 +45,8 @@ namespace SDG.Framework.Landscapes
 
 		public static event LandscapeLoadedHandler loaded;
 
+		internal static bool IsChunkDebugVisible { get; set; }
+
 		protected static Dictionary<LandscapeCoord, LandscapeTile> tiles = new Dictionary<LandscapeCoord, LandscapeTile>();
 		protected static Dictionary<LandscapeCoord, LandscapeHeightmapTransaction> heightmapTransactions = new Dictionary<LandscapeCoord, LandscapeHeightmapTransaction>();
 		protected static Dictionary<LandscapeCoord, LandscapeSplatmapTransaction> splatmapTransactions = new Dictionary<LandscapeCoord, LandscapeSplatmapTransaction>();
@@ -989,6 +991,7 @@ namespace SDG.Framework.Landscapes
 
 		protected void handleGraphicsSettingsApplied()
 		{
+			hasTileRenderRegion = false;
 			foreach (KeyValuePair<LandscapeCoord, LandscapeTile> pair in tiles)
 			{
 				LandscapeTile tile = pair.Value;
@@ -1026,6 +1029,7 @@ namespace SDG.Framework.Landscapes
 			foreach (KeyValuePair<LandscapeCoord, LandscapeTile> pair in tiles)
 			{
 				LandscapeTile tile = pair.Value;
+				tile.terrain.drawHeightmap = true;
 				tile.terrain.basemapDistance = 8192;
 				tile.terrain.heightmapPixelError = 1;
 			}
@@ -1036,6 +1040,7 @@ namespace SDG.Framework.Landscapes
 		/// </summary>
 		protected void onSatellitePostCapture()
 		{
+			hasTileRenderRegion = false;
 			float basemapDistance = GraphicsSettings.terrainBasemapDistance;
 			float heightmapPixelError = GraphicsSettings.terrainHeightmapPixelError;
 			foreach (KeyValuePair<LandscapeCoord, LandscapeTile> pair in tiles)
@@ -1082,6 +1087,56 @@ namespace SDG.Framework.Landscapes
 		}
 
 		private bool shouldTriggerLandscapeLoaded = true;
+		private bool hasTileRenderRegion;
+		private Vector2Int tileRenderRegion;
+		private byte tileRenderRadius;
+
+		protected void Update()
+		{
+			if (instance != this || Dedicator.IsDedicatedServer || Level.isEditor || MainCamera.instance == null)
+				return;
+
+			Vector3 cameraPosition = MainCamera.instance.transform.position;
+			Vector2Int newRegion = new Vector2Int(Mathf.FloorToInt(cameraPosition.x / Regions.REGION_SIZE),
+				Mathf.FloorToInt(cameraPosition.z / Regions.REGION_SIZE));
+			byte newRadius = Regions.WorldChunkRadius;
+			if (!hasTileRenderRegion || tileRenderRegion != newRegion || tileRenderRadius != newRadius)
+			{
+				hasTileRenderRegion = true;
+				tileRenderRegion = newRegion;
+				tileRenderRadius = newRadius;
+				float renderDistance = newRadius * Regions.REGION_SIZE - 1f + Regions.REGION_SIZE;
+				float sqrRenderDistance = renderDistance * renderDistance;
+				foreach (LandscapeTile tile in tiles.Values)
+				{
+					bool isVisible = GraphicsSettings.WantsCinematicMode;
+					if (!isVisible)
+					{
+						Vector3 closestPoint = tile.worldBounds.ClosestPoint(cameraPosition);
+						closestPoint.y = cameraPosition.y;
+						isVisible = (closestPoint - cameraPosition).sqrMagnitude <= sqrRenderDistance;
+					}
+					tile.terrain.drawHeightmap = isVisible;
+				}
+			}
+
+			if (IsChunkDebugVisible && Player.LocalPlayer != null && Player.LocalPlayer.channel.owner.isAdmin)
+				DrawChunkDebug(cameraPosition, newRegion, newRadius);
+		}
+
+		private static void DrawChunkDebug(Vector3 cameraPosition, Vector2Int region, byte radius)
+		{
+			// ponytail: Active square plus one inactive ring is enough; full 64x64 grid adds debug overhead.
+			int activeCells = radius * 2 + 1;
+			Vector3 center = new Vector3((region.x + 0.5f) * Regions.REGION_SIZE, cameraPosition.y - 2f,
+				(region.y + 0.5f) * Regions.REGION_SIZE);
+			RuntimeGizmos gizmos = RuntimeGizmos.Get();
+			gizmos.GridXZ(center, (activeCells + 2) * Regions.REGION_SIZE, activeCells + 2, Color.red);
+			gizmos.GridXZ(center, activeCells * Regions.REGION_SIZE, activeCells, Color.green);
+			gizmos.GridXZ(new Vector3((region.x + 0.5f) * Regions.REGION_SIZE, center.y + 0.05f,
+				(region.y + 0.5f) * Regions.REGION_SIZE), Regions.REGION_SIZE, 1, Color.yellow);
+			gizmos.Label(center, $"Rendered chunks: {activeCells}x{activeCells} | Radius: {radius}", Color.green);
+		}
 
 		protected void Start()
 		{

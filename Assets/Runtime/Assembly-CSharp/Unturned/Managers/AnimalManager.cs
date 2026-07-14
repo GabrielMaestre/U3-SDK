@@ -669,6 +669,18 @@ namespace SDG.Unturned
 				return;
 			}
 
+			bool hasNearbyPlayer = false;
+			foreach (AnimalSpawnpoint spawn in pack.spawns)
+			{
+				if (Regions.IsPositionWithinPlayerSimulationRange(spawn.point))
+				{
+					hasNearbyPlayer = true;
+					break;
+				}
+			}
+			if (!hasNearbyPlayer)
+				return;
+
 			for (int animalIndex = 0; animalIndex < pack.animals.Count; animalIndex++)
 			{
 				Animal animal = pack.animals[animalIndex];
@@ -1024,7 +1036,11 @@ namespace SDG.Unturned
 				}
 
 				start = tickIndex;
-				end = start + 25;
+				uint configuredBudget = Provider.modeConfigData.Animals.Tick_Budget_Per_Frame;
+				if (configuredBudget == 0)
+					configuredBudget = 25; // Backward compatibility for config files created before this option.
+				configuredBudget = System.Math.Min(configuredBudget, 1000u);
+				end = start + (int) configuredBudget;
 				if (end >= tickingAnimals.Count)
 				{
 					end = tickingAnimals.Count;

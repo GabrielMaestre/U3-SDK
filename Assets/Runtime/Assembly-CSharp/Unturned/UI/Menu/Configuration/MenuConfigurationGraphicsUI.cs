@@ -34,6 +34,7 @@ namespace SDG.Unturned
 		private static ISleekToggle skyboxReflectionToggle;
 		private static ISleekToggle itemIconAntiAliasingToggle;
 		private static ISleekToggle clutterToggle;
+		private static ISleekToggle worldChunkFogToggle;
 
 		private static ISleekSlider farClipDistanceSlider;
 		private static ISleekSlider distanceSlider;
@@ -190,6 +191,12 @@ namespace SDG.Unturned
 		{
 			GraphicsSettings.IsClutterEnabled = state;
 			GraphicsSettings.apply("changed clutter");
+		}
+
+		private static void OnToggledWorldChunkFog(ISleekToggle toggle, bool state)
+		{
+			GraphicsSettings.IsWorldChunkFogEnabled = state;
+			GraphicsSettings.apply("changed world chunk fog");
 		}
 
 		private static void OnDraggedFarClipDistanceSlider(ISleekSlider slider, float state)
@@ -350,6 +357,7 @@ namespace SDG.Unturned
 			skyboxReflectionToggle.Value = GraphicsSettings.skyboxReflection;
 			itemIconAntiAliasingToggle.Value = GraphicsSettings.IsItemIconAntiAliasingEnabled;
 			clutterToggle.Value = GraphicsSettings.IsClutterEnabled;
+			worldChunkFogToggle.Value = GraphicsSettings.IsWorldChunkFogEnabled;
 
 			farClipDistanceSlider.Value = GraphicsSettings.NormalizedFarClipDistance;
 			farClipDistanceSlider.UpdateLabel(localization.format("Far_Clip_Slider_Label", 50 + Mathf.RoundToInt(GraphicsSettings.NormalizedFarClipDistance * 150)));
@@ -454,6 +462,17 @@ namespace SDG.Unturned
 			graphicsBox.AddChild(farClipDistanceSlider);
 			verticalOffset += 30;
 			farClipDistanceSlider.SideLabel.SizeOffset_X += 100; // Hack because the default label is too narrow.
+
+			worldChunkFogToggle = Glazier.Get().CreateToggle();
+			worldChunkFogToggle.PositionOffset_X = 205;
+			worldChunkFogToggle.PositionOffset_Y = verticalOffset;
+			worldChunkFogToggle.SizeOffset_X = 40;
+			worldChunkFogToggle.SizeOffset_Y = 40;
+			worldChunkFogToggle.AddLabel("World Chunk Fog", ESleekSide.RIGHT);
+			worldChunkFogToggle.TooltipText = "Show distance fog near the world render boundary.";
+			worldChunkFogToggle.OnValueChanged += OnToggledWorldChunkFog;
+			graphicsBox.AddChild(worldChunkFogToggle);
+			verticalOffset += 50;
 
 			distanceSlider = Glazier.Get().CreateSlider();
 			distanceSlider.PositionOffset_X = 205;

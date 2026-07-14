@@ -328,6 +328,12 @@ namespace SDG.Unturned
 			set => graphicsSettingsData.IsWindEnabled = value;
 		}
 
+		public static bool IsWorldChunkFogEnabled
+		{
+			get => graphicsSettingsData.IsWorldChunkFogEnabled;
+			set => graphicsSettingsData.IsWorldChunkFogEnabled = value;
+		}
+
 		/// <summary>
 		/// Added for players who want to see if they can get better performance with a ridiculously low max draw distance.
 		/// </summary>
@@ -882,7 +888,7 @@ namespace SDG.Unturned
 				LevelGround.ForceUpdateSkyboxActive();
 			}
 
-			float lodBias = 1 + (normalizedDrawDistance * 3); // [1, 4]
+			float lodBias = 0.75f + (normalizedDrawDistance * 1.25f); // [0.75, 2]
 			lodBias += Mathf.Clamp(Provider.preferenceData.Graphics.LOD_Bias, 0.0f, 5.0f); // Prevent negative or extended LOD exploits.
 			if (WantsCinematicMode)
 			{
@@ -1125,6 +1131,12 @@ namespace SDG.Unturned
 					UnturnedLog.error("Unknown foliage quality: " + quality);
 					break;
 			}
+
+			// Foliage is client-only decoration. Never submit tiles farther than one 128-meter world region.
+			int oneRegionTileRadius = Regions.CONST_REGION_SIZE / SDG.Framework.Foliage.FoliageSystem.TILE_SIZE_INT;
+			SDG.Framework.Foliage.FoliageSettings.drawDistance = Mathf.Min(SDG.Framework.Foliage.FoliageSettings.drawDistance, oneRegionTileRadius);
+			SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = Mathf.Min(SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance, oneRegionTileRadius);
+			SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = Mathf.Min(SDG.Framework.Foliage.FoliageSettings.drawFocusDistance, oneRegionTileRadius);
 		}
 
 		public static void load()

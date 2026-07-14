@@ -162,6 +162,9 @@ namespace SDG.Unturned
 			register(new CommandVehicle(Localization.read("/Server/ServerCommandVehicle.dat")));
 			register(new CommandAnimal(Localization.read("/Server/ServerCommandAnimal.dat")));
 			register(new CommandTeleport(Localization.read("/Server/ServerCommandTeleport.dat")));
+			register(new CommandFly(emptyPlaceholder));
+			register(new CommandGod(emptyPlaceholder));
+			register(new CommandSpeed(emptyPlaceholder));
 
 			register(new CommandTimeout(Localization.read("/Server/ServerCommandTimeout.dat")));
 			register(new CommandChatrate(Localization.read("/Server/ServerCommandChatrate.dat")));

@@ -14,6 +14,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir loading de mapa, entrada em servidor e primeiro frame controlável.
 - [x] Definir cenários reproduzíveis de baseline, cidade, floresta, horda, veículos, multiplayer e soak; execução e baselines continuam constantes por build.
 - [x] Executar ações do Build Tool após evento IMGUI, removendo falso erro `EndLayoutGroup` ao concluir `Build Test`.
+- [x] Alinhar Post Processing para `3.3.0`, removendo diretivas WebGPU incompatíveis com Unity `2022.3.62f3`.
+- [x] Diagnosticar alerta de memória no loading: pressão paginada do sistema em `94%`; Profiler descartou frames, Unity permaneceu em `6,25 GB`.
 - [ ] Registrar CPU/GPU frame time p50/p95/p99, GC, RAM, VRAM, I/O, rede e tick do servidor.
 - [ ] Separar métricas de Editor, Development Build, Release e servidor dedicado.
 - [ ] Criar smoke test de boot, criação de mundo, conexão, spawn, inventário, combate, veículo e shutdown.
@@ -54,7 +56,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time — 15/X
+## P1 — CPU e frame time — 18/X
 
 - [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
 - [x] Consultar distância de `LightLOD` já distante a cada oito frames, mantendo transição próxima por frame.
@@ -71,6 +73,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Consumir filas ordenadas de itens, barricadas e estruturas pela cauda, evitando `RemoveRange(0, N)` e deslocamento da fila restante a cada frame.
 - [x] Adicionar modo opt-in exclusivo do Unity Editor que limita far clip a `768 m`, reduzindo culling e submissão de renderers distantes sem alterar Player build.
 - [x] Pausar `Update`/tick server-side de animais e tick de zombies fora do raio regional de todos os jogadores, preservando relógio do tick.
+- [x] Ignorar respawn normal de animais e zombies fora da área de simulação de todos os jogadores; preservar Horde e beacon.
+- [x] Consultar candidatos de fog de água pelo índice espacial existente, evitando varredura de todos os volumes por câmera/render.
+- [x] Tornar budgets de tick de zombies e animais configuráveis no servidor dedicado, preservando padrões `50/25`, fallback para campo ausente e teto `1000`.
 - [ ] Inventariar `Update`, `LateUpdate`, `FixedUpdate`, coroutines e callbacks mais caros.
 - [ ] Remover polling substituível por eventos existentes.
 - [ ] Distribuir trabalho não urgente entre frames com orçamento explícito.
@@ -84,7 +89,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Aplicar Burst/jobs somente em lotes grandes, independentes e medidos.
 - [ ] Revisar reflection e geração dinâmica executadas durante gameplay.
 - [ ] Detectar long frames e atribuir custo por sistema.
-- [ ] Definir orçamento de tick para cliente e servidor dedicado.
+- [ ] Medir `TickZombies`, `TickZombiesInRegionsWithPlayers` e `AnimalManager.Tick` com budgets `50/25`, `20/10` e `10/5`; definir presets somente após comparar latência de IA.
 
 ## P1 — Memória e GC — 2/X
 
@@ -103,13 +108,17 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 5/X
+## P1 — GPU e renderização — 9/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
 - [x] Reduzir faixa base de LOD bias de `[2,5]` para `[1,4]`, fazendo modelos leves entrarem antes pelo slider existente.
 - [x] Classificar captura do Editor: CPU `12,85 ms` contra GPU `5,09 ms`; `Render.OpaqueGeometry`, `BatchRenderer.Flush` e `Batch.DrawStatic` confirmam custo principal de submissão/culling, não shader saturando GPU.
 - [x] Limitar far clip e visibilidade regional por `Gameplay.World_Chunk_Radius`, reutilizando chunks de `128 m` existentes.
+- [x] Desligar desenho do heightmap em tiles de terreno distantes, mantendo collider/dados e margem de preload de uma região.
+- [x] Antecipar transições de `LODGroup` com faixa global `[0,75,2]`, preservando override do usuário e Cinematic Mode.
+- [x] Tornar fog da barreira configurável localmente e aproximar início para últimos 20% do raio visual.
+- [x] Limitar foliage client-side a uma região radial de `128 m`, inclusive presets Ultra e render do escopo.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
@@ -126,7 +135,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
 - [ ] Validar APIs gráficas e GPUs suportadas após cada mudança de shader.
 
-## P1 — Distância de renderização e streaming — 6/X
+## P1 — Distância de renderização e streaming — 10/X
 
 - [x] Materializar proxies `Skybox` de `LevelObject` sob demanda pela região existente; preservar editor e level batching.
 - [x] Desativar objetos, itens, recursos, barricadas e estruturas somente dentro dos bounds da região anterior; centro inicial inválido produz bounds vazios.
@@ -134,6 +143,10 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Antecipar transições de `LODGroup` globalmente sem alterar distâncias de rede, física ou streaming regional.
 - [x] Preservar prioridade próxima e budgets regionais de itens/estruturas enquanto remoção O(1) reduz custo de filas grandes.
 - [x] Replicar raio de chunks do servidor ao cliente e aplicar mesmo limite visual/simulação no singleplayer e multiplayer.
+- [x] Mover fog para configuração gráfica local e preservar fog submerso quando opção estiver desligada.
+- [x] Atualizar visibilidade dos tiles de terreno somente ao cruzar região ou mudar raio, evitando scan por frame.
+- [x] Adicionar `/drawchunks` local para admin visualizar área ativa, primeira faixa inativa e chunk atual.
+- [x] Aplicar limite exato de uma região ao foliage e manter árvores/objetos/terreno sob `Gameplay.World_Chunk_Radius`.
 - [ ] Separar distância por categoria: terreno, estruturas, itens, jogadores, veículos, IA, vegetação, sombras e efeitos.
 - [ ] Definir limites mínimo/máximo por preset e opção manual.
 - [ ] Adaptar distância por orçamento de frame time com histerese e cooldown para evitar oscilação.
@@ -150,9 +163,10 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Separar I/O de ativação: worker lê/decodifica dados puros; main thread cria objetos Unity sob orçamento. Nunca acessar Unity API no worker.
 - [ ] Manter teleporte/carga crítica síncronos até provar que colisão, stance, nav e primeiro frame permanecem corretos.
 
-## P1 — Pathfinding e IA — 1/X
+## P1 — Pathfinding e IA — 2/X
 
 - [x] Compartilhar relógio por tick de zumbi, reduzindo chamadas Unity nativas sem mudar timers ou decisões.
+- [x] Expor budgets server-side por frame para ticks caros de zombies e animais; plantações permanecem orientadas por timestamp.
 
 - [ ] Medir chamadas, duração, nós visitados, falhas, repaths e agentes simultâneos.
 - [ ] Catalogar agentes e necessidades: zumbi, animal, NPC e casos especiais.
@@ -179,6 +193,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 
 - [x] Limitar limpeza de flags carregadas ao anel anterior por jogador em itens, objetos, recursos, barricadas e estruturas.
 - [x] Cachear permissão de visibilidade global uma vez por destinatário durante snapshot de jogadores.
+
+Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e estruturas usam raio `2`; terreno é conteúdo local e não gera envio contínuo por tile.
 
 - [ ] Medir bytes, pacotes, mensagens, serialização e CPU por jogador/sistema.
 - [ ] Mapear mensagens confiáveis, não confiáveis, ordenadas e redundantes.

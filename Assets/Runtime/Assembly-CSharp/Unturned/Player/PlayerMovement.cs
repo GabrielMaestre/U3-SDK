@@ -128,9 +128,7 @@ namespace SDG.Unturned
 					* (player.equipment.asset?.equipableMovementSpeedMultiplier ?? 1.0f)
 					* (player.equipment.useable?.movementSpeedMultiplier ?? 1.0f);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 		public bool enableFly;
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
 
 		private float lastFootstep;
 
@@ -665,6 +663,25 @@ namespace SDG.Unturned
 			if (!channel.IsLocalPlayer)
 			{
 				SendPluginSpeedMultiplier.Invoke(GetNetId(), ENetReliability.Reliable, channel.GetOwnerTransportConnection(), newPluginSpeedMultiplier);
+			}
+		}
+
+		private static readonly ClientInstanceMethod<bool> SendEnableFly = ClientInstanceMethod<bool>.Get(typeof(PlayerMovement), nameof(ReceiveEnableFly));
+		[SteamCall(ESteamCallValidation.ONLY_FROM_SERVER)]
+		public void ReceiveEnableFly(bool newEnableFly)
+		{
+			enableFly = newEnableFly;
+			if (!enableFly)
+				velocity = Vector3.zero;
+		}
+
+		public void sendEnableFly(bool newEnableFly)
+		{
+			ReceiveEnableFly(newEnableFly);
+
+			if (!channel.IsLocalPlayer)
+			{
+				SendEnableFly.Invoke(GetNetId(), ENetReliability.Reliable, channel.GetOwnerTransportConnection(), newEnableFly);
 			}
 		}
 
@@ -1317,7 +1334,6 @@ namespace SDG.Unturned
 				velocity += pendingLaunchVelocity;
 				pendingLaunchVelocity = Vector3.zero;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 				if (enableFly && MainCamera.instance != null)
 				{
 					velocity = MainCamera.instance.transform.rotation * move * speed;
@@ -1326,7 +1342,6 @@ namespace SDG.Unturned
 						velocity *= 2.0f;
 					}
 				}
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
 
 				if (channel.IsLocalPlayer && LoadingUI.isBlocked)
 				{

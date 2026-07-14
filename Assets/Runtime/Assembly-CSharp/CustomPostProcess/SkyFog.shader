@@ -11,6 +11,7 @@ Shader "Hidden/Custom/SkyFog"
 
 		uniform float4x4 _InverseProjectionMatrix;
 		uniform float4x4 _CameraToWorld;
+		uniform float _DistanceFogEnabled;
 
 		uniform float3 _SkyColor;
 		uniform float3 _EquatorColor;
@@ -82,10 +83,10 @@ Shader "Hidden/Custom/SkyFog"
 			float notSkybox = rawDepth > 0 || viewportDir.y < 0.0f;
 
 			float farClipDist = _ProjectionParams.z;
-			float fogStartDist = farClipDist * 0.5;
+			float fogStartDist = farClipDist * 0.8;
 			float fogTransitionDist = farClipDist - fogStartDist;
 			float fogAlpha = saturate((sphericalDepth - fogStartDist) / fogTransitionDist);
-			fogAlpha = pow(fogAlpha, 2.0);
+			fogAlpha = pow(fogAlpha, 2.0) * _DistanceFogEnabled;
 
 			// Identical to sky gradient in skybox shader.
 			float3 skyColor;
