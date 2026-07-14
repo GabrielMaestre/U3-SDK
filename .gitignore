@@ -193,3 +193,7 @@ ItemLinks.txt
 # Unity creates these files during export
 /Assets/Resources/PerformanceTestRunInfo*
 /Assets/Resources/PerformanceTestRunSettings*
+
+# Others
+/External
+/ToolsZIP

@@ -46,6 +46,14 @@ Não use modo como baseline visual ou comparação com build. Desative toggle an
 - Como admin, execute `/drawchunks`: verde deve cobrir área ativa, vermelho primeira faixa inativa e amarelo chunk atual. Execute novamente para desligar.
 - Confirme que grass/pedras decorativas somem após `128 m`, inclusive em Foliage Ultra e ao usar escopo. Árvores e objetos seguem `World_Chunk_Radius`, não teto de foliage.
 
+## Testar sombras e foliage por qualidade
+
+1. Use mesma floresta, horário, clima, resolução e posição em Development Build standalone.
+2. Compare Lighting Low, Medium, High e Ultra com draw distance em `100%`. High/Ultra devem manter visual anterior; registre `Shadow Casters`, batches, CPU e GPU.
+3. Em Low, atravesse limite aproximado de `32 m`; em Medium, `64 m`. Somente sombras de clutter distante devem desaparecer. Árvores, estruturas, personagens e geometria continuam visíveis.
+4. Repita High/Ultra com draw distance em `100%` e `50%`. Em `100%`, alcance de sombras permanece original; abaixo disso acompanha redução escolhida pelo usuário e nunca passa do far clip/chunk.
+5. Teste scope camera, teleporte e fronteira de tile. Rejeite mudança se houver popping próximo, tile sem sombra junto da câmera ou aumento de batches maior que economia no shadow pass.
+
 ## Testar comandos e budget de IA
 
 - Admin/owner: teste `/fly` duas vezes, `/god` com dano controlado e `/speed 2`, finalizando com `/speed 1`. Variantes `@fly`, `@god` e `@speed 2` devem produzir mesmo resultado.

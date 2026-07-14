@@ -799,7 +799,8 @@ namespace SDG.Framework.Foliage
 				Vector3 closestPoint = tile.worldBounds.ClosestPoint(position);
 				float deltaX = closestPoint.x - position.x;
 				float deltaZ = closestPoint.z - position.z;
-				if ((deltaX * deltaX) + (deltaZ * deltaZ) > sqrMaxPlayerDistance)
+				float sqrDistanceFromViewer = (deltaX * deltaX) + (deltaZ * deltaZ);
+				if (sqrDistanceFromViewer > sqrMaxPlayerDistance)
 				{
 					continue;
 				}
@@ -825,7 +826,7 @@ namespace SDG.Framework.Foliage
 
 				UnityEngine.Profiling.Profiler.BeginSample("Draw Tile");
 				int sqrDistance = (offset.x * offset.x) + (offset.y * offset.y);
-				drawTile(tile, sqrDistance, camera);
+				drawTile(tile, sqrDistance, sqrDistanceFromViewer, camera);
 				UnityEngine.Profiling.Profiler.EndSample();
 			}
 
@@ -847,7 +848,7 @@ namespace SDG.Framework.Foliage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void drawTile(FoliageTile tile, int sqrDistance, Camera camera)
+		private static void drawTile(FoliageTile tile, int sqrDistance, float sqrDistanceFromViewer, Camera camera)
 		{
 			// Nelson 2025-05-02: iterating Values is ~0.01 ms faster than KeyValuePair. :P
 			foreach (FoliageInstanceList list in tile.instances.Values)
@@ -868,6 +869,12 @@ namespace SDG.Framework.Foliage
 					continue;
 				}
 
+				FoliageInstancingBatchConfig batchConfig = list.batchConfig;
+				if (list.isClutter && batchConfig.castShadows && !FoliageSettings.shouldCastClutterShadows(sqrDistanceFromViewer))
+				{
+					batchConfig = list.shadowlessBatchConfig;
+				}
+
 				// If there is more than one list then every list except the last should have 1023 instances.
 				// Probably not very common? I suspect this is from when foliage was first added.
 				if (listBatchCount > 1)
@@ -877,7 +884,7 @@ namespace SDG.Framework.Foliage
 					{
 						List<Matrix4x4> matrices = list.matrices[fullBatchIndex];
 						int matrixCount = Mathf.RoundToInt(matrices.Count * FoliageSettings._instanceDensity);
-						DrawInstances(in list.batchConfig, matrices.GetInternalArray(), matrixCount, camera);
+						DrawInstances(in batchConfig, matrices.GetInternalArray(), matrixCount, camera);
 					}
 					Profiler.EndSample(); // Draw Full Batches
 				}
@@ -890,7 +897,7 @@ namespace SDG.Framework.Foliage
 						continue;
 
 					Profiler.BeginSample("Setup Batch Config");
-					if (!batches.TryGetValue(list.batchConfig, out FoliageInstancingBatchData batchData))
+					if (!batches.TryGetValue(batchConfig, out FoliageInstancingBatchData batchData))
 					{
 						if (!matrixListPool.TryPop(out Matrix4x4[] buffer))
 						{
@@ -917,7 +924,7 @@ namespace SDG.Framework.Foliage
 					{
 						// Fill remaining space
 						FastMatrixCopy(matrices, 0, batchData.list, batchData.count, batchCapacity);
-						DrawInstances(in list.batchConfig, batchData.list, list.maxMatricesPerBatch, camera);
+						DrawInstances(in batchConfig, batchData.list, list.maxMatricesPerBatch, camera);
 
 						// Reset batch data with remaining instances from this list
 						batchData.count = matrixCount - batchCapacity;
@@ -926,7 +933,7 @@ namespace SDG.Framework.Foliage
 							FastMatrixCopy(matrices, batchCapacity, batchData.list, 0, batchData.count);
 						}
 					}
-					batches[list.batchConfig] = batchData;
+					batches[batchConfig] = batchData;
 					Profiler.EndSample(); // Handle Batch Config
 				}
 			}

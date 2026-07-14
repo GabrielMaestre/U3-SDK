@@ -759,6 +759,12 @@ namespace SDG.Unturned
 			{
 				QualitySettings.shadowDistance = farClipPlane;
 			}
+			else
+			{
+				// Keep full shadow distance at maximum draw distance, and never render shadows beyond visible world.
+				float shadowDistanceMultiplier = Mathf.Lerp(0.5f, 1.0f, normalizedDrawDistance);
+				QualitySettings.shadowDistance = Mathf.Min(QualitySettings.shadowDistance * shadowDistanceMultiplier, farClipPlane);
+			}
 
 			// Prevent 1024x1024 ground and water titles from popping in too late.
 			// Maximum diagonal distance from tile center is 724.077344.
@@ -1137,6 +1143,23 @@ namespace SDG.Unturned
 			SDG.Framework.Foliage.FoliageSettings.drawDistance = Mathf.Min(SDG.Framework.Foliage.FoliageSettings.drawDistance, oneRegionTileRadius);
 			SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance = Mathf.Min(SDG.Framework.Foliage.FoliageSettings.clutterDrawDistance, oneRegionTileRadius);
 			SDG.Framework.Foliage.FoliageSettings.drawFocusDistance = Mathf.Min(SDG.Framework.Foliage.FoliageSettings.drawFocusDistance, oneRegionTileRadius);
+
+			// Preserve all foliage shadows on High/Ultra. Lower qualities stop submitting distant clutter into shadow passes.
+			switch (lightingQuality)
+			{
+				case EGraphicQuality.OFF:
+					SDG.Framework.Foliage.FoliageSettings.shadowDistance = 0.0f;
+					break;
+				case EGraphicQuality.LOW:
+					SDG.Framework.Foliage.FoliageSettings.shadowDistance = 32.0f;
+					break;
+				case EGraphicQuality.MEDIUM:
+					SDG.Framework.Foliage.FoliageSettings.shadowDistance = 64.0f;
+					break;
+				default:
+					SDG.Framework.Foliage.FoliageSettings.shadowDistance = Regions.CONST_REGION_SIZE;
+					break;
+			}
 		}
 
 		public static void load()

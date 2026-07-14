@@ -37,6 +37,7 @@ namespace SDG.Framework.Foliage
 		}
 
 		internal FoliageInstancingBatchConfig batchConfig;
+		internal FoliageInstancingBatchConfig shadowlessBatchConfig;
 
 		public bool tileDither
 		{
@@ -275,6 +276,7 @@ namespace SDG.Framework.Foliage
 
 			bool castShadows = asset.castShadows;
 			batchConfig = new FoliageInstancingBatchConfig(mesh, material, castShadows);
+			shadowlessBatchConfig = castShadows ? new FoliageInstancingBatchConfig(mesh, material, false) : batchConfig;
 			tileDither = asset.tileDither;
 
 			if (asset.drawDistance == -1)

@@ -27,6 +27,15 @@ Metas principais:
 
 ## Melhorias implementadas
 
+### 2026-07-14 — Sombras e foliage por qualidade
+
+- Distância de sombras agora acompanha slider de draw distance entre `50–100%` do limite do preset e nunca ultrapassa `farClipPlane`/raio visível do mundo. Draw distance máximo mantém distância original.
+- Clutter instanciado preserva sombras até `32 m` em Lighting Low e `64 m` em Medium. High/Ultra mantêm sombras em toda região de foliage (`128 m`), sem redução visual.
+- Batches com e sem sombra reutilizam configurações pré-calculadas por asset; nenhuma criação de material, mesh ou configuração ocorre por instância/frame.
+- Reflection probes automáticos foram desligados somente em Lighting Off/Low. Medium/High/Ultra permanecem iguais.
+- LOD bias global, cascatas High/Ultra, static batching e render mode do usuário não foram alterados: mudança ampla sem assets LOD ou captura A/B poderia causar popping, mais draws ou regressão visual.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes; `Assembly-CSharp-Editor.csproj` compila com 0 erros. Teste de limite quadrático de sombras de clutter foi adicionado; Test Runner e comparação standalone ainda necessários.
+
 ### 2026-07-13 — Loading de master bundles
 
 - Substituído carregamento integral em memória por `AssetBundle.LoadFromFileAsync`.

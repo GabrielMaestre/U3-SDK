@@ -3,6 +3,7 @@
 // Please refer to the included LICENSE.txt for copyright notice and license details. //
 ////////////////////////////////////////////////////////////////////////////////////////
 using NUnit.Framework;
+using SDG.Framework.Foliage;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -42,5 +43,21 @@ internal class MathTests
 		Assert.AreEqual(Quaternion.Euler(0.0f, 0.0f, 90.0f), Quaternion.Euler(0.0f, 0.0f, 89.99f).GetRoundedIfNearlyAxisAligned(), "round nearly 90 around z");
 		Assert.AreNotEqual(Quaternion.Euler(0.0f, 90.0f, 0.0f), Quaternion.Euler(5.0f, 89.99f, 5.0f).GetRoundedIfNearlyAxisAligned(), "do not round y if other axes are not aligned");
 		Assert.AreNotEqual(Quaternion.Euler(0.0f, 0.0f, 90.0f), Quaternion.Euler(5.0f, 5.0f, 89.99f).GetRoundedIfNearlyAxisAligned(), "do not round z if other axes are not aligned");
+	}
+
+	[Test]
+	public void FoliageShadowDistanceUsesSquaredThreshold()
+	{
+		float previousDistance = FoliageSettings.shadowDistance;
+		try
+		{
+			FoliageSettings.shadowDistance = 32.0f;
+			Assert.IsTrue(FoliageSettings.shouldCastClutterShadows(32.0f * 32.0f));
+			Assert.IsFalse(FoliageSettings.shouldCastClutterShadows((32.0f * 32.0f) + 0.01f));
+		}
+		finally
+		{
+			FoliageSettings.shadowDistance = previousDistance;
+		}
 	}
 }

@@ -108,17 +108,20 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 9/X
+## P1 — GPU e renderização — 12/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
-- [x] Reduzir faixa base de LOD bias de `[2,5]` para `[1,4]`, fazendo modelos leves entrarem antes pelo slider existente.
+- [x] Reduzir faixa base de LOD bias de `[2,5]` para `[0,75,2]`, fazendo modelos leves entrarem antes pelo slider existente.
 - [x] Classificar captura do Editor: CPU `12,85 ms` contra GPU `5,09 ms`; `Render.OpaqueGeometry`, `BatchRenderer.Flush` e `Batch.DrawStatic` confirmam custo principal de submissão/culling, não shader saturando GPU.
 - [x] Limitar far clip e visibilidade regional por `Gameplay.World_Chunk_Radius`, reutilizando chunks de `128 m` existentes.
 - [x] Desligar desenho do heightmap em tiles de terreno distantes, mantendo collider/dados e margem de preload de uma região.
 - [x] Antecipar transições de `LODGroup` com faixa global `[0,75,2]`, preservando override do usuário e Cinematic Mode.
 - [x] Tornar fog da barreira configurável localmente e aproximar início para últimos 20% do raio visual.
 - [x] Limitar foliage client-side a uma região radial de `128 m`, inclusive presets Ultra e render do escopo.
+- [x] Limitar sombras de clutter a `32/64/128/128 m` em Lighting Low/Medium/High/Ultra, preservando High/Ultra.
+- [x] Escalar distância de sombras pelo slider de draw distance e limitar ao `farClipPlane`; draw distance máximo mantém visual original.
+- [x] Desligar atualização automática de reflection probes somente em Lighting Off/Low; preservar Medium/High/Ultra.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.

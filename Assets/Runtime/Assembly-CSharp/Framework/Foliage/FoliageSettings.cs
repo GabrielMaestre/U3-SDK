@@ -51,6 +51,27 @@ namespace SDG.Framework.Foliage
 
 		internal static int sqrClutterDrawDistance { get; private set; }
 
+		/// <summary>
+		/// Maximum distance from viewer where decorative foliage casts shadows.
+		/// </summary>
+		private static float _shadowDistance = 0;
+		public static float shadowDistance
+		{
+			get => _shadowDistance;
+			set
+			{
+				_shadowDistance = value;
+				sqrShadowDistance = value * value;
+			}
+		}
+
+		public static bool shouldCastClutterShadows(float sqrDistanceFromViewer)
+		{
+			return sqrDistanceFromViewer <= sqrShadowDistance;
+		}
+
+		private static float sqrShadowDistance;
+
 		internal static float _instanceDensity = 0;
 		public static float instanceDensity
 		{
