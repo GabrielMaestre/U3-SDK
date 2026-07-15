@@ -339,8 +339,8 @@ namespace SDG.Unturned
 								model.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.Interpolate;
 								model.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
 								model.GetComponent<Rigidbody>().AddForce(force);
-								model.GetComponent<Rigidbody>().drag = 0.5f;
-								model.GetComponent<Rigidbody>().angularDrag = 0.1f;
+								model.GetComponent<Rigidbody>().linearDamping = 0.5f;
+								model.GetComponent<Rigidbody>().angularDamping = 0.1f;
 
 								Destroy(model, 8f);
 							}

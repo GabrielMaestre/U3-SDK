@@ -59,6 +59,9 @@ Ordem segura: atacar `1`, explicar pico de `2`, depois medir e reordenar `3–5`
 
 ### Pesquisa Unity: próximos testes, não defaults
 
+- Projeto foi migrado para Unity 6.3 LTS `6000.3.19f1`; `2022.3.62f3` permanece baseline comparativa. Compilação externa está sem erros, mas smoke test, builds Unity e novo perfil ainda precisam confirmar migração; upgrade isolado não será creditado como otimização.
+- CefSharp não existe como dependência encontrada no runtime. Atualização de CEF do Editor não entra em benchmark do Player.
+- Remover Win32 reduz manutenção e permite padronizar distribuição 64-bit, mas não aumenta FPS Win64. DX12 deve entrar antes de DX11 com fallback e A/B; tornar DX12 mínimo sem telemetria de hardware é perda de compatibilidade sem ganho comprovado.
 - Built-in RP prioriza static batching sobre GPU instancing. Próximo experimento: excluir do static combine somente grupos numerosos com mesmo mesh/material e confirmar `Draw Mesh (instanced)` no Frame Debugger. Não desligar batching global. [Unity 2022.3 — draw calls](https://docs.unity3d.com/2022.3/Documentation/Manual/optimizing-draw-calls.html)
 - Static batching pode aumentar memória por cópias de geometria transformada. Medir RAM, batches, SetPass, Main/Render Thread e GPU no mesmo frame antes/depois. [Unity 2022.3 — static batching](https://docs.unity3d.com/2022.3/Documentation/Manual/static-batching.html)
 - GPU Resident Drawer e GPU Occlusion não existem no Built-in RP. Atualizar engine mantendo pipeline não libera esses ganhos; exigem protótipo separado em URP/Forward+ e conversão de shaders/água/terreno. [Comparação oficial de pipelines](https://docs.unity3d.com/Manual/render-pipelines-feature-comparison.html)
@@ -66,6 +69,8 @@ Ordem segura: atacar `1`, explicar pico de `2`, depois medir e reordenar `3–5`
 - `vercidium-patreon/meshing` é greedy meshing para mundo voxel. Unturned usa Unity Terrain por heightmap e modelos autorais; copiar algoritmo não reduz estes meshes. Só se aplica a futura reescrita voxel, não à otimização básica atual. [Projeto de referência](https://github.com/vercidium-patreon/meshing)
 - Auditoria de importação continua válida para assets-fonte: `Read/Write` duplica textura/mesh em CPU e GPU, e dados de vértice não usados podem ser removidos. Não alterar master bundles às cegas; listar top objetos do Memory Profiler e testar por família. [Guia oficial Unity](https://unity.com/how-to/project-configuration-and-assets)
 - Physics broadphase, Forward/Deferred e Dynamic Batching são testes A/B, não alterações automáticas. Só manter opção que reduzir p95/p99 sem regressão visual ou de colisão.
+- Terreno já usa tiles e `World_Chunk_Radius`. Próximo experimento mínimo para água: reutilizar regiões de `128 m`, ativar somente tiles no raio/frustum e atualizar reflexão planar somente para superfície relevante. Pré-culling sob terreno precisa preservar câmera submersa, cavernas e holes.
+- Corte fora do limite de dados pode poupar tiles extras; corte na borda jogável pode remover conteúdo válido fora dela. Implementar somente como opção client-side, com fechamento visual e override por mapa; servidor continua tratando simulação/rede separadamente.
 
 ## Sugestões de lógica de jogo
 

@@ -25,7 +25,7 @@ namespace SDG.Unturned
 			{
 				Light light = lightsInChildren[index];
 
-				if (light.type == LightType.Area || light.type == LightType.Directional)
+				if (light.type == LightType.Rectangle || light.type == LightType.Directional)
 				{
 					continue;
 				}

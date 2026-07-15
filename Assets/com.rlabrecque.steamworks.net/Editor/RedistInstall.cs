@@ -4,6 +4,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Build;
 using System.IO;
 using System.Collections.Generic;
 
@@ -57,14 +58,15 @@ public class RedistInstall {
 	}
 
 	static void AddDefineSymbols() {
-		string currentDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+		NamedBuildTarget buildTarget = NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+		string currentDefines = PlayerSettings.GetScriptingDefineSymbols(buildTarget);
 		HashSet<string> defines = new HashSet<string>(currentDefines.Split(';')) {
 			"STEAMWORKS_NET"
 		};
 
 		string newDefines = string.Join(";", defines);
 		if (newDefines != currentDefines) {
-			PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, newDefines);
+			PlayerSettings.SetScriptingDefineSymbols(buildTarget, newDefines);
 		}
 	}
 }

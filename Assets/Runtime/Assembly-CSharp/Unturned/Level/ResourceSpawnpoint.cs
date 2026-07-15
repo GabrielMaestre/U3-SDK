@@ -286,8 +286,8 @@ namespace SDG.Unturned
 							gib.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.Interpolate;
 							gib.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
 							gib.GetComponent<Rigidbody>().AddForce(ragdoll);
-							gib.GetComponent<Rigidbody>().drag = 1;
-							gib.GetComponent<Rigidbody>().angularDrag = 1;
+							gib.GetComponent<Rigidbody>().linearDamping = 1;
+							gib.GetComponent<Rigidbody>().angularDamping = 1;
 
 							//if(asset.isSpeedTree)
 							//{

@@ -3550,7 +3550,7 @@ namespace SDG.Unturned
 					inputEngineVelocity = inputTargetVelocity;
 
 					rootRigidbody.AddForce(transform.forward * inputEngineVelocity * 2.0f * asset.engineForceMultiplier);
-					rootRigidbody.AddForce(Mathf.Lerp(0.0f, 1.0f, transform.InverseTransformDirection(rootRigidbody.velocity).z / asset.TargetForwardVelocity) * asset.lift * -Physics.gravity);
+					rootRigidbody.AddForce(Mathf.Lerp(0.0f, 1.0f, transform.InverseTransformDirection(rootRigidbody.linearVelocity).z / asset.TargetForwardVelocity) * asset.lift * -Physics.gravity);
 
 					if (_wheels == null || _wheels.Length == 0 || (!_wheels[0].isGrounded && !_wheels[1].isGrounded))
 					{
@@ -3682,7 +3682,7 @@ namespace SDG.Unturned
 			}
 			else
 			{
-				Vector3 worldVelocity = rootRigidbody.velocity;
+				Vector3 worldVelocity = rootRigidbody.linearVelocity;
 				ReplicatedSpeed = worldVelocity.magnitude;
 				Vector3 localVelocity = transform.InverseTransformDirection(worldVelocity);
 				if (asset.engine == EEngine.HELICOPTER)
@@ -4178,8 +4178,8 @@ namespace SDG.Unturned
 				}
 				else
 				{
-					ReplicatedSpeed = rootRigidbody.velocity.magnitude;
-					ReplicatedForwardVelocity = transform.InverseTransformDirection(rootRigidbody.velocity).z;
+					ReplicatedSpeed = rootRigidbody.linearVelocity.magnitude;
+					ReplicatedForwardVelocity = transform.InverseTransformDirection(rootRigidbody.linearVelocity).z;
 					ReplicatedSteeringInput = 0.0f;
 					ReplicatedVelocityInput = 0.0f;
 

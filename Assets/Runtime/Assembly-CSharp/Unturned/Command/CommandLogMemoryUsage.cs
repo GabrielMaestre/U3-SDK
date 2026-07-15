@@ -34,7 +34,7 @@ namespace SDG.Unturned
 			};
 			foreach (System.Type type in sceneTypes)
 			{
-				Object[] instances = Object.FindObjectsOfType(type, /*includeActive*/ true);
+				Object[] instances = Object.FindObjectsByType(type, FindObjectsInactive.Include, FindObjectsSortMode.None);
 				results.Add($"{type.Name}(s) in scene: {instances.Length}");
 			}
 

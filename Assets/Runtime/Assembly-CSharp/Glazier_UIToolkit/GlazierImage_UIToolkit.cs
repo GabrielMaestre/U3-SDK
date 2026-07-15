@@ -207,7 +207,7 @@ namespace SDG.Unturned
 
 		private void SynchronizeRotation()
 		{
-			imageElement.transform.rotation = _canRotate ? Quaternion.AngleAxis(_rotationAngle, Vector3.forward) : Quaternion.identity;
+			imageElement.style.rotate = new Rotate(new Angle(_canRotate ? _rotationAngle : 0f));
 		}
 
 		private VisualElement containerElement;

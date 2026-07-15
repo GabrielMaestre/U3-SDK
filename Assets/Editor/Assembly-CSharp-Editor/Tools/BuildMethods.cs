@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 using Unturned.Jenkins;
 using Unturned.SteamCmd;
@@ -78,7 +79,7 @@ public partial class BuildMethods
 
 	public static void setDefineEnabled(string define, bool enabled)
 	{
-		string defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+		string defines = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone);
 		if (defines.Contains(define))
 		{
 			// define is currently enabled
@@ -98,7 +99,7 @@ public partial class BuildMethods
 				defines += ';';
 			defines += define;
 		}
-		PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, defines);
+		PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, defines);
 	}
 
 	/// <returns>True if successfully built.</returns>

@@ -19,13 +19,40 @@ Metas principais:
 
 ## Estado atual
 
-- Engine: Unity `2022.3.62f3`.
+- Engine atual: Unity 6.3 LTS `6000.3.19f1`; baseline anterior preservada: Unity `2022.3.62f3`.
+- Migração de arquivos foi aplicada. Compilação externa está em `0` erros; saída do Safe Mode, resolução do novo toolchain Linux, smoke test e builds Unity continuam pendentes.
 - Runtime principal: C# em `Assets/Runtime/Assembly-CSharp`.
 - Sistemas separados: transporte, pacotes, host bans, UI, utilitários e serialização.
 - Dependências úteis já presentes: Burst, Collections, Memory Profiler e Unity Test Framework.
 - Aproximadamente 1.955 arquivos C# em `Assets` no início deste plano.
 
+## Plano da migração Unity 6.3
+
+- Primeiro passo mantém Built-in Render Pipeline. Atualizar engine não migra shaders, água ou pós-processamento automaticamente e não garante ganho de FPS.
+- CefSharp não foi encontrado como dependência do runtime deste repositório. Chromium/CEF interno do Editor não afeta FPS ou loading do Player.
+- Win32 pode ser removido após confirmar que distribuição e servidores não dependem dele. Ganho é manutenção/build e espaço de endereçamento; Player Win64 não recebe FPS extra.
+- DX12 será testado como primeira API com DX11 de fallback. DX12 mínimo somente após A/B em várias GPUs confirmar frame time, p95/p99, shader stutter e estabilidade melhores.
+- Migração para URP/Forward+ fica separada. GPU Resident Drawer/GPU Occlusion não estão disponíveis no Built-in RP e conversão pode quebrar shaders, iluminação, bundles, mapas e mods.
+- Próximos candidatos sem perda visual: instancing seletivo de grupos repetidos, comparação Forward/Deferred, culling regional de água/reflexos e opção client-side para ocultar exterior do mapa.
+
+### Água e limites do mapa
+
+- Terreno já desliga tiles distantes por `World_Chunk_Radius`; não criar segundo sistema de chunks.
+- Água grande deve reutilizar regiões existentes de `128 m`: tiles com mesh/material compartilhados, frustum/distância, margem contra popping e reflexão planar somente quando relevante.
+- Tile de água totalmente coberto pelo terreno pode ser marcado offline/no loading, preservando câmeras submersas, cavernas, buracos e override do mapa.
+- Ocultar exterior dos limites dos dados do mapa é seguro com fog/skirt de fechamento. Ocultar pela borda jogável exige opt-in por mapa porque conteúdo válido pode existir fora dela, como laboratório da Rússia.
+- Opção é visual e client-side. Não deve desligar colisão, física, simulação ou relevância do servidor.
+
 ## Melhorias implementadas
+
+### 2026-07-15 — Compatibilidade Unity 6.3
+
+- API Updater converteu `PhysicMaterial` para `PhysicsMaterial`, propriedades de `Rigidbody` para `linearVelocity`/`linearDamping`/`angularDamping` e `LightType.Area` para `LightType.Rectangle`.
+- `BuildMethods` e Steamworks.NET usam `NamedBuildTarget`, removendo APIs obsoletas de scripting defines.
+- `BundleTool` usa `BuildPipeline.BuildAssetBundles` com build map e alvo Windows 64-bit; `BuildAssetBundle` foi removido pela Unity 6.
+- UI Toolkit usa `style.rotate`; diagnóstico de memória usa `FindObjectsByType` sem ordenação desnecessária.
+- Packages foram atualizados pela Unity 6.3. Manifest solicita novo toolchain Linux `com.unity.toolchain.win-x86_64-linux@1.1.0`; Package Manager precisa resolver lock após sair do Safe Mode.
+- Validação externa: `Assembly-CSharp.csproj` e `Assembly-CSharp-Editor.csproj` compilam com `0` erros. Avisos MSBuild restantes vêm de referências geradas para DLLs ausentes do package cache e devem ser reavaliados após regenerar project files.
 
 ### 2026-07-14 — CPU por frame e diagnóstico corrigido
 

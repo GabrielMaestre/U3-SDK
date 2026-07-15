@@ -193,14 +193,14 @@ namespace SDG.Unturned
 
 				if (rootDragMultiplier.HasValue)
 				{
-					log(vehicle, "multiplying root drag by {0} from {1} to {2}", rootDragMultiplier.Value, rootRigidbody.drag, rootRigidbody.drag * rootDragMultiplier.Value);
-					rootRigidbody.drag *= rootDragMultiplier.Value;
+					log(vehicle, "multiplying root drag by {0} from {1} to {2}", rootDragMultiplier.Value, rootRigidbody.linearDamping, rootRigidbody.linearDamping * rootDragMultiplier.Value);
+					rootRigidbody.linearDamping *= rootDragMultiplier.Value;
 				}
 
 				if (rootAngularDragMultiplier.HasValue)
 				{
-					log(vehicle, "multiplying root angular drag by {0} from {1} to {2}", rootAngularDragMultiplier.Value, rootRigidbody.angularDrag, rootRigidbody.angularDrag * rootAngularDragMultiplier.Value);
-					rootRigidbody.angularDrag *= rootAngularDragMultiplier.Value;
+					log(vehicle, "multiplying root angular drag by {0} from {1} to {2}", rootAngularDragMultiplier.Value, rootRigidbody.angularDamping, rootRigidbody.angularDamping * rootAngularDragMultiplier.Value);
+					rootRigidbody.angularDamping *= rootAngularDragMultiplier.Value;
 				}
 			}
 

@@ -70,7 +70,7 @@ namespace SDG.Unturned
 		/// Physics material to assign to road colliders.
 		/// Replaces the "concrete" toggle in the older editor.
 		/// </summary>
-		public PhysicMaterial UnityPhysicsMaterial
+		public PhysicsMaterial UnityPhysicsMaterial
 		{
 			get;
 			set;
@@ -115,7 +115,7 @@ namespace SDG.Unturned
 			}
 			else
 			{
-				MasterBundleReference<PhysicMaterial> path = p.data.readMasterBundleReference<PhysicMaterial>("PhysicsMaterial", p.bundle);
+				MasterBundleReference<PhysicsMaterial> path = p.data.readMasterBundleReference<PhysicsMaterial>("PhysicsMaterial", p.bundle);
 				UnityPhysicsMaterial = path.loadAsset();
 			}
 

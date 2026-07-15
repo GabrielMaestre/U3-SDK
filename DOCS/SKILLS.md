@@ -16,7 +16,7 @@ Saída: baseline, hipótese, captura, mudança mínima e relatório antes/depois
 - Ciclo de vida de `MonoBehaviour`, coroutines, jobs, Burst e Collections.
 - Física, animação, assets, cenas, Addressables/AssetBundles existentes e serialização.
 - Redução de trabalho em `Update`, consultas repetidas e acesso desnecessário a componentes.
-- Compatibilidade com Unity `2022.3.62f3` e backends suportados.
+- Compatibilidade com Unity 6.3 LTS `6000.3.19f1` e baseline anterior `2022.3.62f3`, incluindo diferenças de API, serialização, packages e backends.
 
 Saída: mudança de runtime pequena, verificável e sem regressão funcional.
 
@@ -99,4 +99,3 @@ Saída: diagnóstico rápido sem causar novo gargalo.
 - Separação entre fato medido, hipótese e ideia futura.
 
 Saída: próximo colaborador consegue reproduzir, medir e continuar trabalho.
-

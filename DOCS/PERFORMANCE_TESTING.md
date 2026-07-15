@@ -4,6 +4,22 @@
 
 Comparar builds no mesmo hardware, mapa, rota e preset. Captura local mede frame time, CPU, GPU, GC, memória e render sem enviar telemetria.
 
+## Validar migração para Unity 6.3
+
+Engine atual: Unity 6.3 LTS `6000.3.19f1`. Baseline anterior: Unity `2022.3.62f3`.
+
+1. Preserve branch/cópia e baseline Release 2022.3 antes de abrir projeto na Unity 6.3.
+2. Após reimport, revise Console e diff de `ProjectSettings`, `Packages`, cenas, prefabs, materiais e arquivos `.meta`; não aceite atualização serializada em massa sem causa conhecida.
+3. Mantenha Built-in RP no primeiro build. Não misture upgrade de engine, URP e otimizações de código na mesma comparação.
+4. Execute smoke test: boot, menu, singleplayer, servidor, água acima/abaixo, terrain, iluminação, inventário, veículos, Workshop/mods, save/load e shutdown.
+5. Gere Development Build Win64 para CPU/GPU/Memory Profiler e Release Win64 para FPS. Registre versão Unity no nome/relatório de cada captura.
+6. Compare DX11 e DX12 separadamente, mantendo DX11 fallback: CPU Main/Render Thread, GPU, p50/p95/p99, RAM/VRAM, shader stutter e crashes.
+7. Rejeite migração se houver regressão funcional, visual, de bundles/mods ou p95/p99 sem benefício que justifique correção.
+
+Antes do smoke test, saia do Safe Mode com `Retry`, aguarde Package Manager concluir, confirme toolchain Linux `1.1.0`, use `Assets > Open C# Project` para regenerar `.csproj` e limpe Console. Não edite `.csproj` gerado manualmente.
+
+Não medir CefSharp/CEF interno do Editor como custo do Player: nenhuma dependência CefSharp foi encontrada no runtime do repositório. Remoção de Win32 é simplificação de distribuição, não teste de FPS Win64.
+
 ## Captura rápida
 
 0. Mova `C:\Program Files (x86)\Steam\steamapps\common\Unturned\Bundles\ORIGINAL_ASSETS` para fora de `Unturned/Bundles`, `Maps` e `Sandbox`. Esta exportação de `80.156` arquivos é interpretada como conteúdo do jogo e invalida boot/RAM/profiling.
@@ -167,6 +183,8 @@ Não adicione APM remoto agora. CSV + ferramentas Unity cobrem diagnóstico loca
 4. Repita três vezes em build anterior e novo. Compare mediana e p95/p99; não compare Editor contra standalone.
 
 Referências oficiais Unity 2022.3: [profiling de Player/Development Build](https://docs.unity3d.com/2022.3/Documentation/Manual/profiler-profiling-applications.html) e [CPU Usage/Timeline](https://docs.unity3d.com/2022.3/Documentation/Manual/ProfilerCPU.html).
+
+Durante migração, mantenha documentação 2022.3 para reproduzir baseline antiga e use documentação correspondente a Unity `6000.3` para nova captura.
 
 ## Critério de comparação
 

@@ -319,8 +319,8 @@ namespace SDG.Unturned
 			Rigidbody rb = model.gameObject.GetOrAddComponent<Rigidbody>();
 			rb.interpolation = RigidbodyInterpolation.Interpolate;
 			rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-			rb.drag = 0.5f;
-			rb.angularDrag = 0.1f;
+			rb.linearDamping = 0.5f;
+			rb.angularDamping = 0.1f;
 
 			Object.Destroy(model.gameObject, 8f);
 

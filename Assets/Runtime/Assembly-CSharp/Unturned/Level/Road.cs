@@ -750,7 +750,7 @@ namespace SDG.Unturned
 
 			RoadMaterial legacyRoadConfig = GetLegacyRoadConfig();
 
-			PhysicMaterial physicsMaterial;
+			PhysicsMaterial physicsMaterial;
 			if (_roadAsset != null)
 			{
 				physicsMaterial = _roadAsset.UnityPhysicsMaterial;
@@ -764,11 +764,11 @@ namespace SDG.Unturned
 			{
 				if (legacyRoadConfig.isConcrete)
 				{
-					physicsMaterial = Resources.Load<PhysicMaterial>("Physics/Concrete_Static");
+					physicsMaterial = Resources.Load<PhysicsMaterial>("Physics/Concrete_Static");
 				}
 				else
 				{
-					physicsMaterial = Resources.Load<PhysicMaterial>("Physics/Gravel_Static");
+					physicsMaterial = Resources.Load<PhysicsMaterial>("Physics/Gravel_Static");
 				}
 
 				halfWidth = legacyRoadConfig.HalfWidth;

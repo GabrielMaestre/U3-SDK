@@ -8,6 +8,11 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 
 ## P0 — Baseline e segurança
 
+- [x] Migrar arquivos de Unity `2022.3.62f3` para Unity 6.3 LTS `6000.3.19f1` e revisar conversões automáticas de física/luzes.
+- [x] Substituir APIs Editor removidas/obsoletas: AssetBundle legado, scripting defines, rotação UI Toolkit e busca de objetos.
+- [ ] Sair do Safe Mode, aguardar Package Manager resolver `com.unity.toolchain.win-x86_64-linux@1.1.0`, regenerar project files e confirmar Console sem erros.
+- [ ] Após migração, reimportar em cópia/branch, compilar runtime e Editor, executar smoke test e gerar novas baselines Development/Release. Não comparar diretamente Editor/versões diferentes.
+- [ ] Validar packages, Built-in RP, shaders, Post Processing, água, terrain, master bundles, Workshop, mods, servidor dedicado, saves e protocolo em Unity 6.3.
 - [x] Definir matriz de hardware, resolução, presets, mapas, rotas e entidades em `PERFORMANCE_TESTING.md`; preencher valores reais por máquina em cada captura.
 - [x] Criar ranking inicial dos 50 agressores e separar medição de candidatos estáticos em `TOPLAG.md`.
 - [x] Medir boot frio/quente até menu no Unity Editor: `76,96 s` frio contra `11,88–12,15 s` quente.
@@ -343,11 +348,16 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 
 ## P3 — Experimentos futuros
 
+- [ ] Testar DX12 como primeira API mantendo DX11 fallback; comparar CPU/Render Thread, GPU, p95/p99, shader stutter e crashes em várias GPUs antes de cogitar DX12 mínimo.
+- [ ] Remover build Win32 somente após confirmar ausência de usuários/servidores dependentes; não contabilizar como ganho de FPS Win64.
+- [ ] Comparar Forward e Deferred no mesmo cenário porque GBuffer/Deferred Lighting apareceram caros; rejeitar regressão visual ou aumento de passes por luz.
+- [ ] Prototipar culling de água por regiões existentes, frustum e distância; limitar reflexão a água visível e preservar visão submersa/cavernas.
+- [ ] Adicionar opção client-side para ocultar terreno/foliage/água fora dos limites de dados, com fog/skirt e opt-in por mapa para borda jogável.
 - [ ] Avaliar streaming de mundo mais granular após gargalos atuais estarem medidos.
 - [ ] Avaliar Entities/ECS apenas para subsistema isolado com protótipo superior ao código atual.
 - [ ] Avaliar compute shaders para workload paralelo comprovadamente limitado por GPU.
 - [ ] Avaliar geração offline de proxies, HLODs e dados hierárquicos de navegação.
-- [ ] Avaliar recompilação/upgrade de Unity somente com matriz completa de compatibilidade.
+- [ ] Avaliar URP/Forward+ em protótipo separado somente após estabilizar Unity 6.3 com Built-in RP; medir GPU Resident Drawer antes de converter projeto.
 - [ ] Avaliar replay autoritativo para investigação de anticheat e bugs.
 - [ ] Avaliar escalonamento dinâmico de tick por relevância e carga.
 - [ ] Avaliar servidor headless mais enxuto após separar dependências gráficas reais.

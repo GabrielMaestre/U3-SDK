@@ -426,7 +426,7 @@ namespace SDG.Unturned
 		{
 			if (Player.LocalPlayer.movement.getVehicle() != null)
 			{
-				SendExitVehicleRequest.Invoke(ENetReliability.Unreliable, Player.LocalPlayer.movement.getVehicle().GetComponent<Rigidbody>().velocity);
+				SendExitVehicleRequest.Invoke(ENetReliability.Unreliable, Player.LocalPlayer.movement.getVehicle().GetComponent<Rigidbody>().linearVelocity);
 			}
 		}
 
@@ -1875,7 +1875,7 @@ namespace SDG.Unturned
 
 			if (seat == 0 && Dedicator.IsDedicatedServer)
 			{
-				vehicle.GetComponent<Rigidbody>().velocity = velocity;
+				vehicle.GetComponent<Rigidbody>().linearVelocity = velocity;
 			}
 		}
 

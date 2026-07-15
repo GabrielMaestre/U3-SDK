@@ -41,7 +41,7 @@ namespace SDG.Unturned
 
 			if (Provider.isServer)
 			{
-				float speed = Mathf.Clamp(transform.parent.GetComponent<Rigidbody>().velocity.magnitude, 0, 20);
+				float speed = Mathf.Clamp(transform.parent.GetComponent<Rigidbody>().linearVelocity.magnitude, 0, 20);
 
 				if (speed < 3)
 				{

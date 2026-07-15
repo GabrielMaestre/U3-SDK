@@ -2,6 +2,7 @@
 // This file is part of the U3 SDK: https://github.com/smartlydressedgames/u3-sdk/    //
 // Please refer to the included LICENSE.txt for copyright notice and license details. //
 ////////////////////////////////////////////////////////////////////////////////////////
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -74,13 +75,34 @@ namespace SDG.Unturned.Tools
 		{
 			if (path.Length > 0 && selection.Length > 0)
 			{
-#pragma warning disable 0618
-				if (!BuildPipeline.BuildAssetBundle(selection[0], selection, path, BuildAssetBundleOptions.UncompressedAssetBundle, BuildTarget.StandaloneWindows))
+				HashSet<string> uniqueAssetPaths = new HashSet<string>();
+				List<string> assetPaths = new List<string>();
+				foreach (Object asset in selection)
+				{
+					string assetPath = AssetDatabase.GetAssetPath(asset);
+					if (!string.IsNullOrEmpty(assetPath) && !(asset is MonoScript) && uniqueAssetPaths.Add(assetPath))
+					{
+						assetPaths.Add(assetPath);
+					}
+				}
+				if (assetPaths.Count < 1)
+				{
+					Debug.LogError("No bundle-compatible assets selected.");
+					return;
+				}
+
+				AssetBundleBuild build = new AssetBundleBuild
+				{
+					assetBundleName = Path.GetFileName(path),
+					assetNames = assetPaths.ToArray(),
+				};
+				AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(Path.GetDirectoryName(path), new AssetBundleBuild[] { build },
+					BuildAssetBundleOptions.UncompressedAssetBundle, BuildTarget.StandaloneWindows64);
+				if (manifest == null)
 				{
 					Debug.LogError("Failed to build bundle for \"" + focus.name + "\"!");
 					return;
 				}
-#pragma warning restore 0618
 
 				Debug.Log("Successfully built bundle for \"" + focus.name + "\"!");
 

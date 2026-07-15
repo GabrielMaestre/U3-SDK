@@ -567,8 +567,8 @@ namespace SDG.Unturned
 					rb.useGravity = true;
 					rb.isKinematic = false;
 					rb.AddForce(ragdoll);
-					rb.drag = 0.5f;
-					rb.angularDrag = 0.1f;
+					rb.linearDamping = 0.5f;
+					rb.angularDamping = 0.1f;
 					debrisTransform.localScale *= 0.75f;
 
 					Destroy(debrisGameObject, 8f);
