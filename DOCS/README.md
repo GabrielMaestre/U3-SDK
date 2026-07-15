@@ -27,6 +27,25 @@ Metas principais:
 
 ## Melhorias implementadas
 
+### 2026-07-14 — CPU por frame e diagnóstico corrigido
+
+- `LightingManager` continua interpolando luz/clima todo frame, mas notifica condições de horário somente quando o segundo do ciclo muda. Objetos condicionados por hora/data deixam de ser reavaliados centenas de vezes por segundo.
+- `Zombie.OnUpdate` lê `Time.time` e `Time.deltaTime` uma vez por callback, não até 24 e 4 vezes por zombie. `Animal.tick` aplica mesmo padrão com `Time.timeAsDouble`.
+- `LightLOD` consulta distância de luzes estáveis próximas ou distantes a cada oito frames, distribuídas por instância; fade dentro da faixa de transição continua todo frame.
+- Captura anterior era painel `GPU Usage`: `Render.OpaqueGeometry`, `RenderDeferred.GBuffer` e `BatchRenderer.Flush` descrevem `2,049 ms` de GPU, não atribuição de CPU. CPU `12,85 ms` contra GPU `5,09 ms` confirma CPU-bound, mas CPU Timeline ainda precisa identificar método responsável.
+- Pasta `Bundles/ORIGINAL_ASSETS` contém `80.156` arquivos/`1,38 GB` e foi varrida como conteúdo do jogo, gerando `441.919` erros de parse e log de `706 MB`. Mover export para fora de `Unturned/Bundles`, `Maps` e `Sandbox` antes de qualquer benchmark.
+- Static batching seletivo, broadphase de física, occlusion baking e migração URP não foram aplicados sem A/B. Podem alterar RAM, draws, shaders, iluminação ou compatibilidade de mapas/mods.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes. Teste standalone de cidade iluminada, horda e transição dia/noite continua necessário.
+
+### 2026-07-14 — RAM e loading seguro
+
+- Materiais Primary, Secondary, Attachment e Tertiary de `SkinAsset` agora usam `Bundle.loadDeferred` em master bundles. Skins nunca usadas deixam de carregar materiais e texturas dependentes no boot.
+- Bundles legados, `-NoDeferAssets` e `-ValidateAssets` mantêm carregamento eager e validação. `overrideMeshes` permanece eager para preservar campo público e compatibilidade de plugins/mods.
+- Tiles de terreno serializados preservam arrays e valores padrão, mas pulam uploads temporários de heightmap/splatmap que seriam sobrescritos imediatamente por `LandscapeTile.read`. Tiles novos do editor continuam iguais.
+- Cálculo de distância de sombras usa base estável do preset; reaplicar configurações não reduz alcance cumulativamente. High/Ultra em draw distance máximo preservam valores anteriores.
+- Cache persistente, Texture Streaming global, HLOD e unload físico por chunk não foram aplicados: faltam invalidação segura, assets compatíveis e captura A/B.
+- Validação: `Assembly-CSharp.csproj` e `Assembly-CSharp-Editor.csproj` compilam com 0 erros; Test Runner Unity e benchmark standalone ainda necessários.
+
 ### 2026-07-14 — Sombras e foliage por qualidade
 
 - Distância de sombras agora acompanha slider de draw distance entre `50–100%` do limite do preset e nunca ultrapassa `farClipPlane`/raio visível do mundo. Draw distance máximo mantém distância original.
@@ -66,7 +85,7 @@ Metas principais:
 - `EffectAsset` adia prefab principal e splatters até preload ou primeiro uso; 176 definições oficiais deixam de abrir visual no boot.
 - `MythicAsset` adia quatro prefabs visuais por asset; 81 definições oficiais passam a carregar somente quando exibidas ou validadas.
 - Reutilizado `Bundle.loadDeferred`; bundles legados, `-NoDeferAssets` e validação mantêm comportamento eager.
-- Removido primeiro `UnloadUnusedAssets` + `GC.Collect` do loading de mapa: log mediu `256,43 ms` para somente `76,6 KB`; cleanup final de `7,9 MB` permanece.
+- Primeiro `UnloadUnusedAssets` + `GC.Collect` do loading de mapa mediu `256,43 ms` para `76,6 KB`. Código atual mantém este cleanup e o cleanup final por segurança de memória; remoção depende de snapshots repetidos.
 - Preservados preload/pool de efeitos e validação. Nenhum cache ou dependência nova.
 - Validação: 176 efeitos, 81 mythics e 8.163 `.dat` inventariados; `Assembly-CSharp.csproj` compila com 0 erros e 14 warnings preexistentes. Cold boot e mapa precisam ser repetidos.
 
@@ -91,7 +110,7 @@ Metas principais:
 
 - Assets: três texturas base de skin de `VehicleAsset` usam o mesmo carregamento sob demanda dos itens; catálogo deixa de abrir payloads de veículos sem skin em uso.
 - Streaming: saída de região em objetos, itens, recursos, barricadas e estruturas examina somente anel anteriormente carregado. Antes, cada manager percorria todas as `4.096` regiões por jogador; agora custo normal acompanha raio do sistema.
-- Visibilidade/LOD: luzes já fora de alcance consultam distância uma vez a cada oito frames, distribuídas por instância; luzes próximas e transição continuam atualizadas todo frame.
+- Visibilidade/LOD: luzes estáveis próximas ou fora de alcance consultam distância uma vez a cada oito frames, distribuídas por instância; transição continua atualizada todo frame.
 - Simulação/IA: cada `Zombie.tick` lê `Time.time` uma vez e reutiliza valor em timers de alvo, ataque, stuck e habilidades.
 - Rede: replicação de jogadores calcula permissão global de visibilidade uma vez por destinatário, não uma vez por par de jogadores.
 - Compatibilidade: nenhuma distância, frequência de rede, regra de IA, física, save ou protocolo foi alterado.
@@ -135,8 +154,8 @@ Metas principais:
 
 ### 2026-07-13 — Culling e geometria opaca no Unity Editor
 
-- Captura no Play Mode: CPU `12,85 ms`, GPU `5,09 ms`; `Render.OpaqueGeometry` consumiu `40,2%` da CPU com `397` draw calls.
-- Dentro do passe opaco, `BatchRenderer.Flush` consumiu `26,6%` e `Batch.DrawStatic` `21,7%`, com somente `63` draws estáticos. Perfil indica gargalo de culling/submissão na CPU, não saturação da GPU.
+- Captura no Play Mode: CPU `12,85 ms`, GPU `5,09 ms`; CPU é limite do frame. Painel mostrado era `GPU Usage`: `Render.OpaqueGeometry` consumiu `2,049 ms` de GPU com `397` draw calls, não `40,2%` da CPU.
+- `RenderDeferred.GBuffer`, `BatchRenderer.Flush` e `Batch.DrawStatic` são subdivisões do tempo de GPU nessa captura. Causa do custo CPU permanece aberta até captura em `CPU Usage > Timeline` do standalone.
 - Static Batching, Dynamic Batching e Graphics Jobs para Windows já estão ativos. Trocar static batching por instancing genérico ou reescrever culling na GPU não foi aplicado: static batching tem prioridade e mudança ampla pode aumentar draws, memória ou incompatibilidade.
 - Novo `Editor Performance Mode`, disponível em `Window > Unturned > Editor Settings > Playing in Unity`, limita far clip a `768 m` somente sob `UNITY_EDITOR`. Menos renderers distantes chegam ao culling e GBuffer; Player build permanece idêntico. Cinematic Mode preserva distância original.
 - Ganho deve ser medido no mesmo ponto do mapa. Modo reduz fidelidade de distância e serve para iteração rápida, não baseline final.

@@ -702,7 +702,11 @@ namespace SDG.Framework.Landscapes
 			FoliageSystem.removeSurface(this);
 		}
 
-		public LandscapeTile(LandscapeCoord newCoord)
+		public LandscapeTile(LandscapeCoord newCoord) : this(newCoord, uploadDefaultMaps: true)
+		{
+		}
+
+		internal LandscapeTile(LandscapeCoord newCoord, bool uploadDefaultMaps)
 		{
 			gameObject = new GameObject();
 			gameObject.tag = "Ground";
@@ -763,7 +767,10 @@ namespace SDG.Framework.Landscapes
 			data.alphamapResolution = Landscape.SPLATMAP_RESOLUTION;
 			data.baseMapResolution = Landscape.BASEMAP_RESOLUTION;
 			data.size = new Vector3(Landscape.TILE_SIZE, Landscape.TILE_HEIGHT, Landscape.TILE_SIZE);
-			data.SetHeightsDelayLOD(0, 0, heightmap);
+			if (uploadDefaultMaps)
+			{
+				data.SetHeightsDelayLOD(0, 0, heightmap);
+			}
 
 			if (Landscape.ShouldUseSetHolesDelayLOD)
 			{
@@ -773,8 +780,8 @@ namespace SDG.Framework.Landscapes
 				data.enableHolesTextureCompression = false;
 			}
 
-			isHeightsLodDataDirty = true;
-			if (!Dedicator.IsDedicatedServer)
+			isHeightsLodDataDirty = uploadDefaultMaps;
+			if (!Dedicator.IsDedicatedServer && uploadDefaultMaps)
 			{
 				data.SetAlphamaps(0, 0, splatmap);
 			}
@@ -798,7 +805,10 @@ namespace SDG.Framework.Landscapes
 				dataWithoutHoles = new TerrainData();
 				dataWithoutHoles.heightmapResolution = data.heightmapResolution;
 				dataWithoutHoles.size = data.size;
-				dataWithoutHoles.SetHeightsDelayLOD(0, 0, heightmap);
+				if (uploadDefaultMaps)
+				{
+					dataWithoutHoles.SetHeightsDelayLOD(0, 0, heightmap);
+				}
 			}
 
 			collider = gameObject.AddComponent<TerrainCollider>();

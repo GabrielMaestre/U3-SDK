@@ -108,6 +108,14 @@ namespace SDG.Unturned
 		}
 
 		private static uint _time; // current progress through the day
+		private static uint lastNotifiedTime = uint.MaxValue;
+
+		private static void notifyTimeOfDayChanged()
+		{
+			lastNotifiedTime = _time;
+			onTimeOfDayChanged?.Invoke();
+		}
+
 		public static uint time
 		{
 			get => _time;
@@ -388,7 +396,7 @@ namespace SDG.Unturned
 
 			broadcastDayNightUpdated(isDaytime);
 
-			onTimeOfDayChanged?.Invoke();
+			notifyTimeOfDayChanged();
 
 			LevelLighting.wind = wind * 2f;
 
@@ -480,7 +488,7 @@ namespace SDG.Unturned
 			UnturnedLog.info($"Received date counter update: {dateCounter}");
 
 			// Invoke this event because it's the one objects monitor for date conditions.
-			onTimeOfDayChanged?.Invoke();
+			notifyTimeOfDayChanged();
 		}
 
 		[System.Obsolete]
@@ -573,7 +581,12 @@ namespace SDG.Unturned
 				LevelLighting.time = day;
 			}
 
-			onTimeOfDayChanged?.Invoke();
+			// Provider time has one-second resolution. Avoid rechecking every time-conditioned
+			// level object every rendered frame while preserving per-frame lighting blends.
+			if (lastNotifiedTime != _time)
+			{
+				notifyTimeOfDayChanged();
+			}
 		}
 
 		private void TickScheduledWeather()
@@ -825,6 +838,7 @@ namespace SDG.Unturned
 
 		private void onPrePreLevelLoaded(int level)
 		{
+			lastNotifiedTime = uint.MaxValue;
 			onDayNightUpdated = null;
 			onTimeOfDayChanged = null;
 			onMoonUpdated = null;
@@ -889,7 +903,7 @@ namespace SDG.Unturned
 
 				broadcastDayNightUpdated(true);
 
-				onTimeOfDayChanged?.Invoke();
+				notifyTimeOfDayChanged();
 
 				windDelay = Random.Range(45, 75);
 				LevelLighting.wind = Random.Range(0, 360);

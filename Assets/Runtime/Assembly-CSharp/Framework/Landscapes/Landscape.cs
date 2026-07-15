@@ -950,7 +950,8 @@ namespace SDG.Framework.Landscapes
 			{
 				reader.readArrayIndex(tileIndex);
 
-				LandscapeTile tile = new LandscapeTile(LandscapeCoord.ZERO);
+				// Serialized maps upload their final data in LandscapeTile.read, so skip temporary defaults.
+				LandscapeTile tile = new LandscapeTile(LandscapeCoord.ZERO, uploadDefaultMaps: false);
 				tile.enable();
 				tile.applyGraphicsSettings();
 				tile.read(reader);

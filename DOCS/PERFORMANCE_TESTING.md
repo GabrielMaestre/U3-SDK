@@ -6,7 +6,8 @@ Comparar builds no mesmo hardware, mapa, rota e preset. Captura local mede frame
 
 ## Captura rápida
 
-1. Gere `Build Test` ou Development Build Windows 64-bit.
+0. Mova `C:\Program Files (x86)\Steam\steamapps\common\Unturned\Bundles\ORIGINAL_ASSETS` para fora de `Unturned/Bundles`, `Maps` e `Sandbox`. Esta exportação de `80.156` arquivos é interpretada como conteúdo do jogo e invalida boot/RAM/profiling.
+1. Para Profiler, gere `Build Test` ou Development Build Windows 64-bit. Para FPS final, gere Windows 64-bit Release (`BuildOptions.None`); Development/Debugging adicionam overhead.
    `Building Test player successful!` confirma sucesso. Erro IMGUI `EndLayoutGroup` posterior era do Build Tool e foi corrigido agendando build fora de `OnGUI`.
 2. Desative VSync e mantenha resolução, preset gráfico, mapa e mods idênticos.
 3. Execute:
@@ -20,6 +21,8 @@ Comparar builds no mesmo hardware, mapa, rota e preset. Captura local mede frame
 6. CSV fica em `Application.persistentDataPath\PerformanceCaptures`; caminho completo aparece no log como `Performance metrics capture started`.
 
 No Editor, habilite `Window > Unturned > Editor Settings > Misc > Performance Metrics`. Resultado válido deve vir do executável standalone, porque Editor adiciona CPU, GC e render próprios.
+
+Não compare FPS de `Build Test` contra Release. Use Development para localizar custo; use Release para aceitar/rejeitar ganho final.
 
 ## Play Mode com menos lag
 
@@ -53,6 +56,22 @@ Não use modo como baseline visual ou comparação com build. Desative toggle an
 3. Em Low, atravesse limite aproximado de `32 m`; em Medium, `64 m`. Somente sombras de clutter distante devem desaparecer. Árvores, estruturas, personagens e geometria continuam visíveis.
 4. Repita High/Ultra com draw distance em `100%` e `50%`. Em `100%`, alcance de sombras permanece original; abaixo disso acompanha redução escolhida pelo usuário e nunca passa do far clip/chunk.
 5. Teste scope camera, teleporte e fronteira de tile. Rejeite mudança se houver popping próximo, tile sem sombra junto da câmera ou aumento de batches maior que economia no shadow pass.
+6. Alterne outra opção gráfica várias vezes e reaplique High/Ultra. `QualitySettings.shadowDistance` deve permanecer igual para mesmo preset/draw distance, sem redução cumulativa.
+
+## Testar lazy skins e loading do terreno
+
+1. Compare cold boot e RAM no menu antes/depois sem abrir inventário cosmético. Registre materiais/texturas carregados e tempo de catálogo.
+2. Teste skin padrão, pattern, arma com cinco attachments e veículo. Primeiro uso pode carregar conteúdo uma vez; acessos seguintes não podem gerar novo hitch ou material ausente.
+3. Execute com `-ValidateAssets` e confirme mesmos erros de Primary/Secondary e Attachment/Tertiary de antes. Bundles legados devem continuar eager.
+4. Carregue mesmo mapa três vezes. No CPU Timeline, cada tile serializado deve executar somente upload final de `SetHeightsDelayLOD`/`SetAlphamaps`; terreno, collider, materiais e bordas devem ficar idênticos.
+5. Em cópia de teste do mapa, remova um heightmap/splatmap e confirme fallback padrão. Não modifique mapa original.
+
+## Testar hot paths de CPU desta rodada
+
+1. Em Development Build, capture 300–600 frames na mesma cidade à noite e na mesma horda com animais. Deep Profiling desligado.
+2. Em `CPU Usage > Timeline/Hierarchy`, compare `LightingManager.updateLighting`, callbacks de condições em `PlayerQuests/LevelObject`, `LightLOD.Update`, `Zombie.OnUpdate` e `Animal.tick`.
+3. Valide comando de dia/noite/hora, mudança natural do ciclo, objetos condicionados por data, luzes ao atravessar faixa LOD, ataque/regen/especiais de zombies e ataque/wander de animais.
+4. Rejeite se condição de horário atrasar mais de um segundo, fade de luz ficar irregular ou IA mudar. Depois repita CSV em Release para medir FPS/p95/p99.
 
 ## Testar comandos e budget de IA
 
@@ -101,6 +120,8 @@ Registre em cada resultado: commit, Unity, CPU, GPU, RAM, SO, resolução, prese
 2. Memory Profiler: snapshot após aquecimento e após cenário; use `Compare Snapshots` para objetos retidos.
 3. Frame Debugger: um frame de cidade, floresta e horda para localizar passes, materiais e draws repetidos.
 4. dotTrace Timeline: somente quando Unity Profiler apontar custo managed sem causa clara ou file I/O/thread contention.
+
+Experimento futuro de instancing: no Frame Debugger, selecione árvores/pedras repetidas e confirme mesh, material, shader e motivo do batch. Só testar exclusão seletiva do static batching quando existir grupo grande compatível; aceitar somente se Main/Render Thread, SetPass e RAM melhorarem juntos.
 
 Não adicione APM remoto agora. CSV + ferramentas Unity cobrem diagnóstico local sem serviço, conta, custo ou impacto permanente no jogador.
 

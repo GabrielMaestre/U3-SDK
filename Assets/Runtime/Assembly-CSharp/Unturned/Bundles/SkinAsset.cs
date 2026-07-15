@@ -28,16 +28,79 @@ namespace SDG.Unturned
 		public bool hasMagazine => _hasMagazine;
 
 		protected Material _primarySkin;
-		public Material primarySkin => _primarySkin;
+		private IDeferredAsset<Material> deferredPrimarySkin;
+		public Material primarySkin => GetOrLoad(ref _primarySkin, ref deferredPrimarySkin);
 
 		protected Dictionary<ushort, Material> _secondarySkins;
-		public Dictionary<ushort, Material> secondarySkins => _secondarySkins;
+		private Dictionary<ushort, IDeferredAsset<Material>> deferredSecondarySkins;
+		public Dictionary<ushort, Material> secondarySkins
+		{
+			get
+			{
+				if (deferredSecondarySkins != null)
+				{
+					Dictionary<ushort, IDeferredAsset<Material>> pendingSkins = deferredSecondarySkins;
+					foreach (KeyValuePair<ushort, IDeferredAsset<Material>> pair in pendingSkins)
+					{
+						Material material = pair.Value.getOrLoad();
+						_secondarySkins[pair.Key] = material;
+						if (material == null)
+						{
+							Assets.ReportError(this, $"missing \"Skin_Secondary_{pair.Key}\" Material");
+						}
+					}
+					deferredSecondarySkins = null;
+				}
+
+				return _secondarySkins;
+			}
+		}
 
 		protected Material _attachmentSkin;
-		public Material attachmentSkin => _attachmentSkin;
+		private IDeferredAsset<Material> deferredAttachmentSkin;
+		public Material attachmentSkin
+		{
+			get
+			{
+				LoadLayeredSkins();
+				return _attachmentSkin;
+			}
+		}
 
 		protected Material _tertiarySkin;
-		public Material tertiarySkin => _tertiarySkin;
+		private IDeferredAsset<Material> deferredTertiarySkin;
+		public Material tertiarySkin
+		{
+			get
+			{
+				LoadLayeredSkins();
+				return _tertiarySkin;
+			}
+		}
+
+		private bool hasLoadedLayeredSkins;
+
+		private void LoadLayeredSkins()
+		{
+			if (hasLoadedLayeredSkins)
+				return;
+
+			_attachmentSkin = GetOrLoad(ref _attachmentSkin, ref deferredAttachmentSkin);
+			_tertiarySkin = GetOrLoad(ref _tertiarySkin, ref deferredTertiarySkin);
+			if (_attachmentSkin != null && _tertiarySkin == null)
+			{
+				Assets.ReportError(this, "has Skin_Attachment material without a Skin_Tertiary material");
+			}
+			hasLoadedLayeredSkins = true;
+		}
+
+		private void OnPrimarySkinLoaded(Material material)
+		{
+			if (material == null)
+			{
+				Assets.ReportError(this, "missing \"Skin_Primary\" Material");
+			}
+		}
 
 		/// <summary>
 		/// Used by dawn and dusk skins which pull per-level lighting colors.
@@ -114,6 +177,7 @@ namespace SDG.Unturned
 			_secondarySkins = secondarySkins;
 			_attachmentSkin = attachmentSkin;
 			_tertiarySkin = tertiarySkin;
+			hasLoadedLayeredSkins = true;
 
 			overrideMeshes = new List<Mesh>(0);
 		}
@@ -149,27 +213,31 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				_primarySkin = loadRequiredAsset<Material>(p.bundle, "Skin_Primary");
+				p.bundle.loadDeferred("Skin_Primary", out deferredPrimarySkin, OnPrimarySkinLoaded);
 
 				_secondarySkins = new Dictionary<ushort, Material>();
+				deferredSecondarySkins = new Dictionary<ushort, IDeferredAsset<Material>>();
 				ushort secondarySkinCount = p.data.ParseUInt16("Secondary_Skins");
 				for (ushort secondarySkinIndex = 0; secondarySkinIndex < secondarySkinCount; secondarySkinIndex++)
 				{
 					ushort secondarySkin = p.data.ParseUInt16("Secondary_" + secondarySkinIndex);
 
-					if (!secondarySkins.ContainsKey(secondarySkin))
+					if (!deferredSecondarySkins.ContainsKey(secondarySkin))
 					{
-						Material secondarySkinMaterial = loadRequiredAsset<Material>(p.bundle, "Skin_Secondary_" + secondarySkin);
-						secondarySkins.Add(secondarySkin, secondarySkinMaterial);
+						p.bundle.loadDeferred("Skin_Secondary_" + secondarySkin, out IDeferredAsset<Material> deferredSecondarySkin);
+						deferredSecondarySkins.Add(secondarySkin, deferredSecondarySkin);
 					}
 				}
 
-				_attachmentSkin = p.bundle.load<Material>("Skin_Attachment");
-				_tertiarySkin = p.bundle.load<Material>("Skin_Tertiary");
+				p.bundle.loadDeferred("Skin_Attachment", out deferredAttachmentSkin);
+				p.bundle.loadDeferred("Skin_Tertiary", out deferredTertiarySkin);
+				hasLoadedLayeredSkins = false;
 
-				if (attachmentSkin != null && tertiarySkin == null)
+				if (Assets.shouldDeferLoadingAssets == false || p.bundle is not MasterBundle)
 				{
-					Assets.ReportError(this, "has Skin_Attachment material without a Skin_Tertiary material");
+					_ = primarySkin;
+					_ = secondarySkins;
+					_ = attachmentSkin;
 				}
 
 				ushort overrideMeshesCount = p.data.ParseUInt16("Override_Meshes");

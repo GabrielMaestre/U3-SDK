@@ -2728,6 +2728,9 @@ namespace SDG.Unturned
 				return;
 			}
 
+			float currentTime = Time.time;
+			float deltaTime = Time.deltaTime;
+
 			UnityEngine.Profiling.Profiler.BeginSample("Snapshot");
 
 			if (Provider.isServer)
@@ -2744,7 +2747,7 @@ namespace SDG.Unturned
 
 						isStuck = false;
 
-						lastStuck = Time.time;
+						lastStuck = currentTime;
 						stuckSearchTimer = 0.0f;
 					}
 					else if (!isStuck)
@@ -2763,9 +2766,9 @@ namespace SDG.Unturned
 					}
 				}
 
-				if (isPulled && Time.time - lastPull > pullDelay)
+				if (isPulled && currentTime - lastPull > pullDelay)
 				{
-					lastPull = Time.time;
+					lastPull = currentTime;
 					pullDelay = Random.Range(24.0f, 96.0f); // bump this value up
 
 					if (!isLeaving && ZombieManager.canSpareWanderer)
@@ -2792,8 +2795,8 @@ namespace SDG.Unturned
 					isMoving = false;
 				}
 
-				transform.position = Vector3.Lerp(transform.position, interpPositionTarget, Time.deltaTime * Provider.INTERP_SPEED);
-				transform.rotation = Quaternion.Euler(0.0f, Mathf.LerpAngle(transform.rotation.eulerAngles.y, interpYawTarget, Time.deltaTime * Provider.INTERP_SPEED), 0.0f);
+				transform.position = Vector3.Lerp(transform.position, interpPositionTarget, deltaTime * Provider.INTERP_SPEED);
+				transform.rotation = Quaternion.Euler(0.0f, Mathf.LerpAngle(transform.rotation.eulerAngles.y, interpYawTarget, deltaTime * Provider.INTERP_SPEED), 0.0f);
 			}
 
 			UnityEngine.Profiling.Profiler.EndSample();
@@ -2815,7 +2818,7 @@ namespace SDG.Unturned
 						}
 						else
 						{
-							transform.rotation = Quaternion.Lerp(transform.rotation, rotation, 4 * Time.deltaTime);
+							transform.rotation = Quaternion.Lerp(transform.rotation, rotation, 4 * deltaTime);
 						}
 					}
 				}
@@ -2823,7 +2826,7 @@ namespace SDG.Unturned
 
 			if (isThrowingBoulder)
 			{
-				if (Time.time - lastSpecial > throwTime)
+				if (currentTime - lastSpecial > throwTime)
 				{
 					StopThrowingBoulder();
 
@@ -2858,7 +2861,7 @@ namespace SDG.Unturned
 
 			if (isSpittingAcid)
 			{
-				if (Time.time - lastSpecial > acidTime)
+				if (currentTime - lastSpecial > acidTime)
 				{
 					StopSpittingAcid();
 
@@ -2882,7 +2885,7 @@ namespace SDG.Unturned
 
 			if (isChargingSpark)
 			{
-				if (Time.time - lastSpecial > sparkTime)
+				if (currentTime - lastSpecial > sparkTime)
 				{
 					StopChargingSpark();
 
@@ -2915,7 +2918,7 @@ namespace SDG.Unturned
 
 			if (isStompingWind)
 			{
-				if (Time.time - lastSpecial > windTime)
+				if (currentTime - lastSpecial > windTime)
 				{
 					StopStompingWind();
 
@@ -2947,7 +2950,7 @@ namespace SDG.Unturned
 				{
 					if (isBreathingFire)
 					{
-						fireDamage += Time.deltaTime * 50.0f;
+						fireDamage += deltaTime * 50.0f;
 
 						if (fireDamage > 1.0f)
 						{
@@ -2969,7 +2972,7 @@ namespace SDG.Unturned
 					}
 				}
 
-				if (Time.time - lastSpecial > fireTime)
+				if (currentTime - lastSpecial > fireTime)
 				{
 					StopBreathingFire();
 				}
@@ -2977,42 +2980,42 @@ namespace SDG.Unturned
 
 			if (isPlayingBoulder)
 			{
-				if (Time.time - lastSpecial > boulderTime)
+				if (currentTime - lastSpecial > boulderTime)
 				{
 					isPlayingBoulder = false;
 				}
 			}
 			else if (isPlayingSpit)
 			{
-				if (Time.time - lastSpecial > spitTime)
+				if (currentTime - lastSpecial > spitTime)
 				{
 					isPlayingSpit = false;
 				}
 			}
 			else if (isPlayingCharge)
 			{
-				if (Time.time - lastSpecial > chargeTime)
+				if (currentTime - lastSpecial > chargeTime)
 				{
 					isPlayingCharge = false;
 				}
 			}
 			else if (isPlayingWind)
 			{
-				if (Time.time - lastSpecial > windTime)
+				if (currentTime - lastSpecial > windTime)
 				{
 					isPlayingWind = false;
 				}
 			}
 			else if (isPlayingFire)
 			{
-				if (Time.time - lastSpecial > fireTime)
+				if (currentTime - lastSpecial > fireTime)
 				{
 					isPlayingFire = false;
 				}
 			}
 			else if (isPlayingAttack)
 			{
-				if (Time.time - lastAttack > attackTime)
+				if (currentTime - lastAttack > attackTime)
 				{
 					if (speciality == EZombieSpeciality.FLANKER_FRIENDLY || speciality == EZombieSpeciality.FLANKER_STALK)
 					{
@@ -3024,14 +3027,14 @@ namespace SDG.Unturned
 			}
 			else if (isPlayingStartle)
 			{
-				if (Time.time - lastStartle > startleTime)
+				if (currentTime - lastStartle > startleTime)
 				{
 					isPlayingStartle = false;
 				}
 			}
 			else if (isPlayingStun)
 			{
-				if (Time.time - lastStun > stunTime)
+				if (currentTime - lastStun > stunTime)
 				{
 					isPlayingStun = false;
 				}
@@ -3078,9 +3081,9 @@ namespace SDG.Unturned
 
 			if (Provider.isServer)
 			{
-				if (health < maxHealth && Time.time - lastRegen > LevelZombies.tables[type].regen)
+				if (health < maxHealth && currentTime - lastRegen > LevelZombies.tables[type].regen)
 				{
-					lastRegen = Time.time;
+					lastRegen = currentTime;
 					health++; // Potential timing issues, but not big deal. In most cases the server framerate is higher than this update rate.
 				}
 			}
@@ -3090,9 +3093,9 @@ namespace SDG.Unturned
 			{
 				UnityEngine.Profiling.Profiler.BeginSample("Groan");
 
-				if (Time.time - lastGroan > groanDelay)
+				if (currentTime - lastGroan > groanDelay)
 				{
-					lastGroan = Time.time;
+					lastGroan = currentTime;
 
 					if (isVisible)
 					{
@@ -3163,10 +3166,10 @@ namespace SDG.Unturned
 			{
 				if (isStunned)
 				{
-					if (Time.time - lastStun > 1)
+					if (currentTime - lastStun > 1)
 					{
-						lastTarget = Time.time;
-						lastStuck = Time.time;
+						lastTarget = currentTime;
+						lastStuck = currentTime;
 						stuckSearchTimer = 0.0f;
 
 						isStunned = false;
@@ -3178,7 +3181,7 @@ namespace SDG.Unturned
 					}
 				}
 
-				if (isLeaving && Time.time - lastLeave > leaveTime)
+				if (isLeaving && currentTime - lastLeave > leaveTime)
 				{
 					alert(leaveTo, false);
 

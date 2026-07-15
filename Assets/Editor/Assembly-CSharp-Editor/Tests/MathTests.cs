@@ -60,4 +60,14 @@ internal class MathTests
 			FoliageSettings.shadowDistance = previousDistance;
 		}
 	}
+
+	[Test]
+	public void ShadowDistanceCalculationUsesStablePreset()
+	{
+		System.Reflection.MethodInfo method = typeof(GraphicsSettings).GetMethod("calculateShadowDistance", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+		Assert.IsNotNull(method);
+		Assert.AreEqual(225.0f, (float) method.Invoke(null, new object[] { EGraphicQuality.HIGH, 0.5f, 2048.0f }));
+		Assert.AreEqual(300.0f, (float) method.Invoke(null, new object[] { EGraphicQuality.HIGH, 1.0f, 2048.0f }));
+		Assert.AreEqual(128.0f, (float) method.Invoke(null, new object[] { EGraphicQuality.ULTRA, 1.0f, 128.0f }));
+	}
 }

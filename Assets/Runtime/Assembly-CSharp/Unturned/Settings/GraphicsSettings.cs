@@ -703,6 +703,13 @@ namespace SDG.Unturned
 		/// </summary>
 		internal static float sqrVehicleCullDistanceWithMargin;
 
+		internal static float calculateShadowDistance(EGraphicQuality quality, float drawDistance, float farClipPlane)
+		{
+			// Matches Off/Low/Medium/High/Ultra shadow distances in QualitySettings.asset.
+			float presetShadowDistance = (int) quality * 100.0f;
+			return Mathf.Min(presetShadowDistance * Mathf.Lerp(0.5f, 1.0f, drawDistance), farClipPlane);
+		}
+
 		public static void apply(string reason)
 		{
 			UnturnedLog.info("Applying graphics settings ({0})", reason);
@@ -762,8 +769,7 @@ namespace SDG.Unturned
 			else
 			{
 				// Keep full shadow distance at maximum draw distance, and never render shadows beyond visible world.
-				float shadowDistanceMultiplier = Mathf.Lerp(0.5f, 1.0f, normalizedDrawDistance);
-				QualitySettings.shadowDistance = Mathf.Min(QualitySettings.shadowDistance * shadowDistanceMultiplier, farClipPlane);
+				QualitySettings.shadowDistance = calculateShadowDistance(lightingQuality, normalizedDrawDistance, farClipPlane);
 			}
 
 			// Prevent 1024x1024 ground and water titles from popping in too late.

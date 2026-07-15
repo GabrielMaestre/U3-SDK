@@ -1145,8 +1145,9 @@ namespace SDG.Unturned
 		private double lastTick;
 		public void tick()
 		{
-			float delta = (float) (Time.timeAsDouble - lastTick);
-			lastTick = Time.timeAsDouble;
+			double currentTime = Time.timeAsDouble;
+			float delta = (float) (currentTime - lastTick);
+			lastTick = currentTime;
 			if (Provider.isServer && !Regions.IsPositionWithinPlayerSimulationRange(transform.position))
 			{
 				return;
@@ -1178,11 +1179,11 @@ namespace SDG.Unturned
 
 					if (distance < (currentTargetPlayer.movement.getVehicle() != null ? asset.horizontalVehicleAttackRangeSquared : asset.horizontalAttackRangeSquared) && height < asset.verticalAttackRange)
 					{
-						if (Time.timeAsDouble - lastTarget > (Dedicator.IsDedicatedServer ? 0.3f : 0.1f))
+						if (currentTime - lastTarget > (Dedicator.IsDedicatedServer ? 0.3f : 0.1f))
 						{
 							if (isAttacking)
 							{
-								if (Time.timeAsDouble - lastAttack > attackDuration * 0.5f)
+								if (currentTime - lastAttack > attackDuration * 0.5f)
 								{
 									isAttacking = false;
 
@@ -1211,7 +1212,7 @@ namespace SDG.Unturned
 							}
 							else
 							{
-								if (asset.attackAnimVariantsCount > 0 && Time.timeAsDouble - lastAttack > attackInterval)
+								if (asset.attackAnimVariantsCount > 0 && currentTime - lastAttack > attackInterval)
 								{
 									isAttacking = true;
 
@@ -1229,7 +1230,7 @@ namespace SDG.Unturned
 					}
 					else
 					{
-						lastTarget = Time.timeAsDouble;
+						lastTarget = currentTime;
 						isAttacking = false;
 					}
 				}
@@ -1240,7 +1241,7 @@ namespace SDG.Unturned
 					updateTicking();
 				}
 
-				lastWander = Time.timeAsDouble;
+				lastWander = currentTime;
 			}
 
 			UnityEngine.Profiling.Profiler.BeginSample("Animal.Move");

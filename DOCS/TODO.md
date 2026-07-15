@@ -16,6 +16,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Executar ações do Build Tool após evento IMGUI, removendo falso erro `EndLayoutGroup` ao concluir `Build Test`.
 - [x] Alinhar Post Processing para `3.3.0`, removendo diretivas WebGPU incompatíveis com Unity `2022.3.62f3`.
 - [x] Diagnosticar alerta de memória no loading: pressão paginada do sistema em `94%`; Profiler descartou frames, Unity permaneceu em `6,25 GB`.
+- [x] Identificar scan acidental de `Bundles/ORIGINAL_ASSETS`: `80.156` arquivos, `441.919` erros de parse e log de `706 MB` contaminam boot, RAM e profiling.
+- [ ] Mover `ORIGINAL_ASSETS` para fora das pastas pesquisadas pelo jogo antes de medir nova baseline.
 - [ ] Registrar CPU/GPU frame time p50/p95/p99, GC, RAM, VRAM, I/O, rede e tick do servidor.
 - [ ] Separar métricas de Editor, Development Build, Release e servidor dedicado.
 - [ ] Criar smoke test de boot, criação de mundo, conexão, spawn, inventário, combate, veículo e shutdown.
@@ -24,7 +26,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Definir limites de regressão e ruído aceitável por métrica.
 - [ ] Manter resultados de benchmark fora do repositório quando forem binários ou grandes; versionar só resumo textual.
 
-## P1 — Boot e loading — 13/X
+## P1 — Boot e loading — 15/X
 
 - [x] Carregar master bundles direto do disco com `LoadFromFileAsync`, sem copiar arquivo inteiro para memória; manter SHA-1 de integridade.
 - [x] Suspender leitores de assets ociosos com `SemaphoreSlim.WaitAsync`, eliminando busy-spin durante varredura de diretórios.
@@ -33,10 +35,12 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Adiar geração `Auto_Skybox` de 27 recursos até primeiro uso no loading do mapa.
 - [x] Adiar prefabs de 176 `EffectAsset` até preload ou primeiro uso, preservando bundles legados e validação eager.
 - [x] Adiar quatro prefabs visuais de 81 `MythicAsset` até primeiro uso.
-- [x] Remover cleanup intermediário do mapa que custou `256,43 ms` e recuperou somente `76,6 KB`; preservar cleanup final.
+- [x] Medir cleanup intermediário do mapa: `256,43 ms` por `76,6 KB`; manter ambos os cleanups até snapshots comprovarem remoção segura.
 - [x] Adiar prefab `Item`, animações e três texturas base de skin de `ItemAsset` até primeiro uso, preservando modos eager existentes.
 - [x] Adiar três texturas base de skin de `VehicleAsset` até primeiro uso, reutilizando helper lazy compartilhado.
+- [x] Adiar materiais Primary, Secondary, Attachment e Tertiary de `SkinAsset` até primeiro uso em master bundles; preservar modos eager e API pública.
 - [x] Adiar prefabs `Projectile` de armas e magazines até primeiro uso em master bundles, preservando modos eager existentes.
+- [x] Evitar uploads padrão de heightmap/splatmap antes de ler tiles serializados; manter defaults e criação de tiles novos.
 - [x] Não copiar matrizes de foliage clutter para listas runtime quando opção de clutter estiver desligada.
 - [x] Ler GUIDs comuns de arquivos `River` no buffer compartilhado, removendo um `byte[16]` por GUID durante loading de mapas.
 - [ ] Repetir cold start após reiniciar Unity e comparar contra baseline de `76,96 s`.
@@ -56,11 +60,14 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time — 18/X
+## P1 — CPU e frame time — 21/X
 
 - [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
-- [x] Consultar distância de `LightLOD` já distante a cada oito frames, mantendo transição próxima por frame.
+- [x] Consultar distância de `LightLOD` estável próximo ou distante a cada oito frames, mantendo fade da transição por frame.
 - [x] Ler `Time.time` uma vez por `Zombie.tick` e reutilizar valor nos timers da mesma simulação.
+- [x] Ler `Time.time` e `Time.deltaTime` uma vez por `Zombie.OnUpdate`, eliminando até `24+4` acessos repetidos por zombie/callback.
+- [x] Ler `Time.timeAsDouble` uma vez por `Animal.tick` e reutilizar valor em alvo, ataque e wander.
+- [x] Notificar condições de horário somente quando o segundo do ciclo muda, preservando blend de iluminação por frame e eventos explícitos de data.
 - [x] Limitar limpeza de regiões ao anel anteriormente carregado em seis sistemas, evitando varreduras globais de `64×64`.
 - [x] Usar culling nativo de animação nos prefabs client de players e zombies quando nenhum renderer estiver visível.
 - [x] Rejeitar candidatos fora do cone da sentry com matemática ao quadrado antes de calcular raiz e normalização.
@@ -91,10 +98,11 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Detectar long frames e atribuir custo por sistema.
 - [ ] Medir `TickZombies`, `TickZombiesInRegionsWithPlayers` e `AnimalManager.Tick` com budgets `50/25`, `20/10` e `10/5`; definir presets somente após comparar latência de IA.
 
-## P1 — Memória e GC — 2/X
+## P1 — Memória e GC — 3/X
 
 - [x] Remover alocações dos iteradores `yield` nos efeitos periódicos de clima.
 - [x] Remover array temporário de 16 bytes por GUID no caminho comum de `River.readGUID`, com teste de alocação.
+- [x] Manter materiais e texturas dependentes de skins não utilizadas fora da memória até primeiro acesso.
 
 - [ ] Capturar snapshots em boot, loading, gameplay prolongado, troca de mapa e disconnect.
 - [ ] Localizar objetos gerenciados, nativos e assets retidos após descarregamento.
@@ -108,12 +116,12 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 12/X
+## P1 — GPU e renderização — 13/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
 - [x] Reduzir faixa base de LOD bias de `[2,5]` para `[0,75,2]`, fazendo modelos leves entrarem antes pelo slider existente.
-- [x] Classificar captura do Editor: CPU `12,85 ms` contra GPU `5,09 ms`; `Render.OpaqueGeometry`, `BatchRenderer.Flush` e `Batch.DrawStatic` confirmam custo principal de submissão/culling, não shader saturando GPU.
+- [x] Corrigir classificação da captura: CPU `12,85 ms` contra GPU `5,09 ms` confirma CPU-bound; `Render.OpaqueGeometry`, `BatchRenderer.Flush` e `Batch.DrawStatic` vieram do painel GPU e não identificam método CPU.
 - [x] Limitar far clip e visibilidade regional por `Gameplay.World_Chunk_Radius`, reutilizando chunks de `128 m` existentes.
 - [x] Desligar desenho do heightmap em tiles de terreno distantes, mantendo collider/dados e margem de preload de uma região.
 - [x] Antecipar transições de `LODGroup` com faixa global `[0,75,2]`, preservando override do usuário e Cinematic Mode.
@@ -121,6 +129,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Limitar foliage client-side a uma região radial de `128 m`, inclusive presets Ultra e render do escopo.
 - [x] Limitar sombras de clutter a `32/64/128/128 m` em Lighting Low/Medium/High/Ultra, preservando High/Ultra.
 - [x] Escalar distância de sombras pelo slider de draw distance e limitar ao `farClipPlane`; draw distance máximo mantém visual original.
+- [x] Tornar cálculo de distância de sombras idempotente; reaplicar configuração não reduz alcance cumulativamente.
 - [x] Desligar atualização automática de reflection probes somente em Lighting Off/Low; preservar Medium/High/Ultra.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
