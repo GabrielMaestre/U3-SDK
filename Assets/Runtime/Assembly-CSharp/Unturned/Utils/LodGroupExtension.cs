@@ -38,5 +38,37 @@ namespace SDG.Unturned
 		{
 			ClampCulling(lodGroup, 0.0f);
 		}
+
+		/// <summary>
+		/// Lowest-detail renderers do not need to cast distant shadows. Renderers shared with a higher LOD are preserved.
+		/// </summary>
+		public static void DisableShadowsOnLowestUniqueLod(this LODGroup lodGroup)
+		{
+			LOD[] lods = lodGroup.GetLODs();
+			if (lods.Length < 2)
+				return;
+
+			Renderer[] lowestRenderers = lods[lods.Length - 1].renderers;
+			foreach (Renderer renderer in lowestRenderers)
+			{
+				if (renderer != null && !IsRendererUsedByHigherLod(lods, renderer))
+				{
+					renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+				}
+			}
+		}
+
+		private static bool IsRendererUsedByHigherLod(LOD[] lods, Renderer renderer)
+		{
+			for (int lodIndex = 0; lodIndex < lods.Length - 1; ++lodIndex)
+			{
+				foreach (Renderer higherRenderer in lods[lodIndex].renderers)
+				{
+					if (higherRenderer == renderer)
+						return true;
+				}
+			}
+			return false;
+		}
 	}
 }

@@ -70,4 +70,32 @@ internal class MathTests
 		Assert.AreEqual(300.0f, (float) method.Invoke(null, new object[] { EGraphicQuality.HIGH, 1.0f, 2048.0f }));
 		Assert.AreEqual(128.0f, (float) method.Invoke(null, new object[] { EGraphicQuality.ULTRA, 1.0f, 128.0f }));
 	}
+
+	[Test]
+	public void LowestUniqueLodStopsCastingShadows()
+	{
+		GameObject root = new GameObject("LOD test");
+		try
+		{
+			LODGroup lodGroup = root.AddComponent<LODGroup>();
+			MeshRenderer sharedRenderer = new GameObject("Shared").AddComponent<MeshRenderer>();
+			sharedRenderer.transform.parent = root.transform;
+			MeshRenderer farRenderer = new GameObject("Far").AddComponent<MeshRenderer>();
+			farRenderer.transform.parent = root.transform;
+			lodGroup.SetLODs(new[]
+			{
+				new LOD(0.5f, new Renderer[] { sharedRenderer }),
+				new LOD(0.1f, new Renderer[] { sharedRenderer, farRenderer })
+			});
+
+			lodGroup.DisableShadowsOnLowestUniqueLod();
+
+			Assert.AreEqual(UnityEngine.Rendering.ShadowCastingMode.On, sharedRenderer.shadowCastingMode);
+			Assert.AreEqual(UnityEngine.Rendering.ShadowCastingMode.Off, farRenderer.shadowCastingMode);
+		}
+		finally
+		{
+			Object.DestroyImmediate(root);
+		}
+	}
 }

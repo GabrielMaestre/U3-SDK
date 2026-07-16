@@ -56,6 +56,7 @@ namespace SDG.Unturned
 	{
 		private static List<Rigidbody> reuseableRigidbodyList = new List<Rigidbody>();
 		private static List<Renderer> reuseableSkyboxRendererList = new List<Renderer>();
+		private static List<LODGroup> reuseableLodGroupList = new List<LODGroup>();
 
 		/// <summary>
 		/// If true, object is within a culling volume.
@@ -89,6 +90,7 @@ namespace SDG.Unturned
 		}
 
 		private List<Renderer> renderers;
+		private LODGroup[] lodGroups;
 
 		private ushort _id;
 		public ushort id => _id;
@@ -751,6 +753,27 @@ namespace SDG.Unturned
 				Material materialOverride = GetMaterialOverride();
 
 				transform.GetComponentsInChildren(true, renderers);
+				reuseableLodGroupList.Clear();
+				transform.GetComponentsInChildren(true, reuseableLodGroupList);
+				for (int index = reuseableLodGroupList.Count - 1; index >= 0; --index)
+				{
+					if (reuseableLodGroupList[index] == null || !reuseableLodGroupList[index].enabled)
+					{
+						reuseableLodGroupList.RemoveAt(index);
+					}
+				}
+				if (reuseableLodGroupList.Count > 0)
+				{
+					lodGroups = reuseableLodGroupList.ToArray();
+					if (!Level.isEditor)
+					{
+						foreach (LODGroup lodGroup in lodGroups)
+						{
+							lodGroup.DisableShadowsOnLowestUniqueLod();
+						}
+					}
+				}
+				reuseableLodGroupList.Clear();
 				if (materialOverride != null)
 				{
 					for (int index = 0; index < renderers.Count; index++)
@@ -1138,6 +1161,17 @@ namespace SDG.Unturned
 			if (areRenderersEnabled == isEnabled)
 				return;
 			areRenderersEnabled = isEnabled;
+
+			if (lodGroups != null)
+			{
+				foreach (LODGroup lodGroup in lodGroups)
+				{
+					if (lodGroup != null)
+					{
+						lodGroup.enabled = areRenderersEnabled;
+					}
+				}
+			}
 
 			if (renderers != null)
 			{

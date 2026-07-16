@@ -67,7 +67,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time — 21/X
+## P1 — CPU e frame time — 23/X
 
 - [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
 - [x] Consultar distância de `LightLOD` estável próximo ou distante a cada oito frames, mantendo fade da transição por frame.
@@ -90,6 +90,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Ignorar respawn normal de animais e zombies fora da área de simulação de todos os jogadores; preservar Horde e beacon.
 - [x] Consultar candidatos de fog de água pelo índice espacial existente, evitando varredura de todos os volumes por câmera/render.
 - [x] Tornar budgets de tick de zombies e animais configuráveis no servidor dedicado, preservando padrões `50/25`, fallback para campo ausente e teto `1000`.
+- [x] Suspender `LODGroup` junto dos renderers de `LevelObject` fora da visibilidade regional/culling, preservando raiz, scripts e colliders importantes no singleplayer e servidor host.
+- [x] Executar dois passos pequenos de visibilidade regional por frame para objetos e árvores, reduzindo tempo de convergência sem atualizar região inteira de uma vez.
 - [ ] Inventariar `Update`, `LateUpdate`, `FixedUpdate`, coroutines e callbacks mais caros.
 - [ ] Remover polling substituível por eventos existentes.
 - [ ] Distribuir trabalho não urgente entre frames com orçamento explícito.
@@ -123,7 +125,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 14/X
+## P1 — GPU e renderização — 15/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
@@ -138,6 +140,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Escalar distância de sombras pelo slider de draw distance e limitar ao `farClipPlane`; draw distance máximo mantém visual original.
 - [x] Tornar cálculo de distância de sombras idempotente; reaplicar configuração não reduz alcance cumulativamente.
 - [x] Desligar atualização automática de reflection probes somente em Lighting Off/Low; preservar Medium/High/Ultra.
+- [x] Desligar sombras somente de renderers exclusivos do último LOD de objetos e árvores; preservar renderers reutilizados por LOD próximo, geometria e recepção de sombras.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
@@ -155,7 +158,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
 - [ ] Validar APIs gráficas e GPUs suportadas após cada mudança de shader.
 
-## P1 — Distância de renderização e streaming — 10/X
+## P1 — Distância de renderização e streaming — 11/X
 
 - [x] Materializar proxies `Skybox` de `LevelObject` sob demanda pela região existente; preservar editor e level batching.
 - [x] Desativar objetos, itens, recursos, barricadas e estruturas somente dentro dos bounds da região anterior; centro inicial inválido produz bounds vazios.
@@ -167,6 +170,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Atualizar visibilidade dos tiles de terreno somente ao cruzar região ou mudar raio, evitando scan por frame.
 - [x] Adicionar `/drawchunks` local para admin visualizar área ativa, primeira faixa inativa e chunk atual.
 - [x] Aplicar limite exato de uma região ao foliage e manter árvores/objetos/terreno sob `Gameplay.World_Chunk_Radius`.
+- [x] Duplicar passo time-sliced de objetos e árvores ao cruzar chunk, convergindo ativação/desativação em metade dos frames sem sincronizar região inteira.
 - [ ] Separar distância por categoria: terreno, estruturas, itens, jogadores, veículos, IA, vegetação, sombras e efeitos.
 - [ ] Definir limites mínimo/máximo por preset e opção manual.
 - [ ] Adaptar distância por orçamento de frame time com histerese e cooldown para evitar oscilação.

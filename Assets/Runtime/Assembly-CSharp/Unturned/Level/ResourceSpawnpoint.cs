@@ -96,6 +96,7 @@ namespace SDG.Unturned
 
 	public class ResourceSpawnpoint
 	{
+		private static List<LODGroup> reuseableLodGroupList = new List<LODGroup>();
 		private static List<Collider> colliders = new List<Collider>();
 
 		[System.Obsolete("Unused index into LevelGround.resources for early versions of the level editor.")]
@@ -492,6 +493,17 @@ namespace SDG.Unturned
 
 					if (!Dedicator.IsDedicatedServer)
 					{
+						if (!Level.isEditor)
+						{
+							reuseableLodGroupList.Clear();
+							model.GetComponentsInChildren(true, reuseableLodGroupList);
+							foreach (LODGroup lodGroup in reuseableLodGroupList)
+							{
+								lodGroup.DisableShadowsOnLowestUniqueLod();
+							}
+							reuseableLodGroupList.Clear();
+						}
+
 						if (!Level.isEditor && asset.isForage)
 						{
 							Transform forageTransform = model.Find("Forage");

@@ -1476,6 +1476,8 @@ namespace SDG.Unturned
 			if (MainCamera.instance == null)
 				return;
 
+			// Two small passes converge tree state faster after crossing a chunk without a full-region spike.
+			tickRegionalVisibility();
 			tickRegionalVisibility();
 #endif
 		}

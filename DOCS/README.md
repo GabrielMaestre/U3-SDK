@@ -45,6 +45,14 @@ Metas principais:
 
 ## Melhorias implementadas
 
+### 2026-07-16 — LOD e convergência regional
+
+- `LevelObject` agora pausa `LODGroup` junto dos renderers fora da visibilidade regional/culling. Raiz, scripts e colliders importantes continuam ativos onde já eram necessários.
+- Objetos e árvores processam dois passos pequenos da fila regional por frame, reduzindo atraso de ativação/desativação sem varrer região inteira de forma síncrona.
+- Renderers exclusivos do último LOD deixam de projetar sombras. Renderers compartilhados com LOD próximo, geometria e recepção de sombras são preservados.
+- Nenhuma alteração em câmera, FOV, input, física, regras ou viewmodel. Captura usada não exibia mão do personagem, então caminho da viewmodel ficou intocado.
+- Captura pós-load apontou CPU p50 `6,73 ms`, p95 `8,55 ms`, p99 `10,46 ms`; GPU não foi capturada. Próxima validação deve medir `CalculateLODJob`, bounds e sombras em standalone antes/depois.
+
 ### 2026-07-15 — Build Test Win64 e UI após Unity 6
 
 - Windows Standalone usa D3D11 como padrão e permite DX12 opt-in com `-force-d3d12`. OpenGLCore e Vulkan permanecem removidos porque multiplicavam compilação de variantes, tempo, CPU e RAM do primeiro `Build Test`.

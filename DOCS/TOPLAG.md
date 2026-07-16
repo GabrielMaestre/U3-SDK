@@ -13,6 +13,17 @@ Ranking inicial para orientar profiling. Não representa porcentagem exata: repo
 
 ## Baseline disponível
 
+### Captura standalone Unity Profiler — `2026-07-16`
+
+- `600` frames pós-loading no mapa Russia, preset High: CPU p50 `6,73 ms`, p95 `8,55 ms`, p99 `10,46 ms`.
+- GPU não foi capturada; esta sessão não permite afirmar GPU-bound nem medir ganho de transferência CPU/GPU.
+- Estado de render: `2.354` draw calls, `528` batches, `243` SetPass, `254 mil` triângulos e `144 B/frame` de GC.
+- Maiores custos controláveis: `RenderDeferred.GBuffer` `1,236 ms`, `ExecuteRenderQueueJob` `1,129 ms`, `UpdateRendererBoundingVolumes` `0,626 ms`, `CalculateLODJob` `0,591 ms`, `Shadows.RenderJobDir` `0,551 ms` e pós-processamento `0,452 ms`.
+- `Profiler.FlushMemoryCounters` adicionou `1,37 ms` de overhead. Pico de `45 ms` veio de `SetPlayerFocus/FindObjectsOfType` ao trocar foco da janela, não do gameplay normal.
+- Mão/viewmodel não apareceu durante captura. Nenhuma conclusão nem alteração foi feita em câmera, FOV, viewmodel ou render path.
+- Ação segura aplicada: pausar `LODGroup` de objetos fora da visibilidade regional, convergir filas regionais em dois passos pequenos por frame e remover sombras somente do último LOD exclusivo.
+- HLOD, mesh combine em runtime e instancing genérico permanecem pendentes: exigem Frame Debugger, conteúdo homogêneo e comparação visual antes de mudar produção.
+
 | Métrica | Resultado | Limite |
 | --- | ---: | --- |
 | Primeiro carregamento de assets | `76,9569 s` | Unity Editor |

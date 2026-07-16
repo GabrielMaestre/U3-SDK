@@ -42,6 +42,14 @@ No Editor, habilite `Window > Unturned > Editor Settings > Misc > Performance Me
 
 Não compare FPS de `Build Test` contra Release. Use Development para localizar custo; use Release para aceitar/rejeitar ganho final.
 
+## Baseline pós-load de `2026-07-16`
+
+- Russia, High, `600` frames: CPU p50 `6,73 ms`, p95 `8,55 ms`, p99 `10,46 ms`.
+- Draw calls `2.354`, batches `528`, SetPass `243`, triângulos `254 mil`, GC `144 B/frame`.
+- GPU ficou sem amostras. Nova comparação precisa ativar módulo GPU Usage e confirmar suporte da API/driver no standalone.
+- Desconsidere `Profiler.FlushMemoryCounters` (`1,37 ms`) ao estimar Release e separe picos de `SetPlayerFocus` causados por Alt+Tab.
+- Mão/viewmodel não estava visível. Não use captura para decidir mudança de câmera, FOV, near clip ou forward/deferred da viewmodel.
+
 ## Rebuild rápido e baixo pico de RAM
 
 1. Após mudar package, asset, cena ou layout serializado de `MonoBehaviour`, execute `Build Test` completo uma vez.
@@ -84,6 +92,15 @@ Não use modo como baseline visual ou comparação com build. Desative toggle an
 4. Repita High/Ultra com draw distance em `100%` e `50%`. Em `100%`, alcance de sombras permanece original; abaixo disso acompanha redução escolhida pelo usuário e nunca passa do far clip/chunk.
 5. Teste scope camera, teleporte e fronteira de tile. Rejeite mudança se houver popping próximo, tile sem sombra junto da câmera ou aumento de batches maior que economia no shadow pass.
 6. Alterne outra opção gráfica várias vezes e reaplique High/Ultra. `QualitySettings.shadowDistance` deve permanecer igual para mesmo preset/draw distance, sem redução cumulativa.
+
+## Testar LOD e convergência regional
+
+1. Use Development Build standalone, mesma posição e preset High. Capture antes/depois sem Deep Profiling.
+2. Cruze limites de região a pé, veículo rápido e teleporte. Objetos e árvores devem ativar/desativar sem buracos, pico integral ou mudança de distância configurada.
+3. Valide colisão, interação, barricadas, estruturas e scripts fora/dentro da área: somente renderers e `LODGroup` visual ficam pausados; gameplay deve permanecer igual.
+4. Compare `CalculateLODJob`, `UpdateRendererBoundingVolumes`, `Shadows.RenderJobDir`, shadow casters e p95/p99.
+5. Inspecione objetos próximos: geometria, recepção de sombras e sombras dos LODs próximos devem permanecer iguais. Somente renderer exclusivo do último LOD deixa de projetar sombra.
+6. Teste asset cujo mesmo renderer é reutilizado em múltiplos LODs; sombra deve permanecer ativa. Rejeite mudança se aparecer popping próximo, objeto ausente ou collider alterado.
 
 ## Testar lazy skins e loading do terreno
 
