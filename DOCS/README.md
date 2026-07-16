@@ -47,6 +47,7 @@ Metas principais:
 
 ### 2026-07-16 — LOD e convergência regional
 
+- Tiles de terreno inteiramente no anel externo de 25% da distância visual usam `heightmapMaximumLOD = 1`; Unity limita resolução máxima a um quarto dos triângulos. Tile próximo, Cinematic Mode, colisão, holes, FOV e gameplay permanecem iguais.
 - `LevelObject` agora pausa `LODGroup` junto dos renderers fora da visibilidade regional/culling. Raiz, scripts e colliders importantes continuam ativos onde já eram necessários.
 - Objetos e árvores processam dois passos pequenos da fila regional por frame, reduzindo atraso de ativação/desativação sem varrer região inteira de forma síncrona.
 - Renderers exclusivos do último LOD deixam de projetar sombras. Renderers compartilhados com LOD próximo, geometria e recepção de sombras são preservados.
@@ -407,4 +408,5 @@ Item termina somente quando:
 - [SKILLS.md](SKILLS.md): competências e responsabilidades necessárias.
 - [TOPLAG.md](TOPLAG.md): ranking dos 50 principais candidatos de CPU, memória, GPU e loading.
 - [PERFORMANCE_TESTING.md](PERFORMANCE_TESTING.md): stress, métricas, Profiler, traces e comparação reproduzível.
+- [MESH_TERRAIN_RESEARCH.md](MESH_TERRAIN_RESEARCH.md): avaliação das técnicas do Vercidium para mesh, terrain, LOD e instancing antes de protótipos.
 - [TODO.md](TODO.md): backlog priorizado de melhorias.

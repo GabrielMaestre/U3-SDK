@@ -125,7 +125,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 15/X
+## P1 — GPU e renderização — 16/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
@@ -141,6 +141,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Tornar cálculo de distância de sombras idempotente; reaplicar configuração não reduz alcance cumulativamente.
 - [x] Desligar atualização automática de reflection probes somente em Lighting Off/Low; preservar Medium/High/Ultra.
 - [x] Desligar sombras somente de renderers exclusivos do último LOD de objetos e árvores; preservar renderers reutilizados por LOD próximo, geometria e recepção de sombras.
+- [x] Limitar resolução máxima do Unity Terrain a LOD `1` somente para tiles inteiramente no anel externo de 25% da distância visual; preservar tiles próximos e Cinematic Mode.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
@@ -158,7 +159,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
 - [ ] Validar APIs gráficas e GPUs suportadas após cada mudança de shader.
 
-## P1 — Distância de renderização e streaming — 11/X
+## P1 — Distância de renderização e streaming — 12/X
 
 - [x] Materializar proxies `Skybox` de `LevelObject` sob demanda pela região existente; preservar editor e level batching.
 - [x] Desativar objetos, itens, recursos, barricadas e estruturas somente dentro dos bounds da região anterior; centro inicial inválido produz bounds vazios.
@@ -171,6 +172,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Adicionar `/drawchunks` local para admin visualizar área ativa, primeira faixa inativa e chunk atual.
 - [x] Aplicar limite exato de uma região ao foliage e manter árvores/objetos/terreno sob `Gameplay.World_Chunk_Radius`.
 - [x] Duplicar passo time-sliced de objetos e árvores ao cruzar chunk, convergindo ativação/desativação em metade dos frames sem sincronizar região inteira.
+- [x] Reavaliar LOD do terreno somente ao cruzar região ou mudar raio; manter detalhe original nos 75% próximos e reduzir somente tile inteiramente distante.
 - [ ] Separar distância por categoria: terreno, estruturas, itens, jogadores, veículos, IA, vegetação, sombras e efeitos.
 - [ ] Definir limites mínimo/máximo por preset e opção manual.
 - [ ] Adaptar distância por orçamento de frame time com histerese e cooldown para evitar oscilação.
@@ -358,6 +360,9 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 
 ## P3 — Experimentos futuros
 
+- [ ] Usar Frame Debugger para escolher um único mesh/material repetido e comparar `LevelBatching` contra GPU instancing antes de alterar categoria inteira.
+- [ ] Auditar `Read/Write Enabled`, canais de vértice, Vertex Compression e Optimize Mesh quando fontes dos core assets estiverem disponíveis.
+- [ ] Considerar terrain por `SV_VertexID`/indirect rendering somente se GPU capture provar limite de vértices ou submissão e LOD nativo falhar.
 - [ ] Testar DX12 como primeira API mantendo DX11 fallback; comparar CPU/Render Thread, GPU, p95/p99, shader stutter e crashes em várias GPUs antes de cogitar DX12 mínimo.
 - [ ] Remover build Win32 somente após confirmar ausência de usuários/servidores dependentes; não contabilizar como ganho de FPS Win64.
 - [ ] Comparar Forward e Deferred no mesmo cenário porque GBuffer/Deferred Lighting apareceram caros; rejeitar regressão visual ou aumento de passes por luz.

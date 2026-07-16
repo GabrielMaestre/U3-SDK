@@ -1092,6 +1092,13 @@ namespace SDG.Framework.Landscapes
 		private Vector2Int tileRenderRegion;
 		private byte tileRenderRadius;
 
+		private static int calculateTerrainMaximumLOD(float sqrDistanceToTile, float renderDistance)
+		{
+			// ponytail: Native terrain LOD is enough; only cap tiles wholly inside the outer 25% of view distance.
+			float distantLodStart = renderDistance * 0.75f;
+			return sqrDistanceToTile > distantLodStart * distantLodStart ? 1 : 0;
+		}
+
 		protected void Update()
 		{
 			if (instance != this || Dedicator.IsDedicatedServer || Level.isEditor || MainCamera.instance == null)
@@ -1108,16 +1115,22 @@ namespace SDG.Framework.Landscapes
 				tileRenderRadius = newRadius;
 				float renderDistance = newRadius * Regions.REGION_SIZE - 1f + Regions.REGION_SIZE;
 				float sqrRenderDistance = renderDistance * renderDistance;
+				bool wantsCinematicMode = GraphicsSettings.WantsCinematicMode;
 				foreach (LandscapeTile tile in tiles.Values)
 				{
-					bool isVisible = GraphicsSettings.WantsCinematicMode;
+					bool isVisible = wantsCinematicMode;
+					float sqrDistanceToTile = 0f;
 					if (!isVisible)
 					{
 						Vector3 closestPoint = tile.worldBounds.ClosestPoint(cameraPosition);
 						closestPoint.y = cameraPosition.y;
-						isVisible = (closestPoint - cameraPosition).sqrMagnitude <= sqrRenderDistance;
+						sqrDistanceToTile = (closestPoint - cameraPosition).sqrMagnitude;
+						isVisible = sqrDistanceToTile <= sqrRenderDistance;
 					}
 					tile.terrain.drawHeightmap = isVisible;
+					tile.terrain.heightmapMaximumLOD = isVisible && !wantsCinematicMode
+						? calculateTerrainMaximumLOD(sqrDistanceToTile, renderDistance)
+						: 0;
 				}
 			}
 

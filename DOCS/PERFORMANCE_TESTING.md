@@ -101,6 +101,8 @@ Não use modo como baseline visual ou comparação com build. Desative toggle an
 4. Compare `CalculateLODJob`, `UpdateRendererBoundingVolumes`, `Shadows.RenderJobDir`, shadow casters e p95/p99.
 5. Inspecione objetos próximos: geometria, recepção de sombras e sombras dos LODs próximos devem permanecer iguais. Somente renderer exclusivo do último LOD deixa de projetar sombra.
 6. Teste asset cujo mesmo renderer é reutilizado em múltiplos LODs; sombra deve permanecer ativa. Rejeite mudança se aparecer popping próximo, objeto ausente ou collider alterado.
+7. Para terreno, mantenha câmera e High/Ultra: tile dentro dos 75% próximos deve usar `heightmapMaximumLOD = 0`; somente tile inteiramente no anel externo pode usar `1`.
+8. Valide seams, holes/cavernas, scope, veículo, teleporte, planar reflection, satellite capture e Cinematic Mode. Rejeite se terreno próximo mudar ou colisão divergir do visual.
 
 ## Testar lazy skins e loading do terreno
 

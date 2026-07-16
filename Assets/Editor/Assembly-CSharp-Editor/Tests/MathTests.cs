@@ -4,6 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 using NUnit.Framework;
 using SDG.Framework.Foliage;
+using SDG.Framework.Landscapes;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -97,5 +98,15 @@ internal class MathTests
 		{
 			Object.DestroyImmediate(root);
 		}
+	}
+
+	[Test]
+	public void TerrainMaximumLodOnlyChangesInOuterDistanceRing()
+	{
+		System.Reflection.MethodInfo method = typeof(Landscape).GetMethod("calculateTerrainMaximumLOD", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+		Assert.IsNotNull(method);
+		Assert.AreEqual(0, (int) method.Invoke(null, new object[] { 749.0f * 749.0f, 1000.0f }));
+		Assert.AreEqual(0, (int) method.Invoke(null, new object[] { 750.0f * 750.0f, 1000.0f }));
+		Assert.AreEqual(1, (int) method.Invoke(null, new object[] { 751.0f * 751.0f, 1000.0f }));
 	}
 }

@@ -201,3 +201,6 @@ ItemLinks.txt
 
 # Profiler
 /ProfilerCaptures/*data
+/ProfilerCaptures/*highlights
+/ProfilerCaptures/*bc7
+/ProfilerCaptures/*png
