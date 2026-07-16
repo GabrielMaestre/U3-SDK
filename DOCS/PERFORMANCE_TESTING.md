@@ -13,7 +13,7 @@ Engine atual: Unity 6.3 LTS `6000.3.19f1`. Baseline anterior: Unity `2022.3.62f3
 3. Mantenha Built-in RP no primeiro build. Não misture upgrade de engine, URP e otimizações de código na mesma comparação.
 4. Execute smoke test: boot, menu, singleplayer, servidor, água acima/abaixo, terrain, iluminação, inventário, veículos, Workshop/mods, save/load e shutdown.
 5. Gere Development Build Win64 para CPU/GPU/Memory Profiler e Release Win64 para FPS. Registre versão Unity no nome/relatório de cada captura.
-6. Compare DX11 e DX12 separadamente, mantendo DX11 fallback: CPU Main/Render Thread, GPU, p50/p95/p99, RAM/VRAM, shader stutter e crashes.
+6. Compare DX11 padrão e DX12 opt-in separadamente: CPU Main/Render Thread, GPU, p50/p95/p99, RAM/VRAM, shader stutter e crashes.
 7. Rejeite migração se houver regressão funcional, visual, de bundles/mods ou p95/p99 sem benefício que justifique correção.
 
 Antes do smoke test, saia do Safe Mode com `Retry`, aguarde Package Manager concluir, confirme toolchain Linux `1.1.0`, use `Assets > Open C# Project` para regenerar `.csproj` e limpe Console. Não edite `.csproj` gerado manualmente.
@@ -32,6 +32,8 @@ Não medir CefSharp/CEF interno do Editor como custo do Player: nenhuma dependê
 .\Builds\Test\Unturned.exe -PerformanceMetrics -PerformanceMetricsSeconds=300 -FrameRateLimit=0
 ```
 
+Para testar DX12, acrescente `-force-d3d12`. Sem argumento, Player usa DX11. API gráfica é escolhida antes do código gerenciado iniciar; prefira argumento nativo da Unity em vez de variável de ambiente interna.
+
 4. Aguarde 60 segundos de aquecimento antes de iniciar rota.
 5. Repita rota por pelo menos 180 segundos e execute três capturas por build.
 6. CSV fica em `Application.persistentDataPath\PerformanceCaptures`; caminho completo aparece no log como `Performance metrics capture started`.
@@ -39,6 +41,15 @@ Não medir CefSharp/CEF interno do Editor como custo do Player: nenhuma dependê
 No Editor, habilite `Window > Unturned > Editor Settings > Misc > Performance Metrics`. Resultado válido deve vir do executável standalone, porque Editor adiciona CPU, GC e render próprios.
 
 Não compare FPS de `Build Test` contra Release. Use Development para localizar custo; use Release para aceitar/rejeitar ganho final.
+
+## Rebuild rápido e baixo pico de RAM
+
+1. Após mudar package, asset, cena ou layout serializado de `MonoBehaviour`, execute `Build Test` completo uma vez.
+2. Para alterações somente em código, reutilize saída anterior com `Build Test (Scripts Only)`. Unity 6 também reaproveita conteúdo automaticamente em builds normais quando nada mudou.
+3. Preserve `Library/ShaderCache`, `Library/Bee` e `Library/Artifacts`. Use Clean Build somente para release final ou suspeita de cache inválido; apagar `Library` força import e shaders completos.
+4. Em pouca RAM, feche Play Mode, Profiler, Memory Profiler e abas pesadas antes do build. Último recurso: reinicie Editor com `-diag-debug-shader-compiler`; Unity usa um compilador de shader, reduz pico de RAM e aumenta bastante o tempo.
+
+Referências: [scripts-only/incremental](https://docs.unity3d.com/Manual/build-scripts-only.html), [clean build e caches](https://docs.unity3d.com/6000.0/Documentation/Manual/build-clean-build.html), [compilação de shaders](https://docs.unity3d.com/Manual/shader-compilation.html).
 
 ## Play Mode com menos lag
 

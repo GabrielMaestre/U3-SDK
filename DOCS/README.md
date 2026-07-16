@@ -31,7 +31,7 @@ Metas principais:
 - Primeiro passo mantém Built-in Render Pipeline. Atualizar engine não migra shaders, água ou pós-processamento automaticamente e não garante ganho de FPS.
 - CefSharp não foi encontrado como dependência do runtime deste repositório. Chromium/CEF interno do Editor não afeta FPS ou loading do Player.
 - Win32 pode ser removido após confirmar que distribuição e servidores não dependem dele. Ganho é manutenção/build e espaço de endereçamento; Player Win64 não recebe FPS extra.
-- DX12 será testado como primeira API com DX11 de fallback. DX12 mínimo somente após A/B em várias GPUs confirmar frame time, p95/p99, shader stutter e estabilidade melhores.
+- DX11 permanece API padrão. DX12 é opt-in com `-force-d3d12`; DX12 mínimo somente após A/B em várias GPUs confirmar frame time, p95/p99, shader stutter e estabilidade melhores.
 - Migração para URP/Forward+ fica separada. GPU Resident Drawer/GPU Occlusion não estão disponíveis no Built-in RP e conversão pode quebrar shaders, iluminação, bundles, mapas e mods.
 - Próximos candidatos sem perda visual: instancing seletivo de grupos repetidos, comparação Forward/Deferred, culling regional de água/reflexos e opção client-side para ocultar exterior do mapa.
 
@@ -44,6 +44,26 @@ Metas principais:
 - Opção é visual e client-side. Não deve desligar colisão, física, simulação ou relevância do servidor.
 
 ## Melhorias implementadas
+
+### 2026-07-15 — Build Test Win64 e UI após Unity 6
+
+- Windows Standalone usa D3D11 como padrão e permite DX12 opt-in com `-force-d3d12`. OpenGLCore e Vulkan permanecem removidos porque multiplicavam compilação de variantes, tempo, CPU e RAM do primeiro `Build Test`.
+- `Library/ShaderCache`, `Library/Bee` e `Library/Artifacts` foram preservados. Apagá-los força recompilação completa.
+- Primeiro build continua completo; depois dele, mudanças somente de código podem usar `Build Test (Scripts Only)`.
+- Valores `UnitsPerEM` das quatro fontes TMP foram persistidos após migração, removendo warnings de serialização em cada build.
+- `com.unity.ai.inference`/Sentis foi removido: nenhum consumidor existe em `Assets` e Unity AI Assistant não declara essa dependência. Isso evita compilar shaders Sentis inúteis e remove dependências órfãs.
+- Materiais de fonte uGUI agora recebem explicitamente atlas do `TMP_FontAsset`, evitando quads brancos/coloridos quando referência da textura não é restaurada corretamente no Player Unity 6.
+- `TMP Essential Resources` atual já coincide com pacote uGUI `2.0.0`; reimport completo foi evitado para não sobrescrever `TMP Settings`, fontes e sprites sem necessidade.
+- Smoke test encontrou `354` componentes ausentes vindos do `core.masterbundle`, incluindo `120` `Pathfinding.NavmeshCut`. ASPFP não é distribuído no SDK e continua pendência separada de compatibilidade/pathfinding.
+- Única exceção gerenciada encontrada ocorreu no shutdown: `PlayerEquipment.OnDestroy` tentou alterar Crosshair depois da UI ser destruída. Não afetou boot/gameplay; correção fica separada para não misturar regressões.
+
+### 2026-07-15 — MCP local do Unity Editor
+
+- Bridge MCP oficial continuou recusando o named pipe no Windows mesmo com Unity, relay e Codex configurados corretamente.
+- Fallback editor-only usa TCP loopback, porta aleatória e token novo por sessão; não entra no build do jogo nem altera gameplay.
+- Servidor MCP `stdio` usa somente Python 3 e biblioteca padrão. Expõe status, Console, cenas, hierarchy, AssetDatabase, seleção, menus, play mode, refresh e save.
+- Handshake, descoberta das 11 ferramentas e chamadas reais de status, cenas, hierarchy, assets e Console foram validados contra Unity `6000.3.19f1`.
+- Uso e limites: `DOCS/UNITY_MCP.md`.
 
 ### 2026-07-15 — Compatibilidade Unity 6.3
 

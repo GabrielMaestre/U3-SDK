@@ -19,6 +19,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir loading de mapa, entrada em servidor e primeiro frame controlável.
 - [x] Definir cenários reproduzíveis de baseline, cidade, floresta, horda, veículos, multiplayer e soak; execução e baselines continuam constantes por build.
 - [x] Executar ações do Build Tool após evento IMGUI, removendo falso erro `EndLayoutGroup` ao concluir `Build Test`.
+- [x] Persistir `UnitsPerEM` de fontes TMP migradas e remover warnings repetidos de serialização.
+- [x] Remover AI Inference/Sentis sem consumidores, shaders de build desnecessários e dependências órfãs.
 - [x] Alinhar Post Processing para `3.3.0`, removendo diretivas WebGPU incompatíveis com Unity `2022.3.62f3`.
 - [x] Diagnosticar alerta de memória no loading: pressão paginada do sistema em `94%`; Profiler descartou frames, Unity permaneceu em `6,25 GB`.
 - [x] Identificar scan acidental de `Bundles/ORIGINAL_ASSETS`: `80.156` arquivos, `441.919` erros de parse e log de `706 MB` contaminam boot, RAM e profiling.
@@ -121,7 +123,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 13/X
+## P1 — GPU e renderização — 14/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
@@ -147,6 +149,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Orçar luzes dinâmicas, sombras, cascatas, resolução e distância por preset.
 - [ ] Atualizar probes, reflexos e render textures somente quando necessário.
 - [ ] Reduzir variantes de shader e tempo de compilação/carregamento.
+- [x] Remover OpenGLCore/Vulkan do build Windows; manter D3D11 padrão e DX12 opt-in por `-force-d3d12` durante baseline Unity 6.3.
 - [ ] Pré-aquecer variantes responsáveis por hitch; não pré-aquecer catálogo inteiro.
 - [ ] Revisar terreno, água, folhagem, céu, nuvens, aurora e pós-processamento.
 - [ ] Evitar materiais instanciados acidentalmente e uploads repetidos de propriedades.
@@ -287,6 +290,7 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 
 ## P2 — UI, áudio e input
 
+- [x] Reatribuir atlas TMP aos materiais de fonte uGUI no runtime após migração Unity 6, corrigindo quads brancos/coloridos no lugar de texto.
 - [ ] Medir rebuilds de canvas/layout, bindings, texto e listas grandes.
 - [ ] Virtualizar listas de servidores, inventário, Workshop e logs quando necessário.
 - [ ] Atualizar UI por evento ou frequência reduzida em vez de todo frame.
@@ -320,16 +324,18 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 - [ ] Garantir saves atômicos, backup e recuperação após interrupção.
 - [ ] Validar migração e corrupção parcial de saves/configurações.
 - [ ] Corrigir shutdown, disconnect e troca de mapa sem tarefas pendentes.
+- [ ] Corrigir `NullReferenceException` de `PlayerEquipment.OnDestroy`/Crosshair quando UI já foi destruída; reproduzir antes de alterar lifecycle.
 - [ ] Fazer soak tests de cliente e servidor por longos períodos.
 - [ ] Agrupar crashes por assinatura e atacar maior frequência primeiro.
 
-## P2 — Ferramentas, testes e CI — 1/X
+## P2 — Ferramentas, testes e CI — 2/X
 
 - [ ] Automatizar build limpo de cliente e servidor suportados.
 - [ ] Executar testes existentes de `SDG.NetPak` e `UnturnedDat`.
 - [ ] Adicionar testes unitários somente para lógica pura crítica ou regressão real.
 - [ ] Criar integração mínima para boot, load, conexão e save.
 - [x] Adicionar captura standalone opt-in `-PerformanceMetrics` com CSV e duração limitada; automação de rota continua aberta quando houver replay determinístico.
+- [x] Adicionar MCP local editor-only como fallback ao bridge oficial, com conexão loopback autenticada e 11 ferramentas básicas validadas.
 - [ ] Comparar performance em hardware fixo; não bloquear CI compartilhada por ruído aleatório.
 - [ ] Detectar assets duplicados, referências quebradas e variantes excessivas.
 - [ ] Verificar compatibilidade de protocolo e formato de save.

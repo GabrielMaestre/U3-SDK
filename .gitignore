@@ -198,3 +198,6 @@ ItemLinks.txt
 /External
 /ToolsZIP
 /Unity_Build
+
+# Profiler
+/ProfilerCaptures/*data

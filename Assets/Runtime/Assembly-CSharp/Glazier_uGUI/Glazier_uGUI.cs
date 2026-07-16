@@ -462,6 +462,12 @@ namespace SDG.Unturned
 			fontMaterial_Outline = Instantiate(Resources.Load<Material>("UI/Glazier_uGUI/Font_Outline"));
 			fontMaterial_Shadow = Instantiate(Resources.Load<Material>("UI/Glazier_uGUI/Font_Shadow"));
 			fontMaterial_Tooltip = Instantiate(Resources.Load<Material>("UI/Glazier_uGUI/Font_Tooltip"));
+			TMP_FontAsset font = GlazierResources_uGUI.Font;
+			Texture atlasTexture = font.atlasTexture;
+			fontMaterial_Default.SetTexture(ShaderUtilities.ID_MainTex, atlasTexture);
+			fontMaterial_Outline.SetTexture(ShaderUtilities.ID_MainTex, atlasTexture);
+			fontMaterial_Shadow.SetTexture(ShaderUtilities.ID_MainTex, atlasTexture);
+			fontMaterial_Tooltip.SetTexture(ShaderUtilities.ID_MainTex, atlasTexture);
 			SynchronizeFontMaterials();
 		}
 
