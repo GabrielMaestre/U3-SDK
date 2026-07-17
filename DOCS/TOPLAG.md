@@ -24,6 +24,25 @@ Ranking inicial para orientar profiling. Não representa porcentagem exata: repo
 - Ação segura aplicada: pausar `LODGroup` de objetos fora da visibilidade regional, convergir filas regionais em dois passos pequenos por frame e remover sombras somente do último LOD exclusivo.
 - HLOD, mesh combine em runtime e instancing genérico permanecem pendentes: exigem Frame Debugger, conteúdo homogêneo e comparação visual antes de mudar produção.
 
+### Captura standalone Unity Profiler — `2026-07-17`
+
+- Cenário: `20–30 s` parado em local pesado e caminhada breve. Mapa, preset e rota exata não foram registrados; não comparar distribuição com a baseline anterior.
+- Frames selecionados: CPU `10,305–11,370 ms`; GPU `3,586–5,390 ms`. CPU continua limitando frame; GPU tem margem. Para `200 FPS`, CPU precisa ficar próximo de `5 ms` por frame no mesmo cenário.
+- CPU: `PostLateUpdate.FinishFrameRendering` `5,67 ms`, `Update.ScriptRunBehaviourUpdate` `2,20 ms` e `PostLateUpdate.PlayerFireEndFrame` `1,65 ms`. `PlayerFireEndFrame` é estágio interno da Unity, não prova custo do personagem jogador.
+- GPU: `Camera.Render` `3,993 ms`; `Render.OpaqueGeometry` `2,665 ms`; `RenderDeferred.GBuffer` `1,266 ms`; `RenderDeferred.Lighting` `0,794 ms`; sombras `0,427 ms`; reflexos `0,445 ms`; pós-processamento `0,606 ms`.
+- Render: `352` SetPass, `2,4k` draw calls, `626` batches, `246,3k` triângulos, `360,7k` vértices e `773` shadow casters. Triângulos não são agressor principal nesta cena; submissão, materiais/passes, scripts e sombras são candidatos melhores.
+- Instancing está ativo: `13` batches instanced e `4,4k` draw calls agrupados. Static batching continua dominante (`282` batches); não desligar batching globalmente.
+- Memória gráfica observada: `225` RenderTextures / `399,8 MB` e `11.718` buffers / `1,33 GB`. Estes números exigem Memory Profiler antes de qualquer corte: representam recursos gráficos/driver, não RAM gerenciada diretamente.
+
+#### Próximas ações, sem alteração de código
+
+1. Fazer Deep Profile por `5–10 s` somente no mesmo ponto e expandir `Update.ScriptRunBehaviourUpdate`; decidir scripts por `Self ms` e `GC Alloc`.
+2. No Frame Debugger, identificar grupos que somam os `352` SetPass: material, shader pass, mesh, shadow caster e razão de não usar instancing/static batching.
+3. Capturar Memory Profiler após carregamento e após `10 min`; comparar RenderTextures, buffers, meshes e texturas por referência.
+4. Repetir rota idêntica três vezes em Release e Development, registrar p50/p95/p99. Aceitar mudança apenas se CPU frame time e SetPass reduzirem sem perda visual High/Ultra.
+
+Prioridade atual: atribuir `ScriptRunBehaviourUpdate` e `FinishFrameRendering`; depois reduzir SetPass/sombras por grupo real. Não migrar para Forward/URP, não desabilitar sombras globais e não reescrever meshes com esta captura.
+
 | Métrica | Resultado | Limite |
 | --- | ---: | --- |
 | Primeiro carregamento de assets | `76,9569 s` | Unity Editor |
