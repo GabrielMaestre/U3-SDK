@@ -171,6 +171,8 @@ Registre em cada resultado: commit, Unity, CPU, GPU, RAM, SO, resolução, prese
 
 Experimento futuro de instancing: no Frame Debugger, selecione árvores/pedras repetidas e confirme mesh, material, shader e motivo do batch. Só testar exclusão seletiva do static batching quando existir grupo grande compatível; aceitar somente se Main/Render Thread, SetPass e RAM melhorarem juntos.
 
+Validação atual: refaça mesma cena standalone e confirme `Saved by batching > Instancing` acima de zero para foliage ou estruturas repetidas. Compare `Draw Calls`, `Batches`, `SetPass`, `BatchRenderer.Flush`, CPU Render Thread e frame time. Static-batched objetos podem continuar em `Static Batching`; Unity prioriza esse caminho.
+
 Não adicione APM remoto agora. CSV + ferramentas Unity cobrem diagnóstico local sem serviço, conta, custo ou impacto permanente no jogador.
 
 ## Capturar Unity Profiler CPU Timeline

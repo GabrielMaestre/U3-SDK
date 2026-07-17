@@ -148,7 +148,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Comparar visual e GPU de Sun Shafts Off/Medium/High/Ultra em floresta e cidade no standalone.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
-- [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
+- [x] Preservar variantes essenciais e habilitar GPU instancing seletivo em materiais Standard dinâmicos; manter static batching como prioridade.
 - [ ] Medir no Frame Debugger árvores, pedras, itens e estruturas repetidas. Instanciar somente grupos com mesmo mesh, material, lightmap, sombras e estado de renderer; foliage já usa `DrawMeshInstanced` e mapas já podem usar `LevelBatching`.
 - [ ] Corrigir bounds excessivos que impedem frustum e occlusion culling.
 - [ ] Criar LODs para personagens, veículos, objetos, vegetação e efeitos caros.

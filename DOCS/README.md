@@ -33,7 +33,7 @@ Metas principais:
 - Win32 pode ser removido após confirmar que distribuição e servidores não dependem dele. Ganho é manutenção/build e espaço de endereçamento; Player Win64 não recebe FPS extra.
 - DX11 permanece API padrão. DX12 é opt-in com `-force-d3d12`; DX12 mínimo somente após A/B em várias GPUs confirmar frame time, p95/p99, shader stutter e estabilidade melhores.
 - Migração para URP/Forward+ fica separada. GPU Resident Drawer/GPU Occlusion não estão disponíveis no Built-in RP e conversão pode quebrar shaders, iluminação, bundles, mapas e mods.
-- Próximos candidatos sem perda visual: instancing seletivo de grupos repetidos, comparação Forward/Deferred, culling regional de água/reflexos e opção client-side para ocultar exterior do mapa.
+- Instancing seletivo agora permanece habilitado em materiais Standard dinâmicos e variantes essenciais de foliage/Standard. Próximos candidatos: medir grupos repetidos, comparar Forward/Deferred, culling regional de água/reflexos e opção client-side para ocultar exterior do mapa.
 
 ### Água e limites do mapa
 
@@ -239,7 +239,7 @@ Metas principais:
 
 - Captura no Play Mode: CPU `12,85 ms`, GPU `5,09 ms`; CPU é limite do frame. Painel mostrado era `GPU Usage`: `Render.OpaqueGeometry` consumiu `2,049 ms` de GPU com `397` draw calls, não `40,2%` da CPU.
 - `RenderDeferred.GBuffer`, `BatchRenderer.Flush` e `Batch.DrawStatic` são subdivisões do tempo de GPU nessa captura. Causa do custo CPU permanece aberta até captura em `CPU Usage > Timeline` do standalone.
-- Static Batching, Dynamic Batching e Graphics Jobs para Windows já estão ativos. Trocar static batching por instancing genérico ou reescrever culling na GPU não foi aplicado: static batching tem prioridade e mudança ampla pode aumentar draws, memória ou incompatibilidade.
+- Static Batching, Dynamic Batching e Graphics Jobs para Windows já estão ativos. Materiais Standard carregados habilitam `enableInstancing`; materiais `AlwaysInclude` preservam variantes específicas de foliage e Standard mesmo com `Strip Unused`. Static batching continua com prioridade; nenhuma categoria foi removida do combine nem foi usado `Keep All`, evitando mais shader variants, build e RAM.
 - Novo `Editor Performance Mode`, disponível em `Window > Unturned > Editor Settings > Playing in Unity`, limita far clip a `768 m` somente sob `UNITY_EDITOR`. Menos renderers distantes chegam ao culling e GBuffer; Player build permanece idêntico. Cinematic Mode preserva distância original.
 - Ganho deve ser medido no mesmo ponto do mapa. Modo reduz fidelidade de distância e serve para iteração rápida, não baseline final.
 

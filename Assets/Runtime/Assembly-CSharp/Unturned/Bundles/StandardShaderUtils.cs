@@ -144,6 +144,9 @@ namespace SDG.Unturned
 			if (isMaterialUsingStandardShader(material) == false)
 				return false;
 
+			// Repeated dynamic objects can share one draw call; static-batched objects keep Unity's higher priority path.
+			material.enableInstancing = true;
+
 			bool shouldFixupEmission;
 			if (isModeFade(material))
 			{
