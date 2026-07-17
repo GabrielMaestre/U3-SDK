@@ -970,6 +970,9 @@ namespace SDG.Unturned
 		/// </summary>
 		public void serverSetLegsBroken(bool newLegsBroken)
 		{
+			if (newLegsBroken && enableGodMode)
+				return;
+
 			if (newLegsBroken)
 			{
 				// Reset timer.
@@ -2365,6 +2368,9 @@ namespace SDG.Unturned
 
 		public void breakLegs()
 		{
+			if (enableGodMode)
+				return;
+
 			if (!isBroken)
 			{
 				EffectAsset bones = BonesRef.Find();

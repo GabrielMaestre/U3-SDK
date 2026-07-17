@@ -45,6 +45,32 @@ Metas principais:
 
 ## Melhorias implementadas
 
+### 2026-07-16 — Inventário administrativo F3
+
+- Painel pesquisável usa catálogo runtime `Assets.find<ItemAsset>`, incluindo itens oficiais e mods sem lista manual.
+- UI mantém somente 16 botões e pagina resultados; não carrega ícones, meshes ou prefabs dos itens.
+- Clique solicita uma unidade, mas servidor revalida permissão e GUID antes de usar `ItemTool.tryForceGiveItem`.
+- Admin/owner vanilla usa permissão nativa. RocketMod reutiliza hook de comandos e permissão `give`, sem dependência binária nova.
+- `Shift+F3`/freecam foi preservado. F3 do terceiro assento permanece para jogador sem acesso confirmado.
+- Corrigida regressão de entrada no mundo: metadata NetGen dos cinco RPCs agora acompanha implementação; handles nulos não interrompem mais `PlayerUI.InitializePlayer`.
+- Uso, segurança e roteiro de teste: `ADMIN_INVENTORY.md`.
+
+### 2026-07-16 — Água Ultra leve
+
+- Qualidade selecionada agora é enviada ao material fallback; antes todas usavam o único `LOD 200` e pareciam iguais.
+- Somente Ultra ativa onda visual procedural de normal e reflexão ambiente nativa do shader Standard.
+- Não usa câmera planar, render texture, textura adicional ou alteração da geometria/física da água.
+- Low, Medium e High mantêm caminho barato sem cálculo de onda e com reflexão reduzida.
+
+### 2026-07-16 — Sun Shafts restaurado no SDK aberto
+
+- Build Steam inclui `ImageEffectsUnity5.dll`, mas SDK aberto expunha somente hooks `partial`; opção Sun Shafts não produzia efeito.
+- Implementado efeito próprio no Post-Processing V2/Built-in RP, sem copiar DLL legada.
+- Depth buffer e alpha-cutout do foliage fazem árvores e objetos bloquearem luz, preservando raios somente nas frestas.
+- Presets usam `1/2/3` passes em resolução de um quarto/metade; Off não aloca render textures nem executa o efeito.
+- Shader está em `Always Included Shaders`, evitando remoção no Player build.
+- Runtime e Editor compilam com zero erros; Unity 6.3 reconheceu/importou shader. Validação visual no standalone permanece pendente.
+
 ### 2026-07-16 — LOD e convergência regional
 
 - Tiles de terreno inteiramente no anel externo de 25% da distância visual usam `heightmapMaximumLOD = 1`; Unity limita resolução máxima a um quarto dos triângulos. Tile próximo, Cinematic Mode, colisão, holes, FOV e gameplay permanecem iguais.
@@ -274,8 +300,8 @@ Metas principais:
 
 ### 2026-07-13 — Comandos administrativos, foliage e budget de IA
 
-- Novos comandos pessoais aceitam `/` ou `@`: `fly` alterna voo, `god` alterna imunidade a dano e `speed <1-10>` define multiplicador de movimento. Somente admin/owner conectado pode executar; console sem jogador não é alvo válido.
-- Voo usa caminho de movimento já existente e replica estado do servidor ao cliente. God mode permanece autoritativo no servidor. `/speed 1` restaura velocidade normal.
+- Comandos pessoais aceitam `/` ou `@`: `fly` alterna voo, `god` alterna imunidade a dano e fraturas, `heal` restaura vida/sangramento/pernas, e `speed <1-50>` define multiplicador de movimento. Somente admin/owner conectado pode executar; console sem jogador não é alvo válido.
+- Voo usa caminho de movimento já existente e replica estado do servidor ao cliente. God mode permanece autoritativo, cura fratura ao ativar e bloqueia novas fraturas. `/speed 1` restaura velocidade normal; valores fora de `1–50` são rejeitados.
 - Limite visual server-side existente continua sendo `Gameplay.World_Chunk_Radius`: fora do Cinematic Mode, far clip, objetos, árvores, proxies, estradas e terreno distante respeitam raio. Servidor não “renderiza”; ele limita simulação e relevância de entidades.
 - Foliage client-side agora tem teto radial exato de uma região (`128 m`/quatro tiles de `32 m`) em todos presets e também no escopo. Qualidade menor ainda reduz densidade e distância abaixo desse teto.
 - `Zombies.Tick_Budget_Per_Frame` e `Animals.Tick_Budget_Per_Frame` substituem budgets fixos do servidor dedicado. Padrões preservados: `50` e `25`; runtime limita máximo a `1000` e interpreta `0`/campo ausente como padrão antigo. Valor menor suaviza pico de CPU, mas aumenta latência de reação quando há muitas entidades ativas.

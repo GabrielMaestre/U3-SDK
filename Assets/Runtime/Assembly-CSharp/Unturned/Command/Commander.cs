@@ -164,6 +164,7 @@ namespace SDG.Unturned
 			register(new CommandTeleport(Localization.read("/Server/ServerCommandTeleport.dat")));
 			register(new CommandFly(emptyPlaceholder));
 			register(new CommandGod(emptyPlaceholder));
+			register(new CommandHeal(emptyPlaceholder));
 			register(new CommandSpeed(emptyPlaceholder));
 
 			register(new CommandTimeout(Localization.read("/Server/ServerCommandTimeout.dat")));

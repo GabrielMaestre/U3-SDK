@@ -121,8 +121,9 @@ Não use modo como baseline visual ou comparação com build. Desative toggle an
 
 ## Testar comandos e budget de IA
 
-- Admin/owner: teste `/fly` duas vezes, `/god` com dano controlado e `/speed 2`, finalizando com `/speed 1`. Variantes `@fly`, `@god` e `@speed 2` devem produzir mesmo resultado.
-- Jogador sem admin: três comandos devem responder `Admin or owner permission required` e não alterar estado.
+- Admin/owner: teste `/fly` duas vezes; `/god` com dano e queda; `/heal` após dano, sangramento e fratura; `/speed 50`, finalizando com `/speed 1`. Variantes com `@` devem produzir mesmo resultado.
+- `/speed 0`, `/speed 51` e texto inválido devem mostrar uso `1-50` sem alterar multiplicador.
+- Jogador sem admin: quatro comandos devem responder `Admin or owner permission required` e não alterar estado.
 - Em `Config.txt`, teste `Zombies.Tick_Budget_Per_Frame` e `Animals.Tick_Budget_Per_Frame` primeiro com padrões `50/25`, depois `20/10` e `10/5`. Reinicie servidor entre configurações.
 - Capture CPU Timeline e latência de aquisição de alvo/ataque com mesma contagem de entidades. Não reduza padrão se reação ficar visivelmente atrasada.
 - Valor `0` usa padrão antigo (`50/25`); valores acima de `1000` são limitados. Plantações não entram no teste: crescimento é calculado por timestamp, sem tick server contínuo.

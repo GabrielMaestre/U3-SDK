@@ -109,4 +109,39 @@ internal class MathTests
 		Assert.AreEqual(0, (int) method.Invoke(null, new object[] { 750.0f * 750.0f, 1000.0f }));
 		Assert.AreEqual(1, (int) method.Invoke(null, new object[] { 751.0f * 751.0f, 1000.0f }));
 	}
+
+	[Test]
+	public void SunShaftsRequestsDepthBufferForOcclusion()
+	{
+		Assert.AreEqual(DepthTextureMode.Depth, new SunShaftsRenderer().GetCameraFlags());
+	}
+
+	[Test]
+	public void WaterFallbackExposesQualityProperty()
+	{
+		Shader shader = UnityEditor.AssetDatabase.LoadAssetAtPath<Shader>("Assets/Game/Sources/Shaders/Water_Fallback/Water_Fallback.shader");
+		Assert.IsNotNull(shader);
+		Material material = new Material(shader);
+		try
+		{
+			Assert.IsTrue(material.HasProperty("_WaterQuality"));
+		}
+		finally
+		{
+			Object.DestroyImmediate(material);
+		}
+	}
+
+	[TestCase("1", true)]
+	[TestCase("50", true)]
+	[TestCase("0", false)]
+	[TestCase("51", false)]
+	[TestCase("invalid", false)]
+	public void CommandSpeedMultiplierRange(string parameter, bool expected)
+	{
+		System.Reflection.MethodInfo method = typeof(CommandSpeed).GetMethod("TryParseMultiplier", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+		Assert.IsNotNull(method);
+		object[] arguments = { parameter, 0 };
+		Assert.AreEqual(expected, method.Invoke(null, arguments));
+	}
 }

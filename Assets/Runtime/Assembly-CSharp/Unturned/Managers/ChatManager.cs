@@ -158,6 +158,30 @@ namespace SDG.Unturned
 		{
 			bool shouldExecuteCommand = false;
 			bool shouldList = true;
+			checkPermissions(player, cmd, fromUnityEvent, ref shouldExecuteCommand, ref shouldList);
+
+			if (shouldExecuteCommand)
+			{
+				Commander.execute(player.playerID.steamID, cmd.Substring(1));
+			}
+
+			return shouldList;
+		}
+
+		/// <summary>
+		/// Checks native and plugin command permissions without executing a command.
+		/// Used by server-authoritative UI actions such as admin inventory.
+		/// </summary>
+		internal static bool hasCommandPermission(SteamPlayer player, string command)
+		{
+			bool shouldExecuteCommand = false;
+			bool shouldList = true;
+			checkPermissions(player, command, false, ref shouldExecuteCommand, ref shouldList);
+			return shouldExecuteCommand;
+		}
+
+		private static void checkPermissions(SteamPlayer player, string cmd, bool fromUnityEvent, ref bool shouldExecuteCommand, ref bool shouldList)
+		{
 
 			string type = cmd.Substring(0, 1);
 			if (type == "@" || type == "/")
@@ -181,13 +205,6 @@ namespace SDG.Unturned
 			{
 				onCheckUnityEventPermissions?.Invoke(player, cmd, ref shouldExecuteCommand, ref shouldList);
 			}
-
-			if (shouldExecuteCommand)
-			{
-				Commander.execute(player.playerID.steamID, cmd.Substring(1));
-			}
-
-			return shouldList;
 		}
 
 		[System.Obsolete]

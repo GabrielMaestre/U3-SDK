@@ -155,6 +155,37 @@ namespace SDG.Unturned
 			syncChromaticAberration();
 			syncFilmGrain();
 			syncScreenSpaceReflections();
+			syncSunShafts();
+		}
+
+		public void syncSunShafts()
+		{
+			if (baseProfile?.sunShafts == null)
+				return;
+
+			int quality = Mathf.Clamp((int) GraphicsSettings.sunShaftsQuality, 0, 3);
+			bool isEnabled = quality > 0;
+			baseProfile.sunShafts.active = isEnabled;
+			baseProfile.sunShafts.enabled.Override(isEnabled);
+			baseProfile.sunShafts.downsample.Override(quality <= 1 ? 4 : 2);
+			baseProfile.sunShafts.iterations.Override(quality);
+		}
+
+		public void updateSunShafts(Transform sunTransform, Color sunColor)
+		{
+			if (baseProfile?.sunShafts == null || sunTransform == null)
+				return;
+
+			baseProfile.sunShafts.sunWorldPosition.Override(sunTransform.position);
+			baseProfile.sunShafts.sunColor.Override(sunColor);
+		}
+
+		public void updateSunShaftsIntensity(float intensity)
+		{
+			if (baseProfile?.sunShafts != null)
+			{
+				baseProfile.sunShafts.intensity.Override(Mathf.Clamp01(intensity));
+			}
 		}
 
 		/// <summary>
@@ -327,6 +358,8 @@ namespace SDG.Unturned
 			baseProfile.chromaticAberration.intensity.Override(Provider.preferenceData.Graphics.Chromatic_Aberration_Intensity);
 			viewmodelProfile.chromaticAberration.intensity.Override(Provider.preferenceData.Graphics.Chromatic_Aberration_Intensity);
 			scopeProfile.chromaticAberration.intensity.Override(Provider.preferenceData.Graphics.Chromatic_Aberration_Intensity);
+
+			syncSunShafts();
 		}
 
 		public Texture dirtTexture;
@@ -360,6 +393,7 @@ namespace SDG.Unturned
 			public Vignette vignette;
 			public DepthOfField dof;
 			public SrScope singleRenderScope;
+			public SunShafts sunShafts;
 
 			public PostProcessProfileWrapper(PostProcessProfile profile, EPostProcessLayer layer)
 			{
@@ -393,6 +427,9 @@ namespace SDG.Unturned
 
 				if (layer == EPostProcessLayer.Base)
 				{
+					sunShafts = profile.AddSettings<SunShafts>();
+					sunShafts.active = false;
+
 					// We currently use depth of field to as a background blur for the in-game dashboard. ;)
 					dof = profile.AddSettings<DepthOfField>();
 					dof.active = false;

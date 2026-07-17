@@ -94,8 +94,13 @@ namespace SDG.Unturned
 			if (!Provider.isServer || !TryGetAdminPlayer(executorID, out SteamPlayer steamPlayer))
 				return;
 
-			steamPlayer.player.life.enableGodMode = !steamPlayer.player.life.enableGodMode;
-			SendFeedback(executorID, steamPlayer.player.life.enableGodMode ? "God mode enabled." : "God mode disabled.");
+			PlayerLife life = steamPlayer.player.life;
+			life.enableGodMode = !life.enableGodMode;
+			if (life.enableGodMode)
+			{
+				life.serverSetLegsBroken(false);
+			}
+			SendFeedback(executorID, life.enableGodMode ? "God mode enabled." : "God mode disabled.");
 		}
 
 		public CommandGod(Local newLocalization)
@@ -107,16 +112,48 @@ namespace SDG.Unturned
 		}
 	}
 
-	public class CommandSpeed : Command
+	public class CommandHeal : Command
 	{
 		protected override void execute(CSteamID executorID, string parameter)
 		{
 			if (!Provider.isServer || !TryGetAdminPlayer(executorID, out SteamPlayer steamPlayer))
 				return;
 
-			if (!int.TryParse(parameter, out int multiplier) || multiplier < 1 || multiplier > 10)
+			PlayerLife life = steamPlayer.player.life;
+			if (life.isDead)
 			{
-				SendFeedback(executorID, "Usage: /speed <1-10>");
+				SendFeedback(executorID, "Cannot heal while dead.");
+				return;
+			}
+
+			life.askHeal(100, true, true);
+			SendFeedback(executorID, "Health, bleeding, and broken legs restored.");
+		}
+
+		public CommandHeal(Local newLocalization)
+		{
+			localization = newLocalization;
+			_command = "heal";
+			_info = "/heal or @heal";
+			_help = "Restores health, bleeding, and broken legs for admin or owner.";
+		}
+	}
+
+	public class CommandSpeed : Command
+	{
+		private static bool TryParseMultiplier(string parameter, out int multiplier)
+		{
+			return int.TryParse(parameter, out multiplier) && multiplier >= 1 && multiplier <= 50;
+		}
+
+		protected override void execute(CSteamID executorID, string parameter)
+		{
+			if (!Provider.isServer || !TryGetAdminPlayer(executorID, out SteamPlayer steamPlayer))
+				return;
+
+			if (!TryParseMultiplier(parameter, out int multiplier))
+			{
+				SendFeedback(executorID, "Usage: /speed <1-50>");
 				return;
 			}
 
@@ -128,7 +165,7 @@ namespace SDG.Unturned
 		{
 			localization = newLocalization;
 			_command = "speed";
-			_info = "/speed <1-10> or @speed <1-10>";
+			_info = "/speed <1-50> or @speed <1-50>";
 			_help = "Sets movement speed multiplier for admin or owner.";
 		}
 	}

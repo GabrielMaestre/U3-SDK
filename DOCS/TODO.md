@@ -125,7 +125,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
 
-## P1 — GPU e renderização — 16/X
+## P1 — GPU e renderização — 18/X
 
 - [x] Remover quatro amostras de máscaras dos seis passes de terreno quando variante de neve não está ativa, preservando resultado com `IS_SNOWING`.
 - [x] Limitar clutter a `1/2/3/4` tiles por preset sem reduzir distância de foliage não decorativo.
@@ -142,6 +142,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Desligar atualização automática de reflection probes somente em Lighting Off/Low; preservar Medium/High/Ultra.
 - [x] Desligar sombras somente de renderers exclusivos do último LOD de objetos e árvores; preservar renderers reutilizados por LOD próximo, geometria e recepção de sombras.
 - [x] Limitar resolução máxima do Unity Terrain a LOD `1` somente para tiles inteiramente no anel externo de 25% da distância visual; preservar tiles próximos e Cinematic Mode.
+- [x] Restaurar Sun Shafts no SDK aberto com PPv2, depth occlusion, presets escaláveis e shader preservado no Player build.
+- [x] Diferenciar água Ultra no fallback com reflexão ambiente nativa e uma onda normal procedural leve; preservar caminho barato nas demais qualidades.
+- [ ] Comparar visual e GPU de Sun Shafts Off/Medium/High/Ultra em floresta e cidade no standalone.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
 - [ ] Agrupar materiais e ativar instancing/batching onde produzir ganho real.
@@ -281,6 +284,8 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 
 ## P2 — Gameplay e simulação
 
+- [x] Fazer GOD remover/bloquear fratura, adicionar HEAL para vida/sangramento/pernas e limitar SPEED a `1–50`, todos restritos a admin/owner.
+- [x] Criar inventário administrativo em `F3`, com busca/paginação, catálogo automático base+mods e entrega autoritativa compatível com permissão RocketMod `give`.
 - [ ] Medir frequência/custo de animais, zombies, jogadores, veículos, barricadas e estruturas.
 - [ ] Aplicar níveis de simulação por distância e relevância sem alterar resultados críticos.
 - [ ] Reduzir física de objetos dormindo e entidades fora de interesse.
@@ -297,6 +302,7 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 ## P2 — UI, áudio e input
 
 - [x] Reatribuir atlas TMP aos materiais de fonte uGUI no runtime após migração Unity 6, corrigindo quads brancos/coloridos no lugar de texto.
+- [x] Virtualizar catálogo do inventário administrativo com pool fixo de 16 botões, sem ícones ou elementos por asset.
 - [ ] Medir rebuilds de canvas/layout, bindings, texto e listas grandes.
 - [ ] Virtualizar listas de servidores, inventário, Workshop e logs quando necessário.
 - [ ] Atualizar UI por evento ou frequência reduzida em vez de todo frame.

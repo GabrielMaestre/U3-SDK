@@ -134,6 +134,10 @@ namespace SDG.Framework.Water
 				return;
 
 			EGraphicQuality waterQuality = GraphicsSettings.waterQuality;
+			if (sharedMaterial.HasProperty("_WaterQuality"))
+			{
+				sharedMaterial.SetFloat("_WaterQuality", (float) waterQuality);
+			}
 			if (waterQuality == EGraphicQuality.LOW)
 			{
 				sharedMaterial.shader.maximumLOD = 201;

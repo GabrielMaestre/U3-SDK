@@ -363,7 +363,7 @@ namespace SDG.Unturned
 								hotkey(1);
 							}
 
-							if (InputEx.GetKeyDown(KeyCode.F3))
+							if (InputEx.GetKeyDown(KeyCode.F3) && !PlayerAdminInventoryUI.CanUseHotkeyLocally)
 							{
 								hotkey(2);
 							}
