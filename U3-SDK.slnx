@@ -1,0 +1,19 @@
+﻿<Solution>
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Jenkins.Editor.csproj" />
+  <Project Path="com.rlabrecque.steamworks.net.csproj" />
+  <Project Path="SDG.Glazier.Runtime.csproj" />
+  <Project Path="UnityEditorEx.csproj" />
+  <Project Path="UnityEx.csproj" />
+  <Project Path="UnturnedDat.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="UnturnedDat.Tests.csproj" />
+  <Project Path="SystemEx.csproj" />
+  <Project Path="SDG.NetPak.Runtime.csproj" />
+  <Project Path="SDG.HostBans.Runtime.csproj" />
+  <Project Path="Unturned.LiveConfig.Runtime.csproj" />
+  <Project Path="SDG.NetTransport.csproj" />
+  <Project Path="SDG.NetPak.Tests.csproj" />
+  <Project Path="com.rlabrecque.steamworks.net.editor.csproj" />
+  <Project Path="SteamCmd.Editor.csproj" />
+</Solution>

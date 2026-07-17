@@ -87,6 +87,27 @@ namespace SDG.Unturned
 		}
 	}
 
+	public class CommandNoclip : Command
+	{
+		protected override void execute(CSteamID executorID, string parameter)
+		{
+			if (!Provider.isServer || !TryGetAdminPlayer(executorID, out SteamPlayer steamPlayer))
+				return;
+
+			bool enabled = !steamPlayer.player.movement.enableNoclip;
+			steamPlayer.player.movement.sendEnableNoclip(enabled);
+			SendFeedback(executorID, enabled ? "Noclip enabled." : "Noclip disabled.");
+		}
+
+		public CommandNoclip(Local newLocalization)
+		{
+			localization = newLocalization;
+			_command = "noclip";
+			_info = "/noclip or @noclip";
+			_help = "Toggles collision-free movement for admin or owner.";
+		}
+	}
+
 	public class CommandGod : Command
 	{
 		protected override void execute(CSteamID executorID, string parameter)

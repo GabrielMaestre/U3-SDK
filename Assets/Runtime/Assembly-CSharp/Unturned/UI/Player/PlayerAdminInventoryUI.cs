@@ -14,7 +14,8 @@ namespace SDG.Unturned
 	/// </summary>
 	public class PlayerAdminInventoryUI
 	{
-		private const int RowsPerPage = 16;
+		private const int RowsPerPage = 14;
+		private const int CategoryTabsPerPage = 5;
 		private const string PermissionCommand = "/give";
 
 		private struct CatalogEntry
@@ -32,14 +33,24 @@ namespace SDG.Unturned
 		private static readonly List<CatalogEntry> catalog = new List<CatalogEntry>();
 		private static readonly List<CatalogEntry> filteredCatalog = new List<CatalogEntry>();
 		private static readonly List<ItemAsset> itemAssets = new List<ItemAsset>();
+		private static readonly List<EItemType> catalogTypes = new List<EItemType>();
+		private static readonly HashSet<EItemType> catalogTypeSet = new HashSet<EItemType>();
 
 		private static SleekFullscreenBox container;
 		private static ISleekField searchField;
 		private static ISleekButton[] itemButtons;
+		private static SleekItemIcon[] itemIcons;
+		private static ItemAsset[] displayedAssets;
+		private static ISleekButton[] categoryButtons;
+		private static ISleekButton previousCategoryButton;
+		private static ISleekButton nextCategoryButton;
 		private static ISleekButton previousButton;
 		private static ISleekButton nextButton;
 		private static ISleekLabel pageLabel;
 		private static int pageIndex;
+		private static int categoryPageIndex;
+		private static EItemType selectedType;
+		private static bool filterByType;
 		private static bool hasConfirmedAccess;
 		private static bool isCatalogDirty = true;
 
@@ -70,6 +81,17 @@ namespace SDG.Unturned
 			}
 
 			SendOpenRequest?.Invoke(ENetReliability.Reliable);
+		}
+
+		public static void HandleScroll(float delta)
+		{
+			if (!active)
+				return;
+
+			if (delta > 0f)
+				onPreviousClicked(null);
+			else if (delta < 0f)
+				onNextClicked(null);
 		}
 
 		public static void close()
@@ -113,7 +135,7 @@ namespace SDG.Unturned
 				Assets.find(itemAssets);
 				for (int index = itemAssets.Count - 1; index >= 0; --index)
 				{
-					if (itemAssets[index] == null)
+					if (itemAssets[index] == null || itemAssets[index].isPro)
 					{
 						itemAssets.RemoveAt(index);
 					}
@@ -121,13 +143,23 @@ namespace SDG.Unturned
 				itemAssets.Sort(compareAssets);
 
 				catalog.Clear();
+				catalogTypes.Clear();
+				catalogTypeSet.Clear();
 				foreach (ItemAsset asset in itemAssets)
 				{
 					catalog.Add(new CatalogEntry(asset));
+					if (catalogTypeSet.Add(asset.type))
+					{
+						catalogTypes.Add(asset.type);
+					}
 				}
+				catalogTypes.Sort((lhs, rhs) => ((int)lhs).CompareTo((int)rhs));
+				if (filterByType && !catalogTypeSet.Contains(selectedType))
+					filterByType = false;
 				isCatalogDirty = false;
 			}
 
+			refreshCategoryTabs();
 			applyFilter(searchField.Text);
 		}
 
@@ -156,7 +188,7 @@ namespace SDG.Unturned
 			filteredCatalog.Clear();
 			foreach (CatalogEntry entry in catalog)
 			{
-				if (matchesSearch(entry.searchText, query))
+				if ((!filterByType || entry.asset.type == selectedType) && matchesSearch(entry.searchText, query))
 				{
 					filteredCatalog.Add(entry);
 				}
@@ -179,17 +211,103 @@ namespace SDG.Unturned
 				bool hasItem = itemIndex < filteredCatalog.Count;
 				button.IsVisible = hasItem;
 				if (!hasItem)
+				{
+					itemIcons[rowIndex].IsVisible = false;
+					if (displayedAssets[rowIndex] != null)
+					{
+						displayedAssets[rowIndex] = null;
+						itemIcons[rowIndex].Clear();
+					}
 					continue;
+				}
 
 				ItemAsset asset = filteredCatalog[itemIndex].asset;
 				button.Text = string.Format("{0}  |  {1}", asset.id, asset.FriendlyName);
-				button.TooltipText = string.Format("Click to receive one\nAsset: {0}\nGUID: {1:N}", asset.name, asset.GUID);
+				button.TooltipText = string.Format("Click to receive one\nType: {0}\nAsset: {1}\nGUID: {2:N}", getTypeName(asset.type), asset.name, asset.GUID);
 				button.IsClickable = asset.id != 0;
+				itemIcons[rowIndex].IsVisible = asset.id != 0;
+				if (asset.id != 0 && displayedAssets[rowIndex] != asset)
+				{
+					displayedAssets[rowIndex] = asset;
+					itemIcons[rowIndex].Clear();
+					// Use native render size so ItemTool can reuse its shared icon cache; UI still displays at 24x24.
+					itemIcons[rowIndex].Refresh(asset.id, 100, asset.getState(), asset);
+				}
+				else if (asset.id == 0 && displayedAssets[rowIndex] != null)
+				{
+					displayedAssets[rowIndex] = null;
+					itemIcons[rowIndex].Clear();
+				}
 			}
 
 			previousButton.IsClickable = pageIndex > 0;
 			nextButton.IsClickable = pageIndex + 1 < pageCount;
 			pageLabel.Text = string.Format("Page {0}/{1}  |  {2} items", pageIndex + 1, pageCount, filteredCatalog.Count);
+		}
+
+		private static string getTypeName(EItemType type)
+		{
+			return type.ToString().Replace('_', ' ');
+		}
+
+		private static void refreshCategoryTabs()
+		{
+			int categoryCount = catalogTypes.Count + 1;
+			int pageCount = Math.Max(1, (categoryCount + CategoryTabsPerPage - 1) / CategoryTabsPerPage);
+			categoryPageIndex = Math.Min(categoryPageIndex, pageCount - 1);
+			int firstIndex = categoryPageIndex * CategoryTabsPerPage;
+
+			for (int tabIndex = 0; tabIndex < CategoryTabsPerPage; ++tabIndex)
+			{
+				int categoryIndex = firstIndex + tabIndex;
+				ISleekButton button = categoryButtons[tabIndex];
+				button.IsVisible = categoryIndex < categoryCount;
+				if (!button.IsVisible)
+					continue;
+
+				bool isSelected = categoryIndex == 0 ? !filterByType : filterByType && catalogTypes[categoryIndex - 1] == selectedType;
+				string name = categoryIndex == 0 ? "ALL" : getTypeName(catalogTypes[categoryIndex - 1]);
+				button.Text = isSelected ? string.Format("[{0}]", name) : name;
+			}
+
+			previousCategoryButton.IsClickable = categoryPageIndex > 0;
+			nextCategoryButton.IsClickable = categoryPageIndex + 1 < pageCount;
+		}
+
+		private static void onCategoryClicked(ISleekElement clickedElement)
+		{
+			for (int tabIndex = 0; tabIndex < categoryButtons.Length; ++tabIndex)
+			{
+				if (categoryButtons[tabIndex] != clickedElement)
+					continue;
+
+				int categoryIndex = categoryPageIndex * CategoryTabsPerPage + tabIndex;
+				filterByType = categoryIndex != 0;
+				if (filterByType)
+					selectedType = catalogTypes[categoryIndex - 1];
+				refreshCategoryTabs();
+				applyFilter(searchField.Text);
+				return;
+			}
+		}
+
+		private static void onPreviousCategoryClicked(ISleekElement button)
+		{
+			if (categoryPageIndex > 0)
+			{
+				--categoryPageIndex;
+				refreshCategoryTabs();
+			}
+		}
+
+		private static void onNextCategoryClicked(ISleekElement button)
+		{
+			int pageCount = Math.Max(1, (catalogTypes.Count + 1 + CategoryTabsPerPage - 1) / CategoryTabsPerPage);
+			if (categoryPageIndex + 1 < pageCount)
+			{
+				++categoryPageIndex;
+				refreshCategoryTabs();
+			}
 		}
 
 		private static void onSearchChanged(ISleekField field, string text)
@@ -357,7 +475,7 @@ namespace SDG.Unturned
 
 			searchField = Glazier.Get().CreateStringField();
 			searchField.PositionOffset_X = 10;
-			searchField.PositionOffset_Y = 45;
+			searchField.PositionOffset_Y = 80;
 			searchField.SizeOffset_X = 740;
 			searchField.SizeOffset_Y = 30;
 			searchField.MaxLength = 80;
@@ -367,18 +485,63 @@ namespace SDG.Unturned
 			searchField.OnTextEscaped += onSearchEscaped;
 			panel.AddChild(searchField);
 
+			previousCategoryButton = Glazier.Get().CreateButton();
+			previousCategoryButton.PositionOffset_X = 10;
+			previousCategoryButton.PositionOffset_Y = 45;
+			previousCategoryButton.SizeOffset_X = 35;
+			previousCategoryButton.SizeOffset_Y = 30;
+			previousCategoryButton.Text = "<";
+			previousCategoryButton.TooltipText = "Previous item types";
+			previousCategoryButton.OnClicked += onPreviousCategoryClicked;
+			panel.AddChild(previousCategoryButton);
+
+			categoryButtons = new ISleekButton[CategoryTabsPerPage];
+			for (int tabIndex = 0; tabIndex < CategoryTabsPerPage; ++tabIndex)
+			{
+				ISleekButton button = Glazier.Get().CreateButton();
+				button.PositionOffset_X = 50 + tabIndex * 132;
+				button.PositionOffset_Y = 45;
+				button.SizeOffset_X = 128;
+				button.SizeOffset_Y = 30;
+				button.OnClicked += onCategoryClicked;
+				button.IsVisible = false;
+				panel.AddChild(button);
+				categoryButtons[tabIndex] = button;
+			}
+
+			nextCategoryButton = Glazier.Get().CreateButton();
+			nextCategoryButton.PositionOffset_X = 715;
+			nextCategoryButton.PositionOffset_Y = 45;
+			nextCategoryButton.SizeOffset_X = 35;
+			nextCategoryButton.SizeOffset_Y = 30;
+			nextCategoryButton.Text = ">";
+			nextCategoryButton.TooltipText = "Next item types";
+			nextCategoryButton.OnClicked += onNextCategoryClicked;
+			panel.AddChild(nextCategoryButton);
+
 			itemButtons = new ISleekButton[RowsPerPage];
+			itemIcons = new SleekItemIcon[RowsPerPage];
+			displayedAssets = new ItemAsset[RowsPerPage];
 			for (int rowIndex = 0; rowIndex < RowsPerPage; ++rowIndex)
 			{
 				ISleekButton button = Glazier.Get().CreateButton();
 				button.PositionOffset_X = 10;
-				button.PositionOffset_Y = 85 + rowIndex * 28;
+				button.PositionOffset_Y = 120 + rowIndex * 28;
 				button.SizeOffset_X = 740;
 				button.SizeOffset_Y = 26;
 				button.OnClicked += onItemClicked;
 				button.IsVisible = false;
 				panel.AddChild(button);
 				itemButtons[rowIndex] = button;
+
+				SleekItemIcon icon = new SleekItemIcon();
+				icon.PositionOffset_X = 4;
+				icon.PositionOffset_Y = 1;
+				icon.SizeOffset_X = 24;
+				icon.SizeOffset_Y = 24;
+				icon.IsVisible = false;
+				button.AddChild(icon);
+				itemIcons[rowIndex] = icon;
 			}
 
 			previousButton = Glazier.Get().CreateButton();

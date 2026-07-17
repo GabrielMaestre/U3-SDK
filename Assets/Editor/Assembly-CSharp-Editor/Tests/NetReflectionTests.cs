@@ -9,7 +9,7 @@ using System.Reflection;
 internal class NetReflectionTests
 {
 	[Test]
-	public void AdminInventoryMethodsAreRegistered()
+	public void AdminMethodsAreRegistered()
 	{
 		BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
 		MethodInfo getServerMethod = typeof(NetReflection).GetMethod("GetServerMethodInfo", flags);
@@ -22,5 +22,6 @@ internal class NetReflectionTests
 		Assert.IsNotNull(getServerMethod.Invoke(null, new object[] { typeof(PlayerAdminInventoryUI), nameof(PlayerAdminInventoryUI.ReceiveGiveRequest) }));
 		Assert.IsNotNull(getClientMethod.Invoke(null, new object[] { typeof(PlayerAdminInventoryUI), nameof(PlayerAdminInventoryUI.ReceiveAccessGranted) }));
 		Assert.IsNotNull(getClientMethod.Invoke(null, new object[] { typeof(PlayerAdminInventoryUI), nameof(PlayerAdminInventoryUI.ReceiveOpen) }));
+		Assert.IsNotNull(getClientMethod.Invoke(null, new object[] { typeof(PlayerMovement), nameof(PlayerMovement.ReceiveEnableNoclip) }));
 	}
 }

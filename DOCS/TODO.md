@@ -144,6 +144,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [x] Limitar resolução máxima do Unity Terrain a LOD `1` somente para tiles inteiramente no anel externo de 25% da distância visual; preservar tiles próximos e Cinematic Mode.
 - [x] Restaurar Sun Shafts no SDK aberto com PPv2, depth occlusion, presets escaláveis e shader preservado no Player build.
 - [x] Diferenciar água Ultra no fallback com reflexão ambiente nativa e uma onda normal procedural leve; preservar caminho barato nas demais qualidades.
+- [x] Refinar água Ultra com tint azul preservando metade da cor do mapa e alpha `0,68`; manter Low/Medium/High intactos.
 - [ ] Comparar visual e GPU de Sun Shafts Off/Medium/High/Ultra em floresta e cidade no standalone.
 - [ ] Capturar frames representativos por preset, resolução e GPU-alvo.
 - [ ] Medir draw calls, SetPass, triângulos, overdraw, bandwidth, sombras e pós-processamento.
@@ -284,7 +285,7 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 
 ## P2 — Gameplay e simulação
 
-- [x] Fazer GOD remover/bloquear fratura, adicionar HEAL para vida/sangramento/pernas e limitar SPEED a `1–50`, todos restritos a admin/owner.
+- [x] Fazer GOD remover/bloquear fratura, adicionar HEAL, limitar SPEED a `1–50` e adicionar NOCLIP replicado para atravessar cenário/construções, todos restritos a admin/owner.
 - [x] Criar inventário administrativo em `F3`, com busca/paginação, catálogo automático base+mods e entrega autoritativa compatível com permissão RocketMod `give`.
 - [ ] Medir frequência/custo de animais, zombies, jogadores, veículos, barricadas e estruturas.
 - [ ] Aplicar níveis de simulação por distância e relevância sem alterar resultados críticos.
@@ -302,7 +303,7 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 ## P2 — UI, áudio e input
 
 - [x] Reatribuir atlas TMP aos materiais de fonte uGUI no runtime após migração Unity 6, corrigindo quads brancos/coloridos no lugar de texto.
-- [x] Virtualizar catálogo do inventário administrativo com pool fixo de 16 botões, sem ícones ou elementos por asset.
+- [x] Virtualizar catálogo do inventário administrativo com pool fixo de 14 linhas/ícones e 5 abas; carregar ícones somente para página visível usando cache compartilhado do `ItemTool`, filtrar por `EItemType`, omitir cosméticos `isPro` e paginar por botão/scroll.
 - [ ] Medir rebuilds de canvas/layout, bindings, texto e listas grandes.
 - [ ] Virtualizar listas de servidores, inventário, Workshop e logs quando necessário.
 - [ ] Atualizar UI por evento ou frequência reduzida em vez de todo frame.

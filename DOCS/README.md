@@ -59,6 +59,7 @@ Metas principais:
 
 - Qualidade selecionada agora é enviada ao material fallback; antes todas usavam o único `LOD 200` e pareciam iguais.
 - Somente Ultra ativa onda visual procedural de normal e reflexão ambiente nativa do shader Standard.
+- Ultra mistura 50% de azul oceânico e usa alpha `0,68`, melhorando leitura da água e transparência; demais presets mantêm cor e alpha anteriores.
 - Não usa câmera planar, render texture, textura adicional ou alteração da geometria/física da água.
 - Low, Medium e High mantêm caminho barato sem cálculo de onda e com reflexão reduzida.
 
@@ -301,7 +302,7 @@ Metas principais:
 ### 2026-07-13 — Comandos administrativos, foliage e budget de IA
 
 - Comandos pessoais aceitam `/` ou `@`: `fly` alterna voo, `god` alterna imunidade a dano e fraturas, `heal` restaura vida/sangramento/pernas, e `speed <1-50>` define multiplicador de movimento. Somente admin/owner conectado pode executar; console sem jogador não é alvo válido.
-- Voo usa caminho de movimento já existente e replica estado do servidor ao cliente. God mode permanece autoritativo, cura fratura ao ativar e bloqueia novas fraturas. `/speed 1` restaura velocidade normal; valores fora de `1–50` são rejeitados.
+- Voo usa caminho de movimento já existente e replica estado do servidor ao cliente. `/noclip` alterna movimento sem colisão para admin/owner, atravessando cenário e construções sem desabilitar controller/hitbox; desligue fora de objetos. God mode permanece autoritativo, cura fratura ao ativar e bloqueia novas fraturas. `/speed 1` restaura velocidade normal; valores fora de `1–50` são rejeitados.
 - Limite visual server-side existente continua sendo `Gameplay.World_Chunk_Radius`: fora do Cinematic Mode, far clip, objetos, árvores, proxies, estradas e terreno distante respeitam raio. Servidor não “renderiza”; ele limita simulação e relevância de entidades.
 - Foliage client-side agora tem teto radial exato de uma região (`128 m`/quatro tiles de `32 m`) em todos presets e também no escopo. Qualidade menor ainda reduz densidade e distância abaixo desse teto.
 - `Zombies.Tick_Budget_Per_Frame` e `Animals.Tick_Budget_Per_Frame` substituem budgets fixos do servidor dedicado. Padrões preservados: `50` e `25`; runtime limita máximo a `1000` e interpreta `0`/campo ausente como padrão antigo. Valor menor suaviza pico de CPU, mas aumenta latência de reação quando há muitas entidades ativas.

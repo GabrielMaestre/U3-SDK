@@ -121,7 +121,8 @@ Não use modo como baseline visual ou comparação com build. Desative toggle an
 
 ## Testar comandos e budget de IA
 
-- Admin/owner: teste `/fly` duas vezes; `/god` com dano e queda; `/heal` após dano, sangramento e fratura; `/speed 50`, finalizando com `/speed 1`. Variantes com `@` devem produzir mesmo resultado.
+- Admin/owner: teste `/fly` duas vezes; `/noclip` atravessando terreno, árvore, casa e construção de jogador, desligando fora do objeto; `/god` com dano e queda; `/heal` após dano, sangramento e fratura; `/speed 50`, finalizando com `/speed 1`. Variantes com `@` devem produzir mesmo resultado.
+- Jogador comum: `/noclip` e `@noclip` devem responder falta de permissão sem alterar movimento.
 - `/speed 0`, `/speed 51` e texto inválido devem mostrar uso `1-50` sem alterar multiplicador.
 - Jogador sem admin: quatro comandos devem responder `Admin or owner permission required` e não alterar estado.
 - Em `Config.txt`, teste `Zombies.Tick_Budget_Per_Frame` e `Animals.Tick_Budget_Per_Frame` primeiro com padrões `50/25`, depois `20/10` e `10/5`. Reinicie servidor entre configurações.

@@ -33,7 +33,7 @@ Shader "Custom/Water_Fallback"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
 			half isUltra = step(3.5h, _WaterQuality);
-			o.Albedo = _BaseColor.rgb;
+			o.Albedo = lerp(_BaseColor.rgb, half3(0.03h, 0.32h, 0.62h), isUltra * 0.5h);
 			o.Metallic = 0;
 			o.Smoothness = lerp(0.35h, 0.9h, isUltra);
 			if (isUltra > 0.5h)
@@ -43,7 +43,7 @@ Shader "Custom/Water_Fallback"
 				half2 wave = half2(sin(position.x + time), cos(position.y - time));
 				o.Normal = normalize(half3(wave * 0.08h, 1.0h));
 			}
-			o.Alpha = 0.9;
+			o.Alpha = lerp(0.9h, 0.68h, isUltra);
         }
         ENDCG
     }

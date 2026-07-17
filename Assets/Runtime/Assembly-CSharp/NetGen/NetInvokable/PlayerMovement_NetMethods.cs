@@ -163,5 +163,44 @@ namespace SDG.Unturned
 		{
 			writer.WriteBit(newEnableFly);
 		}
+		[NetInvokableGeneratedMethod(nameof(PlayerMovement.ReceiveEnableNoclip), ENetInvokableGeneratedMethodPurpose.Read)]
+		public static void ReceiveEnableNoclip_Read(in ClientInvocationContext context)
+		{
+			NetPakReader reader = context.reader;
+			NetId netId;
+			if (!reader.ReadNetId(out netId))
+			{
+				context.LogWarning("unable to read target instance net id");
+				return;
+			}
+
+			object voidNetObj = NetIdRegistry.Get(netId);
+			if (voidNetObj == null)
+				return;
+			PlayerMovement netObj = voidNetObj as PlayerMovement;
+			if (netObj == null)
+			{
+				context.LogWarning($"expected target instance with net id {netId} to be type PlayerMovement, but was {voidNetObj.GetType().Name}");
+				return;
+			}
+			System.Boolean newEnableNoclip;
+#if LOG_INVOKE_READ_ERRORS
+			bool newEnableNoclip_ReadSuccess =
+#endif // LOG_INVOKE_READ_ERRORS
+			reader.ReadBit(out newEnableNoclip);
+#if LOG_INVOKE_READ_ERRORS
+			if (!newEnableNoclip_ReadSuccess)
+			{
+				context.ReadParameterFailed(nameof(newEnableNoclip));
+				return;
+			}
+#endif // LOG_INVOKE_READ_ERRORS
+			netObj.ReceiveEnableNoclip(newEnableNoclip);
+		}
+		[NetInvokableGeneratedMethod(nameof(PlayerMovement.ReceiveEnableNoclip), ENetInvokableGeneratedMethodPurpose.Write)]
+		public static void ReceiveEnableNoclip_Write(NetPakWriter writer, System.Boolean newEnableNoclip)
+		{
+			writer.WriteBit(newEnableNoclip);
+		}
 	}
 }

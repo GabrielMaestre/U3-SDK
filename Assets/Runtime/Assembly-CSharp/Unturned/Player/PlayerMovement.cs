@@ -129,6 +129,7 @@ namespace SDG.Unturned
 					* (player.equipment.useable?.movementSpeedMultiplier ?? 1.0f);
 
 		public bool enableFly;
+		public bool enableNoclip;
 
 		private float lastFootstep;
 
@@ -666,6 +667,14 @@ namespace SDG.Unturned
 			}
 		}
 
+		private void moveCharacter(Vector3 displacement)
+		{
+			if (enableNoclip)
+				transform.position += displacement;
+			else if (controller.enabled)
+				controller.CheckedMove(displacement);
+		}
+
 		private static readonly ClientInstanceMethod<bool> SendEnableFly = ClientInstanceMethod<bool>.Get(typeof(PlayerMovement), nameof(ReceiveEnableFly));
 		[SteamCall(ESteamCallValidation.ONLY_FROM_SERVER)]
 		public void ReceiveEnableFly(bool newEnableFly)
@@ -682,6 +691,25 @@ namespace SDG.Unturned
 			if (!channel.IsLocalPlayer)
 			{
 				SendEnableFly.Invoke(GetNetId(), ENetReliability.Reliable, channel.GetOwnerTransportConnection(), newEnableFly);
+			}
+		}
+
+		private static readonly ClientInstanceMethod<bool> SendEnableNoclip = ClientInstanceMethod<bool>.Get(typeof(PlayerMovement), nameof(ReceiveEnableNoclip));
+		[SteamCall(ESteamCallValidation.ONLY_FROM_SERVER)]
+		public void ReceiveEnableNoclip(bool newEnableNoclip)
+		{
+			enableNoclip = newEnableNoclip;
+			if (!enableNoclip)
+				velocity = Vector3.zero;
+		}
+
+		public void sendEnableNoclip(bool newEnableNoclip)
+		{
+			ReceiveEnableNoclip(newEnableNoclip);
+
+			if (!channel.IsLocalPlayer)
+			{
+				SendEnableNoclip.Invoke(GetNetId(), ENetReliability.Reliable, channel.GetOwnerTransportConnection(), newEnableNoclip);
 			}
 		}
 
@@ -1120,7 +1148,7 @@ namespace SDG.Unturned
 
 				return;
 			}
-			else if (player.stance.stance == EPlayerStance.CLIMB)
+			else if (!enableNoclip && player.stance.stance == EPlayerStance.CLIMB)
 			{
 				_isMoving = Mathf.Abs(move.x) > 0.1 || Mathf.Abs(move.z) > 0.1;
 				checkGround(transform.position);
@@ -1143,12 +1171,9 @@ namespace SDG.Unturned
 
 				velocity = new Vector3(0.0f, _move.z * speed * 0.5f, 0.0f);
 				mostRecentControllerColliderHit = null;
-				if (controller.enabled)
-				{
-					controller.CheckedMove(velocity * deltaTime);
-				}
+				moveCharacter(velocity * deltaTime);
 			}
-			else if (player.stance.stance == EPlayerStance.SWIM)
+			else if (!enableNoclip && player.stance.stance == EPlayerStance.SWIM)
 			{
 				_isMoving = Mathf.Abs(move.x) > 0.1 || Mathf.Abs(move.z) > 0.1;
 				checkGround(transform.position);
@@ -1164,10 +1189,7 @@ namespace SDG.Unturned
 					}
 
 					mostRecentControllerColliderHit = null;
-					if (controller.enabled)
-					{
-						controller.CheckedMove(velocity * deltaTime);
-					}
+					moveCharacter(velocity * deltaTime);
 				}
 				else
 				{
@@ -1181,10 +1203,7 @@ namespace SDG.Unturned
 					velocity.y = (surfaceElevation - 1.275f - transform.position.y) / 8f;
 
 					mostRecentControllerColliderHit = null;
-					if (controller.enabled)
-					{
-						controller.CheckedMove(velocity * deltaTime);
-					}
+					moveCharacter(velocity * deltaTime);
 				}
 			}
 			else
@@ -1192,6 +1211,11 @@ namespace SDG.Unturned
 				_isMoving = Mathf.Abs(move.x) > 0.1 || Mathf.Abs(move.z) > 0.1;
 				bool wasGrounded = isGrounded;
 				checkGround(transform.position);
+				if (enableNoclip)
+				{
+					wasGrounded = false;
+					_isGrounded = false;
+				}
 
 				bool updateVelocityAfterMove = false;
 				bool sliding = false;
@@ -1334,9 +1358,12 @@ namespace SDG.Unturned
 				velocity += pendingLaunchVelocity;
 				pendingLaunchVelocity = Vector3.zero;
 
-				if (enableFly && MainCamera.instance != null)
+				if (enableFly || enableNoclip)
 				{
-					velocity = MainCamera.instance.transform.rotation * move * speed;
+					Quaternion flightRotation = channel.IsLocalPlayer && MainCamera.instance != null
+						? MainCamera.instance.transform.rotation
+						: player.look.aim.rotation;
+					velocity = flightRotation * move * speed;
 					if (player.stance.stance == EPlayerStance.SPRINT)
 					{
 						velocity *= 2.0f;
@@ -1353,13 +1380,10 @@ namespace SDG.Unturned
 				{
 					Vector3 oldPosition = transform.position;
 					mostRecentControllerColliderHit = null;
-					if (controller.enabled)
-					{
-						controller.CheckedMove(velocity * deltaTime);
-					}
+					moveCharacter(velocity * deltaTime);
 
 					// Moved from the earlier ground test because we want onLanded to happen before updateVelocityAfterMove 
-					if (!wasGrounded)
+					if (!enableNoclip && !wasGrounded)
 					{
 						checkGround(transform.position);
 
@@ -1376,7 +1400,7 @@ namespace SDG.Unturned
 #endif // !DEDICATED_SERVER
 						}
 					}
-					else
+					else if (!enableNoclip)
 					{
 						// Player *was* grounded, so let's see if we should slightly snap the player to the ground.
 						// Don't snap if velocity was upward to prevent sticking to ground when e.g. jumping.
@@ -1416,7 +1440,7 @@ namespace SDG.Unturned
 						}
 					}
 
-					if (updateVelocityAfterMove)
+					if (updateVelocityAfterMove && !enableNoclip)
 					{
 						// We do not always want to do this, for example when walking up a slope this would launch
 						// us over the top. Useful while midair to prevent player from sticking to walls at high velocity.

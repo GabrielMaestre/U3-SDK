@@ -4,15 +4,21 @@
 
 - Pressione `F3` durante gameplay para abrir ou fechar.
 - Digite nome exibido, nome do asset, ID legado ou GUID na busca.
+- Use as abas para filtrar pelo tipo exato (`EItemType`); setas laterais percorrem tipos adicionais.
+- Use roda do mouse para trocar páginas: cima volta, baixo avança.
 - Clique no item para receber uma unidade.
 - `Escape` e botão `Close` fecham painel.
 - `Shift+F3` continua reservado para freecam. Seleção do terceiro assento por `F3` continua disponível para jogadores sem acesso ao painel.
 
 ## Catálogo e mods
 
-Painel consulta `Assets.find(List<ItemAsset>)` na primeira abertura. Mesma fonte registra itens oficiais, Workshop e mods carregados pelo jogo. Evento `Assets.onAssetsRefreshed` invalida cache após reload ou mudança de mods; abertura seguinte reconstrói catálogo. Nenhuma lista manual de IDs precisa ser mantida.
+Painel consulta `Assets.find(List<ItemAsset>)` na primeira abertura. Mesma fonte registra itens oficiais, Workshop e mods carregados pelo jogo. Evento `Assets.onAssetsRefreshed` invalida cache após reload ou mudança de mods; abertura seguinte reconstrói catálogo e abas. Nenhuma lista manual de IDs ou tipos precisa ser mantida.
 
-Somente 16 botões existem na interface. Paginação reutiliza esses elementos para qualquer quantidade de itens; busca percorre índice textual criado uma vez por abertura. Ícones e prefabs não são carregados, evitando custo de textura, mesh e milhares de elementos UI.
+Itens cosméticos Steam (`ItemAsset.isPro`) são omitidos; roupas e equipamentos jogáveis comuns continuam disponíveis. Busca permanece ativa dentro da aba selecionada.
+
+Somente 14 linhas, 14 ícones e 5 abas existem na interface. Paginação reutiliza elementos para qualquer quantidade de itens. Ícone é solicitado apenas para linhas visíveis no tamanho nativo cacheável do `ItemTool`, mas exibido em `24x24`; páginas revisitadas e ícones já usados pelo inventário normal reaproveitam cache quando asset permite. Catálogo inteiro não instancia prefabs nem cria elementos por asset.
+
+Primeiro ícone ainda depende da fila nativa: modelo é instanciado em um frame e capturado no seguinte. Processar vários por frame foi evitado porque pode causar hitch e capturar modelos antes de ficarem prontos.
 
 Assets sem ID legado aparecem, mas ficam desabilitados porque inventário e `ItemTool` ainda usam `ushort` para identificar itens.
 
@@ -27,10 +33,11 @@ Assets sem ID legado aparecem, mas ficam desabilitados porque inventário e `Ite
 ## Teste manual
 
 1. Entre em singleplayer, pressione `F3`, pesquise por nome e ID, troque páginas e receba item.
-2. Instale mod com item, reinicie/carregue assets e confirme item na busca por nome/GUID.
-3. Em servidor vanilla, confirme que admin abre e jogador comum mantém `F3` de assento sem abrir painel.
-4. Em RocketMod, conceda/remova `give`, reconecte jogador e confirme acesso/negação.
-5. Teste inventário cheio, morte com painel aberto, `Escape`, `Shift+F3` e veículo.
+2. Troque abas, pesquise dentro de uma aba e confirme ícones ao paginar.
+3. Instale mod com item, reinicie/carregue assets e confirme item, tipo e ícone na busca por nome/GUID.
+4. Em servidor vanilla, confirme que admin abre e jogador comum mantém `F3` de assento sem abrir painel.
+5. Em RocketMod, conceda/remova `give`, reconecte jogador e confirme acesso/negação.
+6. Teste inventário cheio, morte com painel aberto, `Escape`, `Shift+F3` e veículo.
 
 Validação estática: `Assembly-CSharp.csproj` compila com `0` erros; 14 warnings preexistentes permanecem.
 

@@ -1833,9 +1833,11 @@ namespace SDG.Unturned
 		private void tickInput()
 		{
 			inputWantsCustomModal = false;
-			if (PlayerAdminInventoryUI.active && !Player.LocalPlayer.life.IsAlive)
+			if (PlayerAdminInventoryUI.active)
 			{
-				PlayerAdminInventoryUI.close();
+				PlayerAdminInventoryUI.HandleScroll(Input.GetAxis("mouse_z"));
+				if (!Player.LocalPlayer.life.IsAlive)
+					PlayerAdminInventoryUI.close();
 			}
 
 			// If trying to move with the inventory open, close the dashboard. (Likely responding to combat.)

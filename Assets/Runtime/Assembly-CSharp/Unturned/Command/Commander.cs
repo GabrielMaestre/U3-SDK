@@ -163,6 +163,7 @@ namespace SDG.Unturned
 			register(new CommandAnimal(Localization.read("/Server/ServerCommandAnimal.dat")));
 			register(new CommandTeleport(Localization.read("/Server/ServerCommandTeleport.dat")));
 			register(new CommandFly(emptyPlaceholder));
+			register(new CommandNoclip(emptyPlaceholder));
 			register(new CommandGod(emptyPlaceholder));
 			register(new CommandHeal(emptyPlaceholder));
 			register(new CommandSpeed(emptyPlaceholder));
