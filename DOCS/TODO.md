@@ -351,7 +351,7 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 - [ ] Fazer soak tests de cliente e servidor por longos períodos.
 - [ ] Agrupar crashes por assinatura e atacar maior frequência primeiro.
 
-## P2 — Ferramentas, testes e CI — 3/X
+## P2 — Ferramentas, testes e CI — 4/X
 
 - [ ] Automatizar build limpo de cliente e servidor suportados.
 - [ ] Executar testes existentes de `SDG.NetPak` e `UnturnedDat`.
@@ -360,6 +360,7 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 - [x] Adicionar captura standalone opt-in `-PerformanceMetrics` com CSV e duração limitada; automação de rota continua aberta quando houver replay determinístico.
 - [x] Criar `Analyze Profiler Capture`: agrega markers de `.data` por self time/calls/GC em CSV ranqueado, com variante sem diálogo executável via MCP.
 - [x] Adicionar MCP local editor-only como fallback ao bridge oficial, com conexão loopback autenticada e 11 ferramentas básicas validadas.
+- [x] Adicionar cena standalone `PerformanceStressTest`: rota automática Ultra, terrain `1024 m`, proxies instanciados de árvores/estruturas/props/agentes, warm-up `10 s` e CSV `30 s`; mapa real continua baseline final.
 - [ ] Comparar performance em hardware fixo; não bloquear CI compartilhada por ruído aleatório.
 - [ ] Detectar assets duplicados, referências quebradas e variantes excessivas.
 - [ ] Verificar compatibilidade de protocolo e formato de save.

@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Game/Sources/Scenes/Menu_Fallback.unity
     guid: 51205a5f4a620d946b16f393329ef8ad
+  - enabled: 1
+    path: Assets/Tests/Scenes/PerformanceStressTest.unity
+    guid: fb90f5de28cdc7145861d33266897176
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f,
       type: 2}

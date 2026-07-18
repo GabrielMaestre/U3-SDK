@@ -22,19 +22,39 @@ namespace SDG.Unturned
 			if (!shouldCapture)
 				return;
 
-			GameObject gameObject = new GameObject("Performance Metrics Capture");
-			DontDestroyOnLoad(gameObject);
-			gameObject.AddComponent<PerformanceMetricsCapture>();
+			beginCapture(captureDuration.hasValue ? captureDuration.value : 300, "performance");
 		}
 
-		private void Awake()
+		/// <summary>
+		/// Starts one opt-in capture after a test warm-up. Used by PerformanceStressScenario.
+		/// </summary>
+		internal static void beginAutomaticStressCapture(int duration)
 		{
-			int requestedDuration = captureDuration.hasValue ? captureDuration.value : 300;
+			if (instance != null)
+			{
+				UnturnedLog.warn("Performance stress capture skipped because another capture is active");
+				return;
+			}
+
+			beginCapture(duration, "performance-stress");
+		}
+
+		private static void beginCapture(int duration, string fileNamePrefix)
+		{
+			GameObject gameObject = new GameObject("Performance Metrics Capture");
+			DontDestroyOnLoad(gameObject);
+			PerformanceMetricsCapture capture = gameObject.AddComponent<PerformanceMetricsCapture>();
+			capture.initialize(duration, fileNamePrefix);
+		}
+
+		private void initialize(int requestedDuration, string fileNamePrefix)
+		{
+			instance = this;
 			maximumDuration = Mathf.Max(1, requestedDuration);
 
 			string directory = Path.Combine(Application.persistentDataPath, "PerformanceCaptures");
 			Directory.CreateDirectory(directory);
-			string path = Path.Combine(directory, $"performance-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
+			string path = Path.Combine(directory, $"{fileNamePrefix}-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
 			writer = new StreamWriter(new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read));
 			writer.WriteLine("timestamp_utc,elapsed_s,scene,frames,fps_avg,frame_ms_avg,frame_ms_p50,frame_ms_p95,frame_ms_p99,frame_ms_max,main_thread_ms_avg,main_thread_ms_max,render_thread_ms_avg,render_thread_ms_max,cpu_frame_ms,gpu_frame_ms,gc_alloc_kib_avg,gc_alloc_kib_max,gc_used_mib,system_used_mib,draw_calls,batches,setpass_calls,triangles");
 			writer.Flush();
@@ -164,6 +184,8 @@ namespace SDG.Unturned
 			setPassCalls.Dispose();
 			triangles.Dispose();
 			writer?.Dispose();
+			if (instance == this)
+				instance = null;
 		}
 
 		private const int recorderCapacity = 256;
@@ -172,6 +194,7 @@ namespace SDG.Unturned
 		private const double bytesPerMebibyte = 1024.0 * 1024.0;
 		private static readonly CommandLineFlag shouldCapture = new CommandLineFlag(false, "-PerformanceMetrics");
 		private static readonly CommandLineInt captureDuration = new CommandLineInt("-PerformanceMetricsSeconds");
+		private static PerformanceMetricsCapture instance;
 
 		// ponytail: one-second fixed window avoids configuration and per-frame allocations.
 		private readonly float[] frameTimes = new float[4096];

@@ -42,6 +42,18 @@ No Editor, habilite `Window > Unturned > Editor Settings > Misc > Performance Me
 
 Não compare FPS de `Build Test` contra Release. Use Development para localizar custo; use Release para aceitar/rejeitar ganho final.
 
+## Cenário automático de stress
+
+`Assets/Tests/Scenes/PerformanceStressTest.unity` cria rota fixa em Ultra: terrain nativo de `1024 m`, água, `800` árvores instanciadas, `240` estruturas, `480` props e `160` agentes proxy. Aquece `10 s`, captura `30 s` automaticamente e grava `performance-stress-*.csv` em `Application.persistentDataPath\PerformanceCaptures`.
+
+No Editor, abra essa cena e use Play. No Player standalone, execute:
+
+```powershell
+.\Builds\Test\Unturned.exe -PerformanceStressTest -FrameRateLimit=0
+```
+
+Não acrescente `-PerformanceMetrics`: stress já inicia captura controlada. Proxies medem terreno/render/instancing/sombras e movimento centralizado; não substituem mapa real, bundles, IA, rede ou streaming.
+
 ## Baseline pós-load de `2026-07-16`
 
 - Russia, High, `600` frames: CPU p50 `6,73 ms`, p95 `8,55 ms`, p99 `10,46 ms`.
