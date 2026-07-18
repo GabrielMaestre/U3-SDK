@@ -147,13 +147,39 @@ namespace SDG.Unturned
 
 		public TVolume GetFirstOverlappingVolume(Vector3 position)
 		{
-			List<TVolume> volumesToTest = GetOverlapTestVolumes(position);
-			if (volumesToTest == null)
+			// Iterates the source lists directly (same order and filters as GetRegionalAndDynamicVolumes)
+			// because building the temporary combined list dominated hot per-frame queries like water.
+			if (regionalVolumes == null)
 			{
+				if (allVolumes == null)
+				{
+					return null;
+				}
+
+				foreach (TVolume volume in allVolumes)
+				{
+					if (volume.IsPositionInsideVolume(position))
+					{
+						return volume;
+					}
+				}
+
 				return null;
 			}
 
-			foreach (TVolume volume in volumesToTest)
+			List<TVolume> staticVolumes = regionalVolumes.GetList(position);
+			if (staticVolumes != null)
+			{
+				foreach (TVolume volume in staticVolumes)
+				{
+					if (volume != null && volume.enabled && volume.IsPositionInsideVolume(position))
+					{
+						return volume;
+					}
+				}
+			}
+
+			foreach (TVolume volume in dynamicVolumes)
 			{
 				if (volume.IsPositionInsideVolume(position))
 				{

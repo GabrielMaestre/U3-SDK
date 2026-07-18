@@ -480,13 +480,17 @@ namespace SDG.Unturned
 			hotbarContainer.PositionOffset_Y = -80 - hotbarContainer.SizeOffset_Y;
 		}
 
+		private static EStatTrackerType cachedStatTrackerType = (EStatTrackerType) (-1);
+		private static int cachedStatTrackerKills = -1;
 		public static void updateStatTracker()
 		{
 			EStatTrackerType type;
 			int kills;
 			statTrackerLabel.IsVisible = Player.LocalPlayer.equipment.getUseableStatTrackerValue(out type, out kills);
-			if (statTrackerLabel.IsVisible)
+			if (statTrackerLabel.IsVisible && (type != cachedStatTrackerType || kills != cachedStatTrackerKills))
 			{
+				cachedStatTrackerType = type;
+				cachedStatTrackerKills = kills;
 				statTrackerLabel.TextColor = Provider.provider.economyService.getStatTrackerColor(type);
 				statTrackerLabel.Text = localization.format(type == EStatTrackerType.TOTAL ? "Stat_Tracker_Total_Kills" : "Stat_Tracker_Player_Kills", kills.ToString("D7"));
 			}

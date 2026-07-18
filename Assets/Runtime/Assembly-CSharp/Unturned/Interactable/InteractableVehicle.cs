@@ -4178,8 +4178,9 @@ namespace SDG.Unturned
 				}
 				else
 				{
-					ReplicatedSpeed = rootRigidbody.linearVelocity.magnitude;
-					ReplicatedForwardVelocity = transform.InverseTransformDirection(rootRigidbody.linearVelocity).z;
+					Vector3 worldVelocity = rootRigidbody.linearVelocity;
+					ReplicatedSpeed = worldVelocity.magnitude;
+					ReplicatedForwardVelocity = transform.InverseTransformDirection(worldVelocity).z;
 					ReplicatedSteeringInput = 0.0f;
 					ReplicatedVelocityInput = 0.0f;
 

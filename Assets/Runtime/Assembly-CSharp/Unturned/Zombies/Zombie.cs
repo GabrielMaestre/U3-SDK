@@ -142,6 +142,27 @@ namespace SDG.Unturned
 		private Transform target;
 		private Animation animator;
 
+		/// <summary>
+		/// Move/idle loop currently cross-faded, so per-update calls skip redundant native CrossFade.
+		/// Cleared by <see cref="PlayAnim"/> because one-shots interrupt the loop.
+		/// </summary>
+		private string lastLoopAnim;
+
+		private void PlayAnim(string name)
+		{
+			lastLoopAnim = null;
+			animator.Play(name);
+		}
+
+		private void CrossFadeLoopAnim(string name, float fadeLength)
+		{
+			if (!string.Equals(lastLoopAnim, name))
+			{
+				lastLoopAnim = name;
+				animator.CrossFade(name, fadeLength);
+			}
+		}
+
 		private float lastHunted;
 		private float lastTarget;
 		private float lastLeave;
@@ -563,7 +584,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Boulder_0");
+				PlayAnim("Boulder_0");
 
 #if !DEDICATED_SERVER
 				AudioClip roarClip = ZombieManager.roars[Random.Range(0, 16)];
@@ -635,7 +656,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Acid_0");
+				PlayAnim("Acid_0");
 			}
 		}
 
@@ -686,7 +707,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Electric_0");
+				PlayAnim("Electric_0");
 
 				if (sparkSystem != null)
 				{
@@ -749,7 +770,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Wind_0");
+				PlayAnim("Wind_0");
 
 				EffectAsset zombie_5 = Assets.find(Zombie_5_Ref);
 				if (zombie_5 != null)
@@ -788,7 +809,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Fire_0");
+				PlayAnim("Fire_0");
 
 				if (fireSystem != null)
 				{
@@ -837,7 +858,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Attack_" + id);
+				PlayAnim("Attack_" + id);
 
 				AudioClip[] clips = speciality.IsDLVolatile() ? ZombieManager.dl_attacks : ZombieManager.roars;
 				PlayOneShot(clips);
@@ -862,7 +883,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Startle_" + id);
+				PlayAnim("Startle_" + id);
 
 				AudioClip[] clips = speciality.IsDLVolatile() ? ZombieManager.dl_enemy_spotted : ZombieManager.roars;
 				PlayOneShot(clips);
@@ -881,7 +902,7 @@ namespace SDG.Unturned
 
 			if (!Dedicator.IsDedicatedServer)
 			{
-				animator.Play("Stun_" + id);
+				PlayAnim("Stun_" + id);
 			}
 		}
 
@@ -2737,10 +2758,12 @@ namespace SDG.Unturned
 			{
 				if (!isUpdated)
 				{
-					if (Mathf.Abs(lastUpdatedPos.x - transform.position.x) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatedPos.y - transform.position.y) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatedPos.z - transform.position.z) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatedAngle - transform.rotation.eulerAngles.y) > 1)
+					Vector3 currentPosition = transform.position;
+					float currentYaw = transform.rotation.eulerAngles.y;
+					if (Mathf.Abs(lastUpdatedPos.x - currentPosition.x) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatedPos.y - currentPosition.y) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatedPos.z - currentPosition.z) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatedAngle - currentYaw) > 1)
 					{
-						lastUpdatedPos = transform.position;
-						lastUpdatedAngle = transform.rotation.eulerAngles.y;
+						lastUpdatedPos = currentPosition;
+						lastUpdatedAngle = currentYaw;
 
 						isUpdated = true;
 						zombieRegion.updates++;
@@ -2758,7 +2781,7 @@ namespace SDG.Unturned
 						}
 						else if (zombieRegion.HasInfiniteAgroRange)
 						{
-							if (player != null && (player.transform.position - transform.position).sqrMagnitude > 4)
+							if (player != null && (player.transform.position - currentPosition).sqrMagnitude > 4)
 							{
 								isStuck = true;
 							}
@@ -2786,16 +2809,10 @@ namespace SDG.Unturned
 			}
 			else
 			{
-				if (Mathf.Abs(lastUpdatedPos.x - transform.position.x) > 0.01f || Mathf.Abs(lastUpdatedPos.y - transform.position.y) > 0.01f || Mathf.Abs(lastUpdatedPos.z - transform.position.z) > 0.01f)
-				{
-					isMoving = true;
-				}
-				else
-				{
-					isMoving = false;
-				}
+				Vector3 currentPosition = transform.position;
+				isMoving = Mathf.Abs(lastUpdatedPos.x - currentPosition.x) > 0.01f || Mathf.Abs(lastUpdatedPos.y - currentPosition.y) > 0.01f || Mathf.Abs(lastUpdatedPos.z - currentPosition.z) > 0.01f;
 
-				transform.position = Vector3.Lerp(transform.position, interpPositionTarget, deltaTime * Provider.INTERP_SPEED);
+				transform.position = Vector3.Lerp(currentPosition, interpPositionTarget, deltaTime * Provider.INTERP_SPEED);
 				transform.rotation = Quaternion.Euler(0.0f, Mathf.LerpAngle(transform.rotation.eulerAngles.y, interpYawTarget, deltaTime * Provider.INTERP_SPEED), 0.0f);
 			}
 
@@ -3047,30 +3064,30 @@ namespace SDG.Unturned
 					{
 						if (speciality == EZombieSpeciality.CRAWLER)
 						{
-							animator.CrossFade("Move_4", CharacterAnimator.BLEND);
+							CrossFadeLoopAnim("Move_4", CharacterAnimator.BLEND);
 						}
 						else if (speciality == EZombieSpeciality.SPRINTER)
 						{
-							animator.CrossFade("Move_5", CharacterAnimator.BLEND);
+							CrossFadeLoopAnim("Move_5", CharacterAnimator.BLEND);
 						}
 						else
 						{
-							animator.CrossFade(moveAnim, CharacterAnimator.BLEND);
+							CrossFadeLoopAnim(moveAnim, CharacterAnimator.BLEND);
 						}
 					}
 					else
 					{
 						if (speciality == EZombieSpeciality.CRAWLER)
 						{
-							animator.CrossFade("Idle_3", CharacterAnimator.BLEND);
+							CrossFadeLoopAnim("Idle_3", CharacterAnimator.BLEND);
 						}
 						else if (speciality == EZombieSpeciality.SPRINTER)
 						{
-							animator.CrossFade("Idle_4", CharacterAnimator.BLEND);
+							CrossFadeLoopAnim("Idle_4", CharacterAnimator.BLEND);
 						}
 						else
 						{
-							animator.CrossFade(idleAnim, CharacterAnimator.BLEND);
+							CrossFadeLoopAnim(idleAnim, CharacterAnimator.BLEND);
 						}
 					}
 				}

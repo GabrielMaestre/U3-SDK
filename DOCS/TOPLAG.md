@@ -34,6 +34,17 @@ Ranking inicial para orientar profiling. Não representa porcentagem exata: repo
 - Instancing está ativo: `13` batches instanced e `4,4k` draw calls agrupados. Static batching continua dominante (`282` batches); não desligar batching globalmente.
 - Memória gráfica observada: `225` RenderTextures / `399,8 MB` e `11.718` buffers / `1,33 GB`. Estes números exigem Memory Profiler antes de qualquer corte: representam recursos gráficos/driver, não RAM gerenciada diretamente.
 
+### Deep Profile atribuído por ferramenta — `2026-07-17`
+
+Captura `Unturned_2026-07-17_17-42-39.data` (`1,6 GB`, `352` frames, Editor Play Mode com Deep Profile) processada por `Window > Unturned > Analyze Profiler Capture`; CSV completo ao lado da captura. Números absolutos são inflados pelo Editor/Deep Profile; contagens de chamadas são exatas. Principais atribuições de `ScriptRunBehaviourUpdate` e GC:
+
+- `FoliageCoord.Equals`: `~9.900` chamadas/frame para `~1.200` `Dictionary.FindEntry`/frame — `~8` comparações por lookup provaram colisão de hash (`x ^ y`). Cluster somava `~3 ms`/frame em deep profile incluindo `GenericEqualityComparer.Equals` (`3,9 M` chamadas na captura). **Corrigido: hash espacial em cinco structs de coordenada.**
+- `Animation.CrossFade`: `~99` chamadas nativas/frame — zombies reaplicavam clip de move/idle todo update. **Corrigido: cache de loop com invalidação nos one-shots.**
+- `PhysicsTool.GetMaterialName`: `~522` chamadas/frame com veículos — cada roda amostrava splatmap (`getSplatmapHighestWeightLayerIndex` `~114`/frame) e resolvia NetId por string a cada passo. **Corrigido: cache por collider/ponto com limiar de `1 m`.**
+- `VolumeManager.GetRegionalAndDynamicVolumes` + variantes: `~400` consultas/frame (`~0,8 ms` self em deep profile), maioria vinda de `WaterUtility.isPointUnderwater` (`~278`/frame, rodas/buoyancy). Aberto: exigiria cache por região ou frequência reduzida; medir após fix das rodas.
+- GC por frame no Editor: `FoliageStorageV2.DeserializeTileOnMainThread → List.AddWithResize` `~1,4 KB`/frame (pool já preserva capacity; churn vem de listas novas em streaming — reavaliar com Memory Profiler), `GetComponentNullErrorMessage` `~460 B`/frame (custo só de Editor), `Zombie.findTargetWhileStuck` `~168 B`/frame, `Provider.Update` self `~363 B`/frame sem alocação óbvia no corpo — reatribuir em captura standalone.
+- `Wheel.UpdateGrounded` `~295`/frame, `InteractableVehicle.FixedUpdate` `~87`/frame, `Zombie.OnUpdate` `96`/frame e `Buoyancy.FixedUpdate` `~11`/frame seguem como maiores consumidores de script após os fixes; nova captura decide próximo alvo.
+
 #### Próximas ações, sem alteração de código
 
 1. Fazer Deep Profile por `5–10 s` somente no mesmo ponto e expandir `Update.ScriptRunBehaviourUpdate`; decidir scripts por `Self ms` e `GC Alloc`.
@@ -141,6 +152,12 @@ Ordem segura: atacar `1`, explicar pico de `2`, depois medir e reordenar `3–5`
 - Simulação: respawn normal de animais/zombies ignora áreas sem jogadores; Horde e beacon permanecem ativos.
 - IA: budgets de tick no dedicado deixam de ser constantes; `Zombies.Tick_Budget_Per_Frame=50` e `Animals.Tick_Budget_Per_Frame=25` preservam comportamento anterior e podem ser reduzidos após profiling.
 - Água: fog testa volumes candidatos do índice espacial, não lista global por câmera/render.
+- Hashes de coordenadas: `FoliageCoord`, `LandscapeCoord`, `HeightmapCoord`, `SplatmapCoord` e `RegionCoord` substituem `x ^ y` por hash sem colisões estruturadas; dicionários regionais/foliage/splatmap deixam de comparar `~8` chaves por lookup.
+- Zombies: `CrossFade` de move/idle só executa em troca real de clip; one-shots invalidam cache. `~99` chamadas nativas por frame viram no máximo uma por transição.
+- Veículos: material do solo por roda é reutilizado até contato mover `1 m` ou trocar collider, eliminando amostragem de splatmap e lookup por string por passo de física; cache cobre também o caminho visual do cliente (`UpdateModel`) e replicação sem motorista lê `linearVelocity` uma vez.
+- Volumes: `GetFirstOverlappingVolume` itera fontes diretamente sem lista temporária por consulta; água/fog/oxygen herdam.
+- Simulação: `Zombie.OnUpdate` e `Animal.Update` leem posição/yaw do transform uma vez por update; conversão quaternion→euler cai para no máximo uma por entidade.
+- UI: stat tracker reformata somente na mudança de kills/tipo; efeito mythic sincroniza uma vez por frame em `LateUpdate`.
 - Memória: alerta do loading veio de memória paginada do sistema em `94%`; Unity ocupava `6,25 GB` e cleanup não reduziu total. 5.911 texturas/`1,88 GB` e 6.906 meshes/`1,43 GB` permanecem referenciadas.
 - Render atual: Deferred GBuffer/Lighting, `833` shadow casters, 316 RenderTextures/`257,6 MB` e 9.675 buffers/`0,71 GB` precedem otimização dos `177,3k` triângulos.
 - Resultado antes/depois ainda precisa de cold boot e loading do mesmo mapa; itens ficam parcialmente abertos até nova captura.

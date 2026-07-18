@@ -208,6 +208,29 @@ namespace SDG.Unturned
 		internal PhysicsMaterialNetId replicatedGroundMaterial;
 
 		/// <summary>
+		/// Ground material lookup samples terrain splatmap weights and resolves names, so per-step calls
+		/// reuse the previous result until the contact point moves or the collider changes.
+		/// Splatmap materials do not vary within one meter, so the threshold is not player-visible.
+		/// </summary>
+		private Collider cachedGroundMaterialCollider;
+		private Vector3 cachedGroundMaterialPoint;
+		private PhysicsMaterialNetId cachedGroundMaterialNetId = PhysicsMaterialNetId.NULL;
+
+		private PhysicsMaterialNetId GetGroundMaterialNetId(WheelHit groundHit)
+		{
+			if (groundHit.collider != cachedGroundMaterialCollider ||
+				(groundHit.point - cachedGroundMaterialPoint).sqrMagnitude > 1.0f)
+			{
+				cachedGroundMaterialCollider = groundHit.collider;
+				cachedGroundMaterialPoint = groundHit.point;
+				string materialName = PhysicsTool.GetMaterialName(groundHit);
+				cachedGroundMaterialNetId = PhysicsMaterialNetTable.GetNetId(materialName);
+			}
+
+			return cachedGroundMaterialNetId;
+		}
+
+		/// <summary>
 		/// [0, 360] angle of rotation around wheel axle. Measured in degrees because Quaternion.AngleAxis takes degrees.
 		/// 
 		/// We track rather than using GetWorldPose so that we can alternate between using replicated and simulated
@@ -344,8 +367,7 @@ namespace SDG.Unturned
 			_isGrounded = wheel.GetGroundHit(out mostRecentGroundHit);
 			if (_isGrounded)
 			{
-				string materialName = PhysicsTool.GetMaterialName(mostRecentGroundHit);
-				replicatedGroundMaterial = PhysicsMaterialNetTable.GetNetId(materialName);
+				replicatedGroundMaterial = GetGroundMaterialNetId(mostRecentGroundHit);
 			}
 			else
 			{
@@ -608,8 +630,7 @@ namespace SDG.Unturned
 					float hitDistanceAlongSuspension = Vector3.Dot(hitWorldPosition - colliderWorldCenter, colliderWorldDownward);
 					distanceAlongSuspension = hitDistanceAlongSuspension - colliderRadius;
 
-					string materialName = PhysicsTool.GetMaterialName(mostRecentGroundHit);
-					replicatedGroundMaterial = PhysicsMaterialNetTable.GetNetId(materialName);
+					replicatedGroundMaterial = GetGroundMaterialNetId(mostRecentGroundHit);
 				}
 				else
 				{
@@ -681,9 +702,8 @@ namespace SDG.Unturned
 						distanceAlongSuspension = hitDistanceAlongSuspension - colliderRadius;
 
 						BeginSample("GetMaterialName");
-						string materialName = PhysicsTool.GetMaterialName(groundHit);
+						replicatedGroundMaterial = GetGroundMaterialNetId(groundHit);
 						EndSample();
-						replicatedGroundMaterial = PhysicsMaterialNetTable.GetNetId(materialName);
 						BeginSample("UpdateMotionEffect");
 						UpdateMotionEffect(hitWorldPosition, true);
 						EndSample();

@@ -830,14 +830,12 @@ namespace SDG.Unturned
 
 		public void updateStates()
 		{
-			//position = transform.position;
-			//angle = transform.rotation.eulerAngles.y;
 			lastUpdatePos = transform.position;
 			lastUpdateAngle = transform.rotation.eulerAngles.y;
 
 			if (nsb != null)
 			{
-				nsb.updateLastSnapshot(new YawSnapshotInfo(transform.position, transform.rotation.eulerAngles.y));
+				nsb.updateLastSnapshot(new YawSnapshotInfo(lastUpdatePos, lastUpdateAngle));
 			}
 #if WITH_NSB_LOGGING
 			else if(!Provider.isServer)
@@ -959,10 +957,12 @@ namespace SDG.Unturned
 			{
 				if (!isUpdated)
 				{
-					if (Mathf.Abs(lastUpdatePos.x - transform.position.x) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatePos.y - transform.position.y) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatePos.z - transform.position.z) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdateAngle - transform.rotation.eulerAngles.y) > 1)
+					Vector3 currentPosition = transform.position;
+					float currentYaw = transform.rotation.eulerAngles.y;
+					if (Mathf.Abs(lastUpdatePos.x - currentPosition.x) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatePos.y - currentPosition.y) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdatePos.z - currentPosition.z) > Provider.UPDATE_DISTANCE || Mathf.Abs(lastUpdateAngle - currentYaw) > 1)
 					{
-						lastUpdatePos = transform.position;
-						lastUpdateAngle = transform.rotation.eulerAngles.y;
+						lastUpdatePos = currentPosition;
+						lastUpdateAngle = currentYaw;
 
 						isUpdated = true;
 						AnimalManager.updates++;
@@ -992,7 +992,8 @@ namespace SDG.Unturned
 			}
 			else
 			{
-				if (Mathf.Abs(lastUpdatePos.x - transform.position.x) > 0.01f || Mathf.Abs(lastUpdatePos.y - transform.position.y) > 0.01f || Mathf.Abs(lastUpdatePos.z - transform.position.z) > 0.01f)
+				Vector3 currentPosition = transform.position;
+				if (Mathf.Abs(lastUpdatePos.x - currentPosition.x) > 0.01f || Mathf.Abs(lastUpdatePos.y - currentPosition.y) > 0.01f || Mathf.Abs(lastUpdatePos.z - currentPosition.z) > 0.01f)
 				{
 					if (!isMoving)
 					{
@@ -1010,7 +1011,7 @@ namespace SDG.Unturned
 					}
 					isMoving = true;
 
-					isRunning = (lastUpdatePos - transform.position).sqrMagnitude > 1; // high freq
+					isRunning = (lastUpdatePos - currentPosition).sqrMagnitude > 1; // high freq
 				}
 				else
 				{

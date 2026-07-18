@@ -56,7 +56,8 @@ namespace SDG.Framework.Landscapes
 
 		public override int GetHashCode()
 		{
-			return x ^ y;
+			// x ^ y collided along xor diagonals; standard spatial hash keeps buckets distinct.
+			return unchecked((x * 73856093) ^ (y * 19349663));
 		}
 
 		public override string ToString()

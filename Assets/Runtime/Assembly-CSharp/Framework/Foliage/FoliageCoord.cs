@@ -56,7 +56,9 @@ namespace SDG.Framework.Foliage
 
 		public override int GetHashCode()
 		{
-			return x ^ y;
+			// x ^ y collided for every coord pair sharing the same xor value, causing ~8 Equals calls
+			// per dictionary lookup in profiler captures. Standard spatial hash keeps buckets distinct.
+			return unchecked((x * 73856093) ^ (y * 19349663));
 		}
 
 		public override string ToString()

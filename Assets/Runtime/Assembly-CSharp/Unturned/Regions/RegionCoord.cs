@@ -59,7 +59,8 @@ namespace SDG.Unturned
 
 		public override int GetHashCode()
 		{
-			return x ^ y;
+			// x ^ y produced only 64 distinct hashes for the 64x64 grid; this is collision-free.
+			return (x << 8) | y;
 		}
 
 		public override string ToString()

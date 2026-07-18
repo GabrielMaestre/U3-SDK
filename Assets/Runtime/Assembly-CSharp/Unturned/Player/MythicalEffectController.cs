@@ -27,15 +27,6 @@ namespace SDG.Unturned
 			}
 		}
 
-		private void Update()
-		{
-			if (systemTransform != null)
-			{
-				transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
-				systemTransform.SetPositionAndRotation(position, rotation);
-			}
-		}
-
 		private void LateUpdate()
 		{
 			if (systemTransform != null)

@@ -67,7 +67,16 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Reduzir domínio/editor iteration time sem afetar build do jogo.
 - [ ] Otimizar boot e memória do servidor dedicado separadamente do cliente.
 
-## P1 — CPU e frame time — 23/X
+## P1 — CPU e frame time — 31/X
+
+- [x] Cobrir o terceiro site de material do solo (`Wheel.UpdateModel`, cliente) com o cache por collider/ponto; helper único recebe `WheelHit`.
+- [x] Iterar volumes regionais/dinâmicos diretamente em `GetFirstOverlappingVolume`, sem lista temporária combinada por consulta (`~391`/frame).
+- [x] Ler `transform.position` e `eulerAngles` uma vez por update em `Zombie.OnUpdate` e `Animal.Update`/`updateStates`, nos caminhos server e client.
+- [x] Ler `linearVelocity` uma vez na replicação de veículo sem motorista.
+- [x] Substituir hash `x ^ y` por hash espacial sem colisões estruturadas em `FoliageCoord`, `LandscapeCoord`, `HeightmapCoord`, `SplatmapCoord` e `RegionCoord`; Deep Profile mediu `~8` `Equals` por lookup de dicionário de foliage.
+- [x] Cachear clip de move/idle de zombies e chamar `Animation.CrossFade` somente em troca real; one-shots (`Play`) invalidam o cache. Antes: `~99` chamadas nativas por frame.
+- [x] Reutilizar material do solo por roda até contato mover `1 m` ou trocar collider, removendo amostragem de splatmap e resolução de nome/NetId por passo de física. Antes: `~522` `GetMaterialName` por frame.
+- [x] Remover `Update` redundante de `MythicalEffectController`; `LateUpdate` idêntico já sobrescrevia o resultado no mesmo frame.
 
 - [x] Consolidar estado submerso e superfície próxima em uma consulta aos volumes de água por frame; ignorar consulta quando efeitos submersos estão desativados.
 - [x] Consultar distância de `LightLOD` estável próximo ou distante a cada oito frames, mantendo fade da transição por frame.
@@ -107,8 +116,9 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Detectar long frames e atribuir custo por sistema.
 - [ ] Medir `TickZombies`, `TickZombiesInRegionsWithPlayers` e `AnimalManager.Tick` com budgets `50/25`, `20/10` e `10/5`; definir presets somente após comparar latência de IA.
 
-## P1 — Memória e GC — 3/X
+## P1 — Memória e GC — 4/X
 
+- [x] Reformatar texto do stat tracker somente quando tipo ou kills mudam, removendo duas alocações de string por frame com arma rastreada equipada.
 - [x] Remover alocações dos iteradores `yield` nos efeitos periódicos de clima.
 - [x] Remover array temporário de 16 bytes por GUID no caminho comum de `River.readGUID`, com teste de alocação.
 - [x] Manter materiais e texturas dependentes de skins não utilizadas fora da memória até primeiro acesso.
@@ -341,13 +351,14 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 - [ ] Fazer soak tests de cliente e servidor por longos períodos.
 - [ ] Agrupar crashes por assinatura e atacar maior frequência primeiro.
 
-## P2 — Ferramentas, testes e CI — 2/X
+## P2 — Ferramentas, testes e CI — 3/X
 
 - [ ] Automatizar build limpo de cliente e servidor suportados.
 - [ ] Executar testes existentes de `SDG.NetPak` e `UnturnedDat`.
 - [ ] Adicionar testes unitários somente para lógica pura crítica ou regressão real.
 - [ ] Criar integração mínima para boot, load, conexão e save.
 - [x] Adicionar captura standalone opt-in `-PerformanceMetrics` com CSV e duração limitada; automação de rota continua aberta quando houver replay determinístico.
+- [x] Criar `Analyze Profiler Capture`: agrega markers de `.data` por self time/calls/GC em CSV ranqueado, com variante sem diálogo executável via MCP.
 - [x] Adicionar MCP local editor-only como fallback ao bridge oficial, com conexão loopback autenticada e 11 ferramentas básicas validadas.
 - [ ] Comparar performance em hardware fixo; não bloquear CI compartilhada por ruído aleatório.
 - [ ] Detectar assets duplicados, referências quebradas e variantes excessivas.

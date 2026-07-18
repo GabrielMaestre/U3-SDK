@@ -45,6 +45,28 @@ Metas principais:
 
 ## Melhorias implementadas
 
+### 2026-07-17 — Atribuição por Deep Profile e cinco correções medidas
+
+- Nova ferramenta `Window > Unturned > Analyze Profiler Capture` (e variante `Analyze Newest` sem diálogo, executável via MCP): carrega `.data` do Unity Profiler e agrega todos os markers da main thread por self time, calls e GC alloc em CSV ranqueado ao lado da captura, com top 25 no Console. Executada na captura Deep Profile de `1,6 GB`/`352` frames do mesmo dia; resultados em `TOPLAG.md`.
+- Hash espacial corrigido em `FoliageCoord`, `LandscapeCoord`, `HeightmapCoord`, `SplatmapCoord` e `RegionCoord`: `x ^ y` colidia em toda diagonal XOR — captura mediu `~9.900` `FoliageCoord.Equals` por frame para `~1.200` lookups de dicionário, ou seja `~8` comparações por acesso. `RegionCoord` (bytes `0–63`) gerava só `64` hashes para `4.096` regiões e agora usa `(x << 8) | y`, livre de colisão; ints usam hash multiplicativo padrão. Hashes nunca são serializados; nenhum formato muda.
+- `Zombie` deixa de chamar `Animation.CrossFade` todo update: captura mediu `~99` chamadas nativas por frame reaplicando o mesmo clip de move/idle. Loop atual é cacheado e invalidado pelos oito `Play` de one-shots (ataque, startle, stun, habilidades); troca real de estado continua com o mesmo blend.
+- `Wheel` cacheia material do solo por collider + ponto de contato (limiar de `1 m`): `PhysicsTool.GetMaterialName` rodava `~522` vezes por frame com veículos ativos, amostrando splatmap e resolvendo nome/NetId por string a cada passo de física de cada roda. Splatmap não varia abaixo de um metro; efeitos de pneu e replicação recebem o mesmo valor.
+- `PlayerLifeUI.updateStatTracker` agora só reformata texto e cor quando tipo ou contagem de kills muda; antes alocava duas strings por frame com arma de stat tracker equipada. Setters uGUI já ignoravam valor igual, então custo era alocação/format, não layout.
+- `MythicalEffectController` remove `Update` redundante: `LateUpdate` idêntico sempre sobrescrevia posição/rotação no mesmo frame antes do render. Metade das sincronizações por efeito mythic visível; nenhum comportamento visual muda.
+- Auditoria estática dos caminhos de UI por frame confirmou compass, hotbar e group labels já cacheados; setters `Text`/`TextColor` Glazier uGUI fazem equality check na Unity. Registrado em `CLAUDE/SUGESTOES-PERFORMANCE-2026-07-17.md` para evitar re-investigação.
+- `ORIGINAL_ASSETS` foi movida para fora das pastas escaneadas pelo jogo, removendo contaminação de boot/profiling; migração 6.3 segue pendente somente de builds Mac/Linux/servidor.
+- Validação: `Assembly-CSharp.csproj` e `Assembly-CSharp-Editor.csproj` compilam com 0 erros; Unity 6.3 recompilou sem erros de Console. Ganho real precisa de nova captura na mesma rota comparando `Equals`/`FindEntry`, `CrossFade` e `GetMaterialName` por frame.
+
+#### Passe de matemática e hot paths — mesma data
+
+- Terceiro site de material do solo em `Wheel.UpdateModel` (caminho visual do cliente, todo frame por roda) agora usa o mesmo cache por collider/ponto; helper recebe o `WheelHit` e cobre os três chamadores.
+- `VolumeManagerBase.GetFirstOverlappingVolume` itera listas regionais/dinâmicas diretamente com os mesmos filtros e ordem; deixa de montar lista temporária combinada a cada consulta (`~391`/frame, dominada por água). `IsPositionInsideAnyVolume` herda o ganho.
+- `Zombie.OnUpdate` lê `transform.position` uma vez (antes até quatro) e converte `eulerAngles` uma vez (antes até duas) por update nos caminhos server e client; `Animal.Update`/`updateStates` recebem os mesmos hoists e o snapshot reutiliza os valores já lidos.
+- Replicação de veículo sem motorista lê `linearVelocity` uma vez por atualização.
+- Auditoria sem mudança: `LevelVolume` box/sphere já usa distância ao quadrado e `InverseTransformPoint` único; compass/Glazier uGUI já usam dirty-flag com equality; `CalculateWheelSpeed` e falloff de explosão precisam do valor real da magnitude. Buoyancy consulta água por voxel — colapsar para uma consulta por corpo mudaria física em borda d'água (barco encalhado) e fica aberto até A/B.
+- Revalidação dos fixes anteriores: hash novo nunca é serializado (`read`/`write` gravam somente `x`/`y`); `SplatmapCoord` confirmado `int`; nenhum `animator.Stop()`/`SetActive` no ciclo de vida do zumbi invalida o cache de `CrossFade`; `tellAlive` revive com `Animation` intacta.
+- Validação: `Assembly-CSharp.csproj` compila com 0 erros; Unity foi fechada durante a sessão, então recompilação do Editor ocorre na próxima abertura.
+
 ### 2026-07-16 — Inventário administrativo F3
 
 - Painel pesquisável usa catálogo runtime `Assets.find<ItemAsset>`, incluindo itens oficiais e mods sem lista manual.
