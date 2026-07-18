@@ -1,6 +1,6 @@
 # Estudo de mesh e terrain inspirado por Vercidium
 
-Status: proposta registrada antes da implementação; fatia segura de LOD nativo aplicada em `2026-07-16`.
+Status: LOD nativo aplicado em `2026-07-16`; spike client-side `GPU Heightfield Terrain Renderer` criado em branch separada em `2026-07-17`.
 
 Fontes principais:
 
@@ -33,6 +33,22 @@ Greedy meshing não serve para terreno atual: heightfield já contém apenas sup
 - Cinematic Mode força LOD original. Tile invisível continua sem heightmap.
 - Colisão, `TerrainData`, holes, splatmaps, materiais, FOV, câmera e gameplay não mudaram.
 - Teste cobre lado próximo, limite exato e lado distante. Assemblies Unity compilaram e método compilado passou por reflexão (`near=0`, `far=1`).
+
+## Spike: GPU Heightfield Terrain Renderer
+
+Branch: `GpuHeightfieldTerrainRenderer`. Ativação exclusiva para teste standalone: `-GpuHeightfieldTerrain`.
+
+- Renderer é desligado por padrão e volta automaticamente ao Unity Terrain quando shader, `Texture2DArray` ou Shader Model 4.5 não estiver disponível.
+- Heightmaps e holes são lidos diretamente dos arrays carregados pelo formato atual. Mapas oficiais e Workshop não exigem conversão, arquivo novo ou ajuste de protocolo.
+- `TerrainData`, `TerrainCollider`, colisão, física, nav, foliage e queries de altura continuam nativos. Somente desenho do heightfield muda no cliente.
+- Servidor dedicado compila stubs sem código gráfico. Nenhum pacote, RPC, hash de mapa ou estado replicado foi alterado.
+- Tiles visíveis usam `Graphics.RenderPrimitives`, `SV_VertexID`, `SV_InstanceID`, texture arrays e um único envio de primitivas para reduzir submissão na CPU. Lista de tiles só é atualizada ao cruzar região ou trocar raio.
+- `-GpuHeightfieldQuads=32|64|128|256` controla densidade. Padrão experimental: `128`; valores intermediários são limitados e arredondados para potência de dois.
+- Shader atual preserva relevo, holes, iluminação Deferred/Forward e sombras, mas usa cores diagnósticas. Splatmaps, oito layers, chuva/neve, reflexos planares e paridade visual ainda não estão prontos.
+- Lightmaps, Dynamic GI e Meta pass ficam explicitamente desativados no spike porque geometria procedural não fornece UV1/UV2; iluminação dinâmica e sombras continuam ativas, sem warnings falsos no build.
+- Um bounds agregado cobre tiles visíveis. Isso reduz custo de submissão, mas transfere granularidade de culling para lista regional; compute/indirect culling permanece fora do primeiro spike.
+
+Critério antes de evoluir: comparar build sem argumento contra build com argumento, mesma rota e preset. Medir CPU `FinishFrameRendering`, Render Thread, SetPass, draws, GPU, p95/p99, RAM/VRAM, holes e seams. Não tornar padrão sem ganho repetível e paridade visual.
 
 ## Estado atual do Unturned
 

@@ -376,11 +376,12 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 - [ ] Gerar relatório de crash com versão, plataforma, mapa e mods.
 - [ ] Proteger logs contra injeção, dados sensíveis e crescimento sem limite.
 
-## P3 — Experimentos futuros
+## P3 — Experimentos futuros — 1/X
 
 - [ ] Usar Frame Debugger para escolher um único mesh/material repetido e comparar `LevelBatching` contra GPU instancing antes de alterar categoria inteira.
 - [ ] Auditar `Read/Write Enabled`, canais de vértice, Vertex Compression e Optimize Mesh quando fontes dos core assets estiverem disponíveis.
-- [ ] Considerar terrain por `SV_VertexID`/indirect rendering somente se GPU capture provar limite de vértices ou submissão e LOD nativo falhar.
+- [x] Criar spike client-side opt-in de terrain por `SV_VertexID`, reutilizando heightmaps/holes atuais, `TerrainCollider` nativo e um envio instanciado para tiles visíveis; servidor e formato de mapas permanecem inalterados.
+- [ ] Validar spike `-GpuHeightfieldTerrain` em standalone A/B e implementar splatmaps/reflexos somente se CPU/Render Thread melhorar sem regressão de GPU, p95/p99, holes ou seams.
 - [ ] Testar DX12 como primeira API mantendo DX11 fallback; comparar CPU/Render Thread, GPU, p95/p99, shader stutter e crashes em várias GPUs antes de cogitar DX12 mínimo.
 - [ ] Remover build Win32 somente após confirmar ausência de usuários/servidores dependentes; não contabilizar como ganho de FPS Win64.
 - [ ] Comparar Forward e Deferred no mesmo cenário porque GBuffer/Deferred Lighting apareceram caros; rejeitar regressão visual ou aumento de passes por luz.

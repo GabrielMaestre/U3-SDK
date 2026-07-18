@@ -1104,12 +1104,16 @@ namespace SDG.Framework.Landscapes
 			if (instance != this || Dedicator.IsDedicatedServer || Level.isEditor || MainCamera.instance == null)
 				return;
 
+			bool useGpuHeightfieldRenderer = TryPrepareGpuHeightfieldRenderer();
 			Vector3 cameraPosition = MainCamera.instance.transform.position;
 			Vector2Int newRegion = new Vector2Int(Mathf.FloorToInt(cameraPosition.x / Regions.REGION_SIZE),
 				Mathf.FloorToInt(cameraPosition.z / Regions.REGION_SIZE));
 			byte newRadius = Regions.WorldChunkRadius;
 			if (!hasTileRenderRegion || tileRenderRegion != newRegion || tileRenderRadius != newRadius)
 			{
+				if (useGpuHeightfieldRenderer)
+					BeginGpuHeightfieldVisibilityUpdate();
+
 				hasTileRenderRegion = true;
 				tileRenderRegion = newRegion;
 				tileRenderRadius = newRadius;
@@ -1127,12 +1131,20 @@ namespace SDG.Framework.Landscapes
 						sqrDistanceToTile = (closestPoint - cameraPosition).sqrMagnitude;
 						isVisible = sqrDistanceToTile <= sqrRenderDistance;
 					}
-					tile.terrain.drawHeightmap = isVisible;
+					tile.terrain.drawHeightmap = isVisible && !useGpuHeightfieldRenderer;
 					tile.terrain.heightmapMaximumLOD = isVisible && !wantsCinematicMode
 						? calculateTerrainMaximumLOD(sqrDistanceToTile, renderDistance)
 						: 0;
+					if (useGpuHeightfieldRenderer && isVisible)
+						AddVisibleGpuHeightfieldTile(tile);
 				}
+
+				if (useGpuHeightfieldRenderer)
+					FinishGpuHeightfieldVisibilityUpdate();
 			}
+
+			if (useGpuHeightfieldRenderer)
+				RenderGpuHeightfieldTerrain();
 
 			if (IsChunkDebugVisible && Player.LocalPlayer != null && Player.LocalPlayer.channel.owner.isAdmin)
 				DrawChunkDebug(cameraPosition, newRegion, newRadius);
@@ -1162,6 +1174,8 @@ namespace SDG.Framework.Landscapes
 
 		protected void OnDestroy()
 		{
+			DisposeGpuHeightfieldRenderer();
+
 			if (instance == this)
 			{
 				GraphicsSettings.graphicsSettingsApplied -= handleGraphicsSettingsApplied;
