@@ -116,12 +116,13 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Detectar long frames e atribuir custo por sistema.
 - [ ] Medir `TickZombies`, `TickZombiesInRegionsWithPlayers` e `AnimalManager.Tick` com budgets `50/25`, `20/10` e `10/5`; definir presets somente após comparar latência de IA.
 
-## P1 — Memória e GC — 4/X
+## P1 — Memória e GC — 5/X
 
 - [x] Reformatar texto do stat tracker somente quando tipo ou kills mudam, removendo duas alocações de string por frame com arma rastreada equipada.
 - [x] Remover alocações dos iteradores `yield` nos efeitos periódicos de clima.
 - [x] Remover array temporário de 16 bytes por GUID no caminho comum de `River.readGUID`, com teste de alocação.
 - [x] Manter materiais e texturas dependentes de skins não utilizadas fora da memória até primeiro acesso.
+- [x] Após `StaticBatchingUtility.Combine`, liberar cópia CPU das meshes duplicadas para atlas com `Mesh.UploadMeshData(true)`; UVs e batching já foram concluídos, enquanto meshes de origem continuam intactas.
 
 - [ ] Capturar snapshots em boot, loading, gameplay prolongado, troca de mapa e disconnect.
 - [ ] Localizar objetos gerenciados, nativos e assets retidos após descarregamento.
@@ -131,6 +132,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Revisar caches sem limite; definir teto e descarte baseado em uso real.
 - [ ] Pool somente objetos com churn medido; limitar tamanho e limpar estado no retorno.
 - [ ] Usar formatos e compressão adequados para textura, áudio e mesh por plataforma.
+- [ ] Ativar Texture Streaming somente após selecionar texturas de mundo elegíveis e comparar Ultra: fontes atuais não marcam `streamingMipmaps`, portanto ativação global isolada não reduz memória.
 - [ ] Descarregar assets e bundles sem destruir recursos ainda referenciados.
 - [ ] Medir fragmentação, large object heap e picos de desserialização.
 - [ ] Fazer soak test com troca repetida de mapa, conexão e respawn.
@@ -339,6 +341,7 @@ Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e
 
 ## P2 — Bugs e estabilidade
 
+- [x] Remover bloco `Update` de debug comentado em `PlayerInput`; comentário parcial deixou `#endif` órfão e bloqueou compilação.
 - [ ] Classificar issues por reprodução, severidade, frequência e área afetada.
 - [ ] Exigir passos, logs, versão, mapa, mods e configuração relevantes.
 - [ ] Corrigir causa raiz e adicionar menor teste de regressão útil.

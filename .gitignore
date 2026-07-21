@@ -205,3 +205,5 @@ ItemLinks.txt
 /ProfilerCaptures/*bc7
 /ProfilerCaptures/*png
 /ProfilerCaptures/*csv
+/MemoryCaptures/*bc7
+/MemoryCaptures/*snap

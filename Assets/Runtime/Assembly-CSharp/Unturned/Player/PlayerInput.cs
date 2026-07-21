@@ -1511,16 +1511,6 @@ Position delta: {(transform.position - oldPosition).magnitude}");
 			serversidePackets.Clear();
 		}
 
-#if UNITY_EDITOR
-		private void Update()
-		{
-// 			if (serverBoundsHistory != null)
-// 			{
-// 				serverBoundsHistory.DrawGizmos();
-// 			}
-		}
-#endif // UNITY_EDITOR
-
 		private void FixedUpdate()
 		{
 			if (isDismissed)

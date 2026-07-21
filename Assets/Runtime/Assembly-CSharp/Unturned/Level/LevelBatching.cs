@@ -276,6 +276,7 @@ namespace SDG.Unturned
 			// spatial clustering Unity seems to do a better job.
 			GameObject staticBatchingRoot = new GameObject("Static Batching Root (LevelBatching)");
 			StaticBatchingUtility.Combine(gameObjects, staticBatchingRoot);
+			ReleaseAtlasMeshCpuCopies();
 
 			for (int index = 0; index < gameObjects.Length; ++index)
 			{
@@ -298,6 +299,21 @@ namespace SDG.Unturned
 
 			watch.Stop();
 			UnturnedLog.info($"Level static batching took: {watch.ElapsedMilliseconds}ms");
+		}
+
+		/// <summary>
+		/// Atlas generation duplicates meshes to rewrite UVs. They need CPU data until runtime static batching has
+		/// copied them, but never afterwards.
+		/// </summary>
+		private void ReleaseAtlasMeshCpuCopies()
+		{
+			foreach (Object obj in objectsToDestroy)
+			{
+				if (obj is Mesh mesh && mesh.isReadable)
+				{
+					mesh.UploadMeshData(/*markNoLongerReadable*/ true);
+				}
+			}
 		}
 
 		/// <summary>
