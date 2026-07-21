@@ -129,6 +129,7 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Corrigir inscrições de eventos, delegates, coroutines e referências estáticas vazando lifetime.
 - [ ] Eliminar alocações por frame em UI, rede, inventário, combate e IA.
 - [ ] Reduzir duplicação de meshes, materiais, texturas, strings e buffers.
+- [ ] Implementar Asset Residency Streaming por mapa/servidor em PR isolada; detalhes, compatibilidade e medições em `ASSET_RESIDENCY_STREAMING.md`.
 - [ ] Revisar caches sem limite; definir teto e descarte baseado em uso real.
 - [ ] Pool somente objetos com churn medido; limitar tamanho e limpar estado no retorno.
 - [ ] Usar formatos e compressão adequados para textura, áudio e mesh por plataforma.
