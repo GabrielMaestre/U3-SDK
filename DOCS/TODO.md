@@ -232,10 +232,11 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 - [ ] Entregar atrás de flag até paridade funcional e migração de mapas.
 - [ ] Implementar scheduler compartilhado de repath quando implementação ASPFP estiver disponível: teto de buscas e milissegundos por tick, prioridade por ameaça/distância, cooldown, histerese e cancelamento. SDK atual contém fallback vazio, sem busca real para orçar.
 
-## P1 — Rede e servidor dedicado — 2/X
+## P1 — Rede e servidor dedicado — 3/X
 
 - [x] Limitar limpeza de flags carregadas ao anel anterior por jogador em itens, objetos, recursos, barricadas e estruturas.
 - [x] Cachear permissão de visibilidade global uma vez por destinatário durante snapshot de jogadores.
+- [x] Indexar conexões SteamNetworkingSockets por `HSteamNetConnection` para lookup `O(1)` por pacote, preservando connect e close.
 
 Estado verificado: itens usam raio regional `1`; objetos, recursos, barricadas e estruturas usam raio `2`; terreno é conteúdo local e não gera envio contínuo por tile.
 

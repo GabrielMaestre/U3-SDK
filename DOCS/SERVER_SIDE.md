@@ -1,6 +1,6 @@
 # Verificação Server-Side
 
-Data da auditoria: 2026-07-17.
+Data da auditoria: 2026-07-21.
 
 ## Estado atual
 
@@ -10,6 +10,7 @@ Data da auditoria: 2026-07-17.
 - GPU Instancing, shaders, fog, água, LOD e demais mudanças visuais são ignorados ou não executados pelo servidor dedicado.
 - Comandos `/fly`, `/noclip`, `/god`, `/heal` e `/speed` validam admin/owner no servidor.
 - Inventário administrativo valida permissão `/give`, rate limit e GUID do item no servidor.
+- Transporte SteamNetworkingSockets indexa conexões por `HSteamNetConnection`; recebimento e callbacks não percorrem mais todas as conexões para localizar remetente.
 
 ## Problemas e riscos
 
@@ -57,7 +58,7 @@ Risco: **baixo a médio para mapas/mods não testados**.
 4. Testar horde, beacon, itens dropados, barricadas, estruturas e veículos.
 5. Executar comandos administrativos e inventário `F3` com admin, não-admin e permissão RocketMod.
 6. Salvar, reiniciar servidor e confirmar inventários, estruturas, veículos e mundo.
-7. Executar por pelo menos 30 minutos e revisar erros, tick, RAM e desconexões.
+7. Executar por pelo menos 30 minutos, incluindo conexão/reconexão, e revisar erros, tick, RAM e desconexões.
 
 ## Conclusão
 

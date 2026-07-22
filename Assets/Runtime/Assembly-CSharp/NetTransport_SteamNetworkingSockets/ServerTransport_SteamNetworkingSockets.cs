@@ -221,7 +221,7 @@ namespace SDG.NetTransport.SteamNetworkingSockets
 				// internally closes the connection when the auth ticket ends, but we still close just in case.
 				// Log("Server failed to close connection {0}", transportConnection);
 			}
-			transportConnections.RemoveFast(transportConnection);
+			transportConnections.Remove(transportConnection.steamConnectionHandle);
 		}
 
 		/// <summary>
@@ -229,15 +229,8 @@ namespace SDG.NetTransport.SteamNetworkingSockets
 		/// </summary>
 		private TransportConnection_SteamNetworkingSockets FindConnection(HSteamNetConnection steamConnectionHandle)
 		{
-			foreach (TransportConnection_SteamNetworkingSockets transportConnection in transportConnections)
-			{
-				if (transportConnection.steamConnectionHandle == steamConnectionHandle)
-				{
-					return transportConnection;
-				}
-			}
-
-			return null;
+			transportConnections.TryGetValue(steamConnectionHandle, out TransportConnection_SteamNetworkingSockets transportConnection);
+			return transportConnection;
 		}
 
 		private void OnUpdate()
@@ -377,7 +370,7 @@ namespace SDG.NetTransport.SteamNetworkingSockets
 		private void HandleState_Connected(ref SteamNetConnectionStatusChangedCallback_t callback)
 		{
 			TransportConnection_SteamNetworkingSockets newConnection = new TransportConnection_SteamNetworkingSockets(this, ref callback);
-			transportConnections.Add(newConnection);
+			transportConnections.Add(newConnection.steamConnectionHandle, newConnection);
 			DebugLog("Server accepted connection from {0}", IdentityToString(ref callback));
 		}
 
@@ -456,7 +449,7 @@ namespace SDG.NetTransport.SteamNetworkingSockets
 		private HSteamListenSocket fakeIpListenSocket = HSteamListenSocket.Invalid;
 		private HSteamListenSocket p2pListenSocket = HSteamListenSocket.Invalid;
 		private HSteamNetPollGroup pollGroup;
-		private List<TransportConnection_SteamNetworkingSockets> transportConnections = new List<TransportConnection_SteamNetworkingSockets>();
+		private Dictionary<HSteamNetConnection, TransportConnection_SteamNetworkingSockets> transportConnections = new Dictionary<HSteamNetConnection, TransportConnection_SteamNetworkingSockets>();
 		private IntPtr[] messageAddresses = new IntPtr[1];
 		private bool didSetupDebugOutput;
 

@@ -458,4 +458,5 @@ Item termina somente quando:
 - [TOPLAG.md](TOPLAG.md): ranking dos 50 principais candidatos de CPU, memória, GPU e loading.
 - [PERFORMANCE_TESTING.md](PERFORMANCE_TESTING.md): stress, métricas, Profiler, traces e comparação reproduzível.
 - [MESH_TERRAIN_RESEARCH.md](MESH_TERRAIN_RESEARCH.md): avaliação das técnicas do Vercidium para mesh, terrain, LOD e instancing antes de protótipos.
+- [LDM.md](LDM.md): integração LDM/Rocket, alterações de rede, compatibilidade, desempenho e smoke test de plugins.
 - [TODO.md](TODO.md): backlog priorizado de melhorias.
