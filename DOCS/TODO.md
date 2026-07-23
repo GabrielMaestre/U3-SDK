@@ -234,6 +234,8 @@ Progresso usa `N/X`: `N` melhorias concluídas; `X` permanece aberto porque perf
 
 ## P1 — Rede e servidor dedicado — 3/X
 
+Plano de escalabilidade, compatibilidade LDM, métricas e critérios: [`LDM.md`](LDM.md).
+
 - [x] Limitar limpeza de flags carregadas ao anel anterior por jogador em itens, objetos, recursos, barricadas e estruturas.
 - [x] Cachear permissão de visibilidade global uma vez por destinatário durante snapshot de jogadores.
 - [x] Indexar conexões SteamNetworkingSockets por `HSteamNetConnection` para lookup `O(1)` por pacote, preservando connect e close.
